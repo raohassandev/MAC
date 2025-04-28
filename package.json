@@ -14,8 +14,8 @@
     "management",
     "iot"
   ],
-  "author": "Your Name",
-  "license": "ISC",
+  "author": "Israr ul Haq",
+  "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

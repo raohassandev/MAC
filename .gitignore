@@ -1,20 +1,17 @@
 # MacSys Project .gitignore
 
 # Dependency Directories
-# Ignore all node_modules folders to prevent committing dependencies
 node_modules/
 bower_components/
 jspm_packages/
 
 # Compiled Output
-# Ignore build and distribution directories
 dist/
 build/
 out/
 bundle/
 
 # Logs
-# Ignore log files that might contain sensitive information
 logs/
 *.log
 npm-debug.log*
@@ -22,7 +19,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Environment Variables
-# IMPORTANT: Never commit .env files with real credentials
 .env
 .env.local
 .env.development.local
@@ -30,20 +26,17 @@ yarn-error.log*
 .env.production.local
 
 # Operating System Files
-# Ignore OS-specific files
 .DS_Store
 Thumbs.db
 desktop.ini
 
 # IDE and Editor Directories
-# Ignore IDE-specific configuration folders
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
 
 # Temporary Files
-# Ignore temporary and backup files
 *.tmp
 *.bak
 *.swp
@@ -55,7 +48,6 @@ desktop.ini
 .cache/
 
 # Testing
-# Ignore coverage reports and temporary test files
 coverage/
 .nyc_output/
 
@@ -66,12 +58,10 @@ pids
 *.pid.lock
 
 # Security
-# Be careful with keys and certificates
 *.pem
 *.key
 *.cert
 
-# Optional: Specific to your project
-# Add any project-specific ignore patterns below
+# Specific Project Directories
 macsys_web/dist/
 macsys_engine/dist/
