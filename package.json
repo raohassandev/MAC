@@ -1,4 +1,3 @@
-
 {
   "name": "macsys-root",
   "version": "1.0.0",
@@ -9,9 +8,10 @@
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "server": "node index.js",
     "server:dev": "nodemon index.js",
-    "client": "cd client && npm start",
+    "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
-    "push": "git add . && git commit -m 's' && git push"
+    "lint": "cd client && npm run lint",
+    "setup": "bash setup.sh"
   },
   "keywords": [
     "modbus",

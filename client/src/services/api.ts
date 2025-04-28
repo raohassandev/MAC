@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create base URL based on environment
-const baseURL = process.env.NODE_ENV === 'production' 
+const baseURL = import.meta.env.PROD 
   ? '/api' 
   : 'http://localhost:3333/api';
 
@@ -20,5 +20,19 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Add response interceptor for error handling
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Global error handling
+    if (error.response?.status === 401) {
+      // Handle unauthorized (e.g., redirect to login)
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;
