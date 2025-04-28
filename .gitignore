@@ -1,63 +1,77 @@
-# Engine
+# MacSys Project .gitignore
 
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# Dependency Directories
+# Ignore all node_modules folders to prevent committing dependencies
+node_modules/
+bower_components/
+jspm_packages/
 
-# Compiled output
-macysys-engine/dist/
-macysys-engine/build/
-macysys-engine/out/
-macysys-engine/bundle/
-
-# Dependencies
-macysys-engine/node_modules/
-macysys-engine//bower_components
-macysys-engine/jspm_packages/
-macysys-engine/yarn-berry/
-
-# Logs
-logs*
-*.log
-macysys-engine/npm-debug.log*
-macysys-engine/yarn-debug.log*
-macysys-engine/yarn-error.log*
-macysys-engine/lerna-debug.log*
-macysys-engine/.pnpm-debug.log*
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
-macysys-engine/report.*.json
-
-
-macysys-engine/.vscode/ # VSCode settings, but you might want to commit some
-macysys-engine//build
-
-
-# Web
-
-
-# Compiled output
-macysys-web/dist/
-macysys-web/build/
-macysys-web/out/
-macysys-web/bundle/
-
-# Dependencies
-macysys-web/node_modules/
-macysys-web//bower_components
-macysys-web/jspm_packages/
-macysys-web/yarn-berry/
+# Compiled Output
+# Ignore build and distribution directories
+dist/
+build/
+out/
+bundle/
 
 # Logs
-logs*
+# Ignore log files that might contain sensitive information
+logs/
 *.log
-macysys-web/npm-debug.log*
-macysys-web/yarn-debug.log*
-macysys-web/yarn-error.log*
-macysys-web/lerna-debug.log*
-macysys-web/.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
-macysys-web/report.*.json
+# Environment Variables
+# IMPORTANT: Never commit .env files with real credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
+# Operating System Files
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
 
-macysys-web/.vscode/ # VSCode settings, but you might want to commit some
-macysys-web//build
+# IDE and Editor Directories
+# Ignore IDE-specific configuration folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary Files
+# Ignore temporary and backup files
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Dependency Caches
+.npm
+.yarn-integrity
+.cache/
+
+# Testing
+# Ignore coverage reports and temporary test files
+coverage/
+.nyc_output/
+
+# Runtime Data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Security
+# Be careful with keys and certificates
+*.pem
+*.key
+*.cert
+
+# Optional: Specific to your project
+# Add any project-specific ignore patterns below
+macsys_web/dist/
+macsys_engine/dist/

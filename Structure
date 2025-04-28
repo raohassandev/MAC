@@ -1,0 +1,85 @@
+src/
+├── assets/                    # Static assets like images, icons
+├── components/                # Reusable UI components
+│   ├── common/                # General purpose components
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx  
+│   │   ├── Modal.tsx
+│   │   ├── Table.tsx
+│   │   └── ...
+│   ├── devices/               # Device-specific components
+│   │   ├── DeviceCard.tsx
+│   │   ├── DeviceForm.tsx     # Enhanced version of existing component
+│   │   ├── DeviceList.tsx     # Enhanced version of existing component
+│   │   ├── DeviceDetails.tsx  # New component for device details
+│   │   ├── RegisterTable.tsx  # Component for showing register data
+│   │   └── ...
+│   ├── dashboard/             # Dashboard components
+│   │   ├── StatusSummary.tsx
+│   │   ├── RecentAlerts.tsx
+│   │   ├── QuickAccess.tsx
+│   │   └── ...
+│   ├── profiles/              # Components for cooling profiles
+│   │   ├── ProfileList.tsx
+│   │   ├── ProfileForm.tsx
+│   │   ├── ProfileCard.tsx
+│   │   └── ...
+│   ├── schedules/             # Components for scheduling
+│   │   ├── ScheduleCalendar.tsx
+│   │   ├── ScheduleForm.tsx
+│   │   ├── TimeSlotEditor.tsx
+│   │   └── ...
+│   ├── deployment/            # Deployment engineer components
+│   │   ├── SystemConfig.tsx
+│   │   ├── NetworkSettings.tsx
+│   │   ├── DiagnosticTools.tsx
+│   │   └── ...
+│   └── admin/                 # Admin panel components
+│       ├── UserManagement.tsx
+│       ├── LicensingView.tsx
+│       ├── SubscriptionManager.tsx
+│       └── ...
+├── contexts/                  # React context providers
+│   ├── AuthContext.tsx        # Authentication context
+│   ├── DeviceContext.tsx      # Global device state
+│   ├── ThemeContext.tsx       # UI theme configuration
+│   └── ...
+├── hooks/                     # Custom React hooks
+│   ├── useDeviceData.ts       # Hook for fetching device data
+│   ├── useModbus.ts           # Hook for Modbus communications
+│   ├── useProfiles.ts         # Hook for cooling profiles
+│   └── ...
+├── layouts/                   # Page layout components
+│   ├── MainLayout.tsx         # Main application layout with navigation
+│   ├── DashboardLayout.tsx    # Dashboard-specific layout
+│   ├── AdminLayout.tsx        # Admin panel layout
+│   └── ...
+├── pages/                     # Application pages
+│   ├── Dashboard.tsx          # Main dashboard page
+│   ├── DeviceManagement.tsx   # Devices list page
+│   ├── DeviceDetails.tsx      # Single device details page
+│   ├── Profiles.tsx           # Cooling profiles management
+│   ├── Schedules.tsx          # Schedule management
+│   ├── Templates.tsx          # Templates management
+│   ├── Deployment.tsx         # Deployment engineer section
+│   ├── Administration.tsx     # Admin panel
+│   └── ...
+├── services/                  # API and service functions
+│   ├── api.ts                 # Enhanced API service
+│   ├── auth.ts                # Authentication service
+│   ├── devices.ts             # Device-related API calls
+│   ├── profiles.ts            # Profile-related API calls
+│   └── ...
+├── types/                     # TypeScript type definitions
+│   ├── device.types.ts        # Device-related types
+│   ├── profile.types.ts       # Profile-related types
+│   ├── user.types.ts          # User and authentication types
+│   └── ...
+├── utils/                     # Utility functions
+│   ├── dateUtils.ts           # Date formatting and manipulation
+│   ├── formatters.ts          # Data formatting helpers
+│   ├── validators.ts          # Form validation helpers
+│   └── ...
+├── App.tsx                    # Main App component with routing
+├── index.tsx                  # Application entry point
+└── router.tsx                 # Application routing configuration
