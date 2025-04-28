@@ -1,12 +1,16 @@
+
 {
-  "name": "macsys",
+  "name": "macsys-root",
   "version": "1.0.0",
-  "description": "Modbus Device Management System",
+  "description": "Modbus Device Management System - Root Package",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "install-all": "npm install && cd client && npm install",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node index.js",
+    "server:dev": "nodemon index.js",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
     "push": "git add . && git commit -m 's' && git push"
   },
   "keywords": [
@@ -25,6 +29,7 @@
     "mongoose": "^7.3.4"
   },
   "devDependencies": {
+    "concurrently": "^8.0.1",
     "nodemon": "^3.0.1"
   }
 }

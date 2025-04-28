@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -19,13 +20,8 @@ mongoose
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Basic route
-app.get('/', (req, res) => {
-  res.json({ message: 'MacSys Backend is running' });
-});
-
-// Device Routes (placeholder)
-app.get('/getDevices', (req, res) => {
+// API routes
+app.get('/api/getDevices', (req, res) => {
   // Temporary mock data
   const devices = [
     {
@@ -64,6 +60,16 @@ app.get('/getDevices', (req, res) => {
 
   res.json(devices);
 });
+
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static('client/build'));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  });
+}
 
 // Start server
 app.listen(PORT, () => {
