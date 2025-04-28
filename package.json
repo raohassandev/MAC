@@ -11,7 +11,8 @@
     "client": "cd client && npm run dev",
     "build": "cd client && npm run build",
     "lint": "cd client && npm run lint",
-    "setup": "bash setup.sh"
+    "setup": "bash setup.sh",
+    "push": "git add . && git commit -m 'Your commit message here' && git push origin $(git branch --show-current)"
   },
   "keywords": [
     "modbus",
