@@ -1,82 +1,80 @@
 # MacSys - Modbus Device Management System
 
-A modern web application for managing Modbus-enabled devices, built with React, Vite, TypeScript, and Node.js.
+MacSys is a comprehensive web application for managing and monitoring Modbus devices. It provides a modern, responsive interface for device configuration, monitoring, and control.
 
 ## Project Structure
 
-The project is organized into two main parts:
+The project is organized as a monorepo with two main components:
+- **Backend**: Express.js server with MongoDB for data storage
+- **Client**: React application using TypeScript, Vite, and Tailwind CSS
 
-- **Backend**: Node.js/Express server with Modbus communication capabilities
-- **Client**: React application with TypeScript and Vite
+## Features
 
-## Installation
+- Device discovery and management
+- Real-time monitoring of device parameters
+- Cooling profiles and scheduling
+- User management with role-based access control
+- Dashboard with visualizations
+- Modbus communications
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 16.x or higher
-- npm or yarn package manager
+- Node.js (v16 or later)
+- MongoDB (local or remote)
+- Yarn or npm
 
-### Setting up the Project
+### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd macsys
-   ```
-
-2. Install dependencies for both client and server:
-   ```bash
-   # Install server dependencies
-   npm install
-   
-   # Install client dependencies
-   cd client
-   npm install
-   cd ..
-   ```
-
-3. Create a `.env` file in the root directory with the following content:
-   ```
-   PORT=3333
-   MONGO_URI=mongodb://localhost:27017/macsys
-   ```
-
-## Running the Application
-
-### Development Mode
-
-To run both the client and server in development mode:
-
+1. Clone the repository
 ```bash
-npm start
+git clone https://github.com/yourusername/macsys.git
+cd macsys
 ```
 
-This will start:
-- The backend server on port 3333
-- The React development server on port 3000 with hot reloading
-
-### Running Only the Backend
-
+2. Install dependencies
 ```bash
-npm run server
+# Install root dependencies
+npm install
+
+# Install client dependencies
+cd client
+npm install
+cd ..
 ```
 
-### Running Only the Frontend
+3. Environment Setup
+   - Create a `.env` file in the root directory (see `.env.example`)
+   - Configure MongoDB connection URI
 
+4. Start development servers
 ```bash
-npm run client
+# Start both backend and frontend
+npm run start
+
+# Or start individually
+npm run server     # Backend only
+npm run client     # Frontend only
 ```
 
-## Building for Production
+5. The application will be available at:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:3333/api
 
-To create a production build of the client:
+## Deployment
+
+To build for production:
 
 ```bash
+# Build frontend
 cd client
 npm run build
-```
 
-The build output will be available in the `client/dist` directory.
+# Start production server
+cd ..
+npm run start
+```
 
 ## License
 

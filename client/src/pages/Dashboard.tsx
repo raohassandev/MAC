@@ -1,86 +1,8 @@
-import {
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  HardDrive,
-  ThermometerSnowflake,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle, HardDrive, Thermometer } from 'lucide-react';
 
-import DeviceStatusChart from '../components/dashboard/DeviceStatusChart';
-import { Link } from 'react-router-dom';
-import QuickAccessDevices from '../components/dashboard/QuickAccessDevices';
-import RecentAlerts from '../components/dashboard/RecentAlerts';
-// Components
-import StatusCard from '../components/dashboard/StatusCard';
-import TemperatureChart from '../components/dashboard/TemperatureChart';
-import { useDevices } from '../hooks/useDevices';
+import React from 'react';
 
-interface Alert {
-  id: string;
-  deviceId: string;
-  deviceName: string;
-  message: string;
-  severity: 'info' | 'warning' | 'error';
-  timestamp: Date;
-  isRead: boolean;
-}
-
-const Dashboard = () => {
-  const { devices, loading, error } = useDevices();
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-
-  useEffect(() => {
-    // Normally this would be from an API, but for demo we'll create some sample alerts
-    setAlerts([
-      {
-        id: '1',
-        deviceId: '123',
-        deviceName: 'Main Cooling Unit',
-        message: 'Temperature exceeded threshold (28°C)',
-        severity: 'error',
-        timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-        isRead: false,
-      },
-      {
-        id: '2',
-        deviceId: '456',
-        deviceName: 'Server Room Cooler',
-        message: 'Connection lost',
-        severity: 'warning',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        isRead: false,
-      },
-      {
-        id: '3',
-        deviceId: '789',
-        deviceName: 'Office AC',
-        message: 'Maintenance required',
-        severity: 'info',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-        isRead: true,
-      },
-    ]);
-  }, []);
-
-  if (loading) {
-    return <div className='animate-pulse p-4'>Loading dashboard data...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className='bg-red-50 text-red-600 p-4 rounded-lg'>
-        Error loading dashboard: {error.message}
-      </div>
-    );
-  }
-
-  // Calculate statistics
-  const totalDevices = devices?.length || 0;
-  const onlineDevices = devices?.filter((d) => d.enabled).length || 0;
-  const offlineDevices = totalDevices - onlineDevices;
-  const unreadAlerts = alerts.filter((a) => !a.isRead).length;
-
+const Dashboard: React.FC = () => {
   return (
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
@@ -94,80 +16,79 @@ const Dashboard = () => {
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <StatusCard
           title='Total Devices'
-          value={totalDevices.toString()}
+          value='0'
           icon={<HardDrive className='text-blue-500' />}
-          bgColor='bg-blue-50'
         />
         <StatusCard
           title='Online Devices'
-          value={onlineDevices.toString()}
+          value='0'
           icon={<CheckCircle className='text-green-500' />}
-          bgColor='bg-green-50'
         />
         <StatusCard
           title='Offline Devices'
-          value={offlineDevices.toString()}
-          icon={<Clock className='text-orange-500' />}
-          bgColor='bg-orange-50'
+          value='0'
+          icon={<AlertCircle className='text-orange-500' />}
         />
         <StatusCard
-          title='Active Alerts'
-          value={unreadAlerts.toString()}
-          icon={<AlertCircle className='text-red-500' />}
-          bgColor='bg-red-50'
+          title='Temperature'
+          value='--°C'
+          icon={<Thermometer className='text-red-500' />}
         />
       </div>
 
-      {/* Charts and Quick Access */}
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Device Status Chart */}
-        <div className='bg-white rounded-lg shadow-sm p-4 lg:col-span-2'>
-          <h2 className='text-lg font-semibold mb-4 flex items-center'>
-            <ThermometerSnowflake className='mr-2 text-blue-500' size={20} />
-            Temperature Trends
-          </h2>
-          <TemperatureChart />
-        </div>
+      {/* Main Content Area */}
+      <div className='bg-white rounded-lg shadow-sm p-6'>
+        <h2 className='text-lg font-semibold mb-4'>Welcome to MacSys</h2>
+        <p className='text-gray-600'>
+          This is your dashboard for managing Modbus devices. Use the navigation
+          menu on the left to explore the application features.
+        </p>
 
-        {/* Quick Access */}
-        <div className='bg-white rounded-lg shadow-sm p-4'>
-          <h2 className='text-lg font-semibold mb-4'>Quick Access</h2>
-          <QuickAccessDevices devices={devices?.slice(0, 5) || []} />
-          <div className='mt-4 text-center'>
-            <Link
-              to='/devices'
-              className='text-blue-500 hover:text-blue-700 text-sm'
-            >
-              View all devices →
-            </Link>
+        <div className='mt-6 grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer'>
+            <h3 className='font-medium text-indigo-600 flex items-center'>
+              <HardDrive size={18} className='mr-2' />
+              Device Management
+            </h3>
+            <p className='mt-2 text-sm text-gray-600'>
+              Add, configure, and monitor your Modbus devices
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* Second Row */}
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Device Status Distribution */}
-        <div className='bg-white rounded-lg shadow-sm p-4'>
-          <h2 className='text-lg font-semibold mb-4'>Device Status</h2>
-          <DeviceStatusChart online={onlineDevices} offline={offlineDevices} />
-        </div>
-
-        {/* Recent Alerts */}
-        <div className='bg-white rounded-lg shadow-sm p-4 lg:col-span-2'>
-          <h2 className='text-lg font-semibold mb-4'>Recent Alerts</h2>
-          <RecentAlerts alerts={alerts} />
-          <div className='mt-4 text-center'>
-            <Link
-              to='/alerts'
-              className='text-blue-500 hover:text-blue-700 text-sm'
-            >
-              View all alerts →
-            </Link>
+          <div className='border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer'>
+            <h3 className='font-medium text-indigo-600 flex items-center'>
+              <Thermometer size={18} className='mr-2' />
+              Cooling Profiles
+            </h3>
+            <p className='mt-2 text-sm text-gray-600'>
+              Create and manage temperature profiles for your devices
+            </p>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+// Status Card Component
+const StatusCard = ({
+  title,
+  value,
+  icon,
+}: {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+}) => (
+  <div className='bg-white rounded-lg shadow-sm p-5'>
+    <div className='flex justify-between items-start'>
+      <div>
+        <h3 className='text-sm font-medium text-gray-500'>{title}</h3>
+        <p className='text-2xl font-semibold mt-1'>{value}</p>
+      </div>
+      <div className='text-2xl'>{icon}</div>
+    </div>
+  </div>
+);
 
 export default Dashboard;

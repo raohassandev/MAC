@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 // Create base URL based on environment
-const baseURL = import.meta.env.PROD 
-  ? '/api' 
-  : 'http://localhost:3333/api';
+const baseURL =
+  process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3333/api';
 
 const API = axios.create({
   baseURL,
@@ -25,10 +24,11 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Global error handling
-    if (error.response?.status === 401) {
-      // Handle unauthorized (e.g., redirect to login)
+    // Handle specific error cases
+    if (error.response && error.response.status === 401) {
+      // Unauthorized - clear auth data and redirect to login
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

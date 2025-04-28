@@ -1,24 +1,15 @@
 import {
-  Bell,
-  Calendar,
-  FileCode,
   HardDrive,
   LayoutGrid,
   Menu,
-  Settings,
-  ShieldCheck,
   Thermometer,
-  Tool,
   User,
   X,
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
+import React, { useState } from 'react';
 
-import { useAuth } from '../hooks/useAuth';
-import { useState } from 'react';
-
-const MainLayout = () => {
-  const { user } = useAuth();
+const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -53,48 +44,6 @@ const MainLayout = () => {
             icon={<Thermometer size={18} />}
             label='Cooling Profiles'
           />
-          <NavItem
-            to='/schedules'
-            icon={<Calendar size={18} />}
-            label='Schedules'
-          />
-          <NavItem
-            to='/templates'
-            icon={<FileCode size={18} />}
-            label='Templates'
-          />
-          <NavItem
-            to='/settings'
-            icon={<Settings size={18} />}
-            label='Settings'
-          />
-
-          {/* Conditional sections based on user role */}
-          {user?.role === 'engineer' && (
-            <div className='mt-4'>
-              <div className='px-4 py-2 text-xs uppercase text-indigo-300'>
-                Deployment
-              </div>
-              <NavItem
-                to='/deployment'
-                icon={<Tool size={18} />}
-                label='System Config'
-              />
-            </div>
-          )}
-
-          {user?.role === 'admin' && (
-            <div className='mt-4'>
-              <div className='px-4 py-2 text-xs uppercase text-indigo-300'>
-                Administration
-              </div>
-              <NavItem
-                to='/admin/users'
-                icon={<ShieldCheck size={18} />}
-                label='Management'
-              />
-            </div>
-          )}
         </nav>
       </aside>
 
@@ -114,16 +63,11 @@ const MainLayout = () => {
           </button>
 
           <div className='flex items-center space-x-4'>
-            <button className='p-2 rounded-full hover:bg-gray-100 relative'>
-              <Bell size={20} />
-              <span className='absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full'></span>
-            </button>
-
             <div className='flex items-center'>
               <div className='w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white'>
                 <User size={16} />
               </div>
-              <span className='ml-2'>{user?.name || 'User'}</span>
+              <span className='ml-2'>Administrator</span>
             </div>
           </div>
         </header>
