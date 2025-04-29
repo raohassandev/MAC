@@ -145,7 +145,7 @@ const ProfileCard = ({
             <span className='text-sm font-medium'>Target Temperature</span>
           </div>
           <span className='text-sm font-bold'>
-            {profile.targetTemperature}°C
+            {profile?.targetTemperature || 'N/A'}°C
           </span>
         </div>
 

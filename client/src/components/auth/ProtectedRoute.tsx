@@ -1,7 +1,15 @@
 // client/src/components/auth/ProtectedRoute.tsx
-import React from 'react';
+
 import { Navigate, Outlet } from 'react-router-dom';
-import { authService } from '../../services/auth';
+// client/src/contexts/AuthContext.tsx
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { User, authService } from '../services/auth';
 
 interface ProtectedRouteProps {
   redirectPath?: string;
@@ -21,15 +29,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
 export default ProtectedRoute;
 
-// client/src/contexts/AuthContext.tsx
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
-import { authService, User } from '../services/auth';
 
 type UserRole = 'user' | 'engineer' | 'admin';
 

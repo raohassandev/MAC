@@ -38,52 +38,56 @@ const TemperatureChart = () => {
   return (
     <div className='h-64'>
       <ResponsiveContainer width='100%' height='100%'>
-        <LineChart
-          data={data}
-          margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
-          <XAxis
-            dataKey='time'
-            tick={{ fontSize: 12 }}
-            interval='preserveStartEnd'
-          />
-          <YAxis
-            label={{
-              value: '°C',
-              angle: -90,
-              position: 'insideLeft',
-              style: { textAnchor: 'middle' },
-            }}
-            domain={[16, 30]}
-          />
-          <Tooltip />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Line
-            type='monotone'
-            dataKey='Server Room'
-            stroke='#3b82f6'
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 5 }}
-          />
-          <Line
-            type='monotone'
-            dataKey='Office Area'
-            stroke='#10b981'
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 5 }}
-          />
-          <Line
-            type='monotone'
-            dataKey='Data Center'
-            stroke='#f59e0b'
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 5 }}
-          />
-        </LineChart>
+        {data && data.length > 0 ? (
+          <LineChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+            <XAxis
+              dataKey='time'
+              tick={{ fontSize: 12 }}
+              interval='preserveStartEnd'
+            />
+            <YAxis
+              label={{
+                value: '°C',
+                angle: -90,
+                position: 'insideLeft',
+                style: { textAnchor: 'middle' },
+              }}
+              domain={[16, 30]}
+            />
+            <Tooltip />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Line
+              type='monotone'
+              dataKey='Server Room'
+              stroke='#3b82f6'
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 5 }}
+            />
+            <Line
+              type='monotone'
+              dataKey='Office Area'
+              stroke='#10b981'
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 5 }}
+            />
+            <Line
+              type='monotone'
+              dataKey='Data Center'
+              stroke='#f59e0b'
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
+        ) : (
+          <p>No data available</p>
+        )}
       </ResponsiveContainer>
     </div>
   );
