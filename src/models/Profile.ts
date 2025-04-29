@@ -69,12 +69,10 @@ const ProfileSchema = new Schema<IProfile>({
 });
 
 // Update the updatedAt timestamp on save
-ProfileSchema.pre(
-  'save',
-  function (this: IProfile, next: mongoose.CallbackWithoutResult) {
-    this.updatedAt = new Date();
-    next(undefined);
-  }
-);
+ProfileSchema.pre('save', function (this: IProfile, next) {
+  this.updatedAt = new Date();
+  next(null); // Fixed: pass null instead of undefined
+});
 
-export default mongoose.model<IProfile>('Profile', ProfileSchema);
+const Profile = mongoose.model<IProfile>('Profile', ProfileSchema);
+export default Profile;

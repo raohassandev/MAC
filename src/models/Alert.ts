@@ -26,4 +26,5 @@ const AlertSchema = new Schema<IAlert>({
   isRead: { type: Boolean, default: false },
 });
 
-export default mongoose.model<IAlert>('Alert', AlertSchema);
+const Alert = mongoose.model<IAlert>('Alert', AlertSchema);
+export default Alert;

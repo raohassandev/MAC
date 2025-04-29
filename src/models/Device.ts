@@ -45,12 +45,10 @@ const DeviceSchema = new Schema<IDevice>({
 });
 
 // Update the updatedAt timestamp on save
-DeviceSchema.pre(
-  'save',
-  function (this: IDevice, next: mongoose.CallbackWithoutResult) {
-    this.updatedAt = new Date();
-    next(undefined); // Call next with undefined to indicate no error
-  }
-);
+DeviceSchema.pre('save', function (this: IDevice, next) {
+  this.updatedAt = new Date();
+  next(null); // Fixed: pass null instead of undefined
+});
 
-export default mongoose.model<IDevice>('Device', DeviceSchema);
+const Device = mongoose.model<IDevice>('Device', DeviceSchema);
+export default Device;

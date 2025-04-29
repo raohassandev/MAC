@@ -1,12 +1,18 @@
 import * as authController from '../controllers/authController';
 
+import { Router } from 'express';
 import express from 'express';
 import { protect } from '../middleware/authMiddleware';
 
-const router = express.Router();
+const router: Router = express.Router();
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.get('/me', protect, authController.getMe);
+// Use RequestHandler type for the middleware
+router.post('/register', authController.register as express.RequestHandler);
+router.post('/login', authController.login as express.RequestHandler);
+router.get(
+  '/me',
+  protect as express.RequestHandler,
+  authController.getMe as express.RequestHandler
+);
 
 export default router;

@@ -1,18 +1,19 @@
-// controllers/profileController.js
-const { Profile, Device } = require('../models');
-const ModbusRTU = require('modbus-serial');
+import { Device, Profile } from '../models';
+import { Request, Response } from 'express';
+
+import ModbusRTU from 'modbus-serial';
 
 // @desc    Get all profiles
 // @route   GET /api/profiles
 // @access  Private
-exports.getProfiles = async (req, res) => {
+export const getProfiles = async (req: Request, res: Response) => {
   try {
     const profiles = await Profile.find({}).populate(
       'assignedDevices',
       'name ip enabled'
     );
     res.json(profiles);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get profiles error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -21,7 +22,7 @@ exports.getProfiles = async (req, res) => {
 // @desc    Get a single profile
 // @route   GET /api/profiles/:id
 // @access  Private
-exports.getProfileById = async (req, res) => {
+export const getProfileById = async (req: Request, res: Response) => {
   try {
     const profile = await Profile.findById(req.params.id).populate(
       'assignedDevices',
@@ -33,7 +34,7 @@ exports.getProfileById = async (req, res) => {
     }
 
     res.json(profile);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -42,11 +43,11 @@ exports.getProfileById = async (req, res) => {
 // @desc    Create a new profile
 // @route   POST /api/profiles
 // @access  Private
-exports.createProfile = async (req, res) => {
+export const createProfile = async (req: Request, res: Response) => {
   try {
     const profile = await Profile.create(req.body);
     res.status(201).json(profile);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -55,7 +56,7 @@ exports.createProfile = async (req, res) => {
 // @desc    Update a profile
 // @route   PUT /api/profiles/:id
 // @access  Private
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req: Request, res: Response) => {
   try {
     const profile = await Profile.findById(req.params.id);
 
@@ -71,7 +72,7 @@ exports.updateProfile = async (req, res) => {
     );
 
     res.json(updatedProfile);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -80,7 +81,7 @@ exports.updateProfile = async (req, res) => {
 // @desc    Delete a profile
 // @route   DELETE /api/profiles/:id
 // @access  Private
-exports.deleteProfile = async (req, res) => {
+export const deleteProfile = async (req: Request, res: Response) => {
   try {
     const profile = await Profile.findById(req.params.id);
 
@@ -91,7 +92,7 @@ exports.deleteProfile = async (req, res) => {
     await profile.deleteOne();
 
     res.json({ message: 'Profile removed', id: req.params.id });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -100,7 +101,7 @@ exports.deleteProfile = async (req, res) => {
 // @desc    Duplicate a profile
 // @route   POST /api/profiles/:id/duplicate
 // @access  Private
-exports.duplicateProfile = async (req, res) => {
+export const duplicateProfile = async (req: Request, res: Response) => {
   try {
     const profile = await Profile.findById(req.params.id);
 
@@ -118,7 +119,7 @@ exports.duplicateProfile = async (req, res) => {
     const newProfile = await Profile.create(profileData);
 
     res.status(201).json(newProfile);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Duplicate profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -127,7 +128,7 @@ exports.duplicateProfile = async (req, res) => {
 // @desc    Apply profile to assigned devices
 // @route   POST /api/profiles/:id/apply
 // @access  Private
-exports.applyProfile = async (req, res) => {
+export const applyProfile = async (req: Request, res: Response) => {
   try {
     const profile = await Profile.findById(req.params.id).populate(
       'assignedDevices'
@@ -177,13 +178,13 @@ exports.applyProfile = async (req, res) => {
         await client.writeRegisters(101, [profile.fanSpeed]);
 
         // Setting mode (assuming register address 102)
-        const modeValue =
-          {
-            cooling: 1,
-            heating: 2,
-            auto: 3,
-            dehumidify: 4,
-          }[profile.mode] || 1;
+        const modeMapping: { [key: string]: number } = {
+          cooling: 1,
+          heating: 2,
+          auto: 3,
+          dehumidify: 4,
+        };
+        const modeValue = modeMapping[profile.mode] || 1;
 
         await client.writeRegisters(102, [modeValue]);
 
@@ -197,7 +198,7 @@ exports.applyProfile = async (req, res) => {
           success: true,
           message: 'Profile applied successfully',
         });
-      } catch (modbusError) {
+      } catch (modbusError: any) {
         console.error(
           `Modbus error applying profile to device ${device.name}:`,
           modbusError
@@ -220,7 +221,7 @@ exports.applyProfile = async (req, res) => {
       timestamp: new Date(),
       results,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Apply profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -229,11 +230,11 @@ exports.applyProfile = async (req, res) => {
 // @desc    Get all template profiles
 // @route   GET /api/profiles/templates
 // @access  Private
-exports.getTemplateProfiles = async (req, res) => {
+export const getTemplateProfiles = async (req: Request, res: Response) => {
   try {
     const templates = await Profile.find({ isTemplate: true });
     res.json(templates);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get template profiles error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -242,7 +243,7 @@ exports.getTemplateProfiles = async (req, res) => {
 // @desc    Create a profile from template
 // @route   POST /api/profiles/from-template/:templateId
 // @access  Private
-exports.createFromTemplate = async (req, res) => {
+export const createFromTemplate = async (req: Request, res: Response) => {
   try {
     const template = await Profile.findById(req.params.templateId);
 
@@ -283,7 +284,7 @@ exports.createFromTemplate = async (req, res) => {
     const newProfile = await Profile.create(profileData);
 
     res.status(201).json(newProfile);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create from template error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }

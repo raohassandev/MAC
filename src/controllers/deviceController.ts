@@ -1,15 +1,16 @@
-// controllers/deviceController.js
-const { Device } = require('../models');
-const ModbusRTU = require('modbus-serial');
+import { Request, Response } from 'express';
+
+import { Device } from '../models';
+import ModbusRTU from 'modbus-serial';
 
 // @desc    Get all devices
 // @route   GET /api/devices
 // @access  Private
-exports.getDevices = async (req, res) => {
+export const getDevices = async (req: Request, res: Response) => {
   try {
     const devices = await Device.find();
     res.json(devices);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get devices error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -18,7 +19,7 @@ exports.getDevices = async (req, res) => {
 // @desc    Get a single device
 // @route   GET /api/devices/:id
 // @access  Private
-exports.getDeviceById = async (req, res) => {
+export const getDeviceById = async (req: Request, res: Response) => {
   try {
     const device = await Device.findById(req.params.id);
 
@@ -27,7 +28,7 @@ exports.getDeviceById = async (req, res) => {
     }
 
     res.json(device);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get device error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -36,11 +37,11 @@ exports.getDeviceById = async (req, res) => {
 // @desc    Create a new device
 // @route   POST /api/devices
 // @access  Private (Admin/Engineer)
-exports.createDevice = async (req, res) => {
+export const createDevice = async (req: Request, res: Response) => {
   try {
     const device = await Device.create(req.body);
     res.status(201).json(device);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create device error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -49,7 +50,7 @@ exports.createDevice = async (req, res) => {
 // @desc    Update a device
 // @route   PUT /api/devices/:id
 // @access  Private (Admin/Engineer)
-exports.updateDevice = async (req, res) => {
+export const updateDevice = async (req: Request, res: Response) => {
   try {
     const device = await Device.findById(req.params.id);
 
@@ -65,7 +66,7 @@ exports.updateDevice = async (req, res) => {
     );
 
     res.json(updatedDevice);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update device error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -74,7 +75,7 @@ exports.updateDevice = async (req, res) => {
 // @desc    Delete a device
 // @route   DELETE /api/devices/:id
 // @access  Private (Admin/Engineer)
-exports.deleteDevice = async (req, res) => {
+export const deleteDevice = async (req: Request, res: Response) => {
   try {
     const device = await Device.findById(req.params.id);
 
@@ -85,7 +86,7 @@ exports.deleteDevice = async (req, res) => {
     await device.deleteOne();
 
     res.json({ message: 'Device removed', id: req.params.id });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete device error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -94,7 +95,7 @@ exports.deleteDevice = async (req, res) => {
 // @desc    Test connection to a device
 // @route   POST /api/devices/:id/test
 // @access  Private
-exports.testDeviceConnection = async (req, res) => {
+export const testDeviceConnection = async (req: Request, res: Response) => {
   try {
     const device = await Device.findById(req.params.id);
 
@@ -129,7 +130,7 @@ exports.testDeviceConnection = async (req, res) => {
         success: true,
         message: 'Successfully connected to device',
       });
-    } catch (modbusError) {
+    } catch (modbusError: any) {
       console.error('Modbus connection error:', modbusError);
       res.status(400).json({
         success: false,
@@ -139,7 +140,7 @@ exports.testDeviceConnection = async (req, res) => {
       // Close the connection
       client.close();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Test connection error:', error);
     res.status(500).json({
       success: false,
@@ -152,7 +153,7 @@ exports.testDeviceConnection = async (req, res) => {
 // @desc    Read registers from a device
 // @route   GET /api/devices/:id/read
 // @access  Private
-exports.readDeviceRegisters = async (req, res) => {
+export const readDeviceRegisters = async (req: Request, res: Response) => {
   try {
     const device = await Device.findById(req.params.id);
 
@@ -206,7 +207,7 @@ exports.readDeviceRegisters = async (req, res) => {
             value: value,
             unit: register.unit || '',
           });
-        } catch (registerError) {
+        } catch (registerError: any) {
           readings.push({
             name: register.name,
             address: register.address,
@@ -227,7 +228,7 @@ exports.readDeviceRegisters = async (req, res) => {
         timestamp: new Date(),
         readings,
       });
-    } catch (modbusError) {
+    } catch (modbusError: any) {
       console.error('Modbus reading error:', modbusError);
       res.status(400).json({
         message: `Failed to read from device: ${modbusError.message}`,
@@ -236,7 +237,7 @@ exports.readDeviceRegisters = async (req, res) => {
       // Close the connection
       client.close();
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Read registers error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }

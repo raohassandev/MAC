@@ -1,33 +1,42 @@
-// routes/deviceRoutes.js
+import * as deviceController from '../controllers/deviceController';
 
-const {
-  getDevices,
-  getDeviceById,
-  createDevice,
-  updateDevice,
-  deleteDevice,
-  testDeviceConnection,
-  readDeviceRegisters,
-} = require('../controllers/deviceController');
-const { protect, checkPermission } = require('../middleware/authMiddleware');
+import { checkPermission, protect } from '../middleware/authMiddleware';
 
-const router = express.Router();
+import { Router } from 'express';
+import express from 'express';
+
+const router: Router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(protect);
+router.use(protect as express.RequestHandler);
 
 router
   .route('/')
-  .get(getDevices)
-  .post(checkPermission(['manage_devices']), createDevice);
+  .get(deviceController.getDevices as express.RequestHandler)
+  .post(
+    checkPermission(['manage_devices']) as express.RequestHandler,
+    deviceController.createDevice as express.RequestHandler
+  );
 
 router
   .route('/:id')
-  .get(getDeviceById)
-  .put(checkPermission(['manage_devices']), updateDevice)
-  .delete(checkPermission(['manage_devices']), deleteDevice);
+  .get(deviceController.getDeviceById as express.RequestHandler)
+  .put(
+    checkPermission(['manage_devices']) as express.RequestHandler,
+    deviceController.updateDevice as express.RequestHandler
+  )
+  .delete(
+    checkPermission(['manage_devices']) as express.RequestHandler,
+    deviceController.deleteDevice as express.RequestHandler
+  );
 
-router.post('/:id/test', testDeviceConnection);
-router.get('/:id/read', readDeviceRegisters);
+router.post(
+  '/:id/test',
+  deviceController.testDeviceConnection as express.RequestHandler
+);
+router.get(
+  '/:id/read',
+  deviceController.readDeviceRegisters as express.RequestHandler
+);
 
-module.exports = router;
+export default router;

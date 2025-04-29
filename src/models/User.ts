@@ -26,23 +26,20 @@ const UserSchema = new Schema({
 });
 
 // Hash password before saving
-UserSchema.pre(
-  'save',
-  async function (this: IUser, next: mongoose.CallbackWithoutResult) {
-    this.updatedAt = new Date();
+UserSchema.pre('save', async function (this: IUser, next) {
+  this.updatedAt = new Date();
 
-    // Only hash the password if it's modified or new
-    if (!this.isModified('password')) return next();
+  // Only hash the password if it's modified or new
+  if (!this.isModified('password')) return next(null); // Fixed: pass null instead of nothing
 
-    try {
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(this.password, salt);
-      next();
-    } catch (err) {
-      next(err as mongoose.CallbackError);
-    }
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next(null); // Fixed: pass null instead of nothing
+  } catch (err) {
+    next(err as Error);
   }
-);
+});
 
 // Compare password method
 UserSchema.methods.comparePassword = async function (
@@ -52,4 +49,5 @@ UserSchema.methods.comparePassword = async function (
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-export default mongoose.model<IUser>('User', UserSchema);
+const User = mongoose.model<IUser>('User', UserSchema);
+export default User;
