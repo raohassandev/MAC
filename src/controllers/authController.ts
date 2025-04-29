@@ -4,14 +4,16 @@ import { User } from '../models';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// Type-safe token generation
+// Generate JWT
 const generateToken = (id: string): string => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'your_jwt_secret_here', {
     expiresIn: '30d',
   });
 };
 
-// Register user
+// @desc    Register new user
+// @route   POST /api/auth/register
+// @access  Public
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
@@ -50,7 +52,9 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// Login user
+// @desc    Authenticate a user
+// @route   POST /api/auth/login
+// @access  Public
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -83,10 +87,12 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// Get current user
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
 export const getMe = async (req: Request, res: Response) => {
   try {
-    // User is attached to request in auth middleware
+    // User should be attached to req by auth middleware
     const user = {
       _id: req.user.id,
       name: req.user.name,

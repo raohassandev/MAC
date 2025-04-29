@@ -1,4 +1,3 @@
-// Create this file to fix the missing module error
 export interface ScheduleTime {
   days: ('mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun')[];
   startTime: string;

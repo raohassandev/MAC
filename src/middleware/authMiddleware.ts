@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { User } from '../models';
 import jwt from 'jsonwebtoken';
 
-// Add user to Request type
+// Add custom property to Express Request
 declare global {
   namespace Express {
     interface Request {
@@ -13,7 +13,11 @@ declare global {
 }
 
 // Protect routes
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
+export const protect = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   let token;
 
   // Check if token exists in header
@@ -26,7 +30,10 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       token = req.headers.authorization.split(' ')[1];
 
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as jwt.JwtPayload;
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || ''
+      ) as jwt.JwtPayload;
 
       // Get user from token
       req.user = await User.findById(decoded.id).select('-password');

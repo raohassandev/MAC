@@ -2,16 +2,23 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
+    "lib": ["dom", "es6", "es2017", "esnext.asynciterable"],
+    "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
+    "types": ["node"],
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
-    "declaration": true
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "strictPropertyInitialization": false,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.test.ts", "client"]
+  "exclude": ["node_modules", "client", "**/*.test.ts"]
 }

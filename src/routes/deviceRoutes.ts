@@ -1,5 +1,5 @@
 // routes/deviceRoutes.js
-const express = require('express');
+
 const {
   getDevices,
   getDeviceById,
