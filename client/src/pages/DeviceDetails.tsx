@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Device } from '../types/device.types';
-import RegisterTable from '../components/devices/RegisterTable';
-import api from '../services/api';
+// import RegisterTable from '../components/devices/RegisterTable';
+import { getDeviceById } from '../services/api';
+import { readDeviceRegisters } from '../services/api';
 
 const DeviceDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +23,7 @@ const DeviceDetails: React.FC = () => {
 
       try {
         setLoading(true);
-        const deviceData = await api.getDeviceById(id);
+        const deviceData = await getDeviceById(id);
         setDevice(deviceData);
         // Initial read of registers if the device is enabled
         if (deviceData.enabled) {
@@ -44,7 +45,7 @@ const DeviceDetails: React.FC = () => {
 
     try {
       setRefreshing(true);
-      const data = await api.readDeviceRegisters(id);
+      const data = await readDeviceRegisters(id);
       setReadings(data.readings || []);
       setError(null);
     } catch (err: any) {
@@ -59,15 +60,15 @@ const DeviceDetails: React.FC = () => {
     if (!id) return;
 
     try {
-      setRefreshing(true);
-      const result = await api.testDeviceConnection(id);
-      if (result.success) {
-        setError(null);
-        // Read registers after successful connection test
-        await readRegisters();
-      } else {
-        setError(result.message || 'Connection test failed');
-      }
+      // setRefreshing(true);
+      // const result = await testDeviceConnection(id );
+      // if (result.success) {
+      //   setError(null);
+      //   // Read registers after successful connection test
+      //   await readRegisters();
+      // } else {
+      //   setError(result.message || 'Connection test failed');
+      // }
     } catch (err: any) {
       setError(err.message || 'Connection test failed');
       console.error('Error testing connection:', err);
@@ -189,7 +190,7 @@ const DeviceDetails: React.FC = () => {
           {readings.length > 0 && (
             <>
               <h3>Current Readings</h3>
-              <RegisterTable readings={readings} />
+              {/* FIXME: <RegisterTable readings={readings} /> */}
             </>
           )}
         </>

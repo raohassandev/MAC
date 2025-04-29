@@ -5,7 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import path from 'path';
-import routes from './routes';
+import routes from './src/routes/index';
 
 // Load environment variables
 dotenv.config();
@@ -53,6 +53,9 @@ const initAdminUser = async () => {
 
 // API routes
 app.use('/api', routes);
+app.get('/' , (req,res) => {
+  res.send("Backend is working");
+})
 
 // Mock data for backward compatibility
 app.get('/api/getDevices', (req: Request, res: Response) => {

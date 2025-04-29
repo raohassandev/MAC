@@ -1,11 +1,11 @@
-import './ProfileManagement.css';
+import '../ProfileManagement.css';
 
 import React, { useEffect, useState } from 'react';
+import  { applyProfile, createProfile, deleteProfile, getProfiles, updateProfile } from '../services/api';
 
 import { Profile } from '../types/profile.types';
 import ProfileCard from '../components/profiles/ProfileCard';
 import ProfileForm from '../components/profiles/ProfileForm';
-import api from '../services/api';
 
 const ProfileManagement: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -22,7 +22,7 @@ const ProfileManagement: React.FC = () => {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      const data = await api.getProfiles();
+      const data = await getProfiles();
       setProfiles(data || []);
       setError(null);
     } catch (err: any) {
@@ -52,7 +52,7 @@ const ProfileManagement: React.FC = () => {
     }
 
     try {
-      await api.deleteProfile(id);
+      await deleteProfile(id);
       setProfiles(profiles.filter((profile) => profile._id !== id));
     } catch (err: any) {
       setError(err.message || 'Failed to delete profile');
@@ -62,7 +62,7 @@ const ProfileManagement: React.FC = () => {
 
   const handleApplyProfile = async (id: string) => {
     try {
-      await api.applyProfile(id);
+      await applyProfile(id);
       alert('Profile applied successfully!');
     } catch (err: any) {
       setError(err.message || 'Failed to apply profile');
@@ -74,7 +74,7 @@ const ProfileManagement: React.FC = () => {
     try {
       if (editingProfile?._id) {
         // Update existing profile
-        const updatedProfile = await api.updateProfile(
+        const updatedProfile = await updateProfile(
           editingProfile._id,
           profileData
         );
@@ -85,7 +85,7 @@ const ProfileManagement: React.FC = () => {
         );
       } else {
         // Create new profile
-        const newProfile = await api.createProfile(profileData);
+        const newProfile = await createProfile(profileData);
         setProfiles([...profiles, newProfile]);
       }
 

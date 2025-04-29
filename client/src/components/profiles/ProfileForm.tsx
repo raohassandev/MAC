@@ -18,7 +18,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       name: '',
       description: '',
       targetTemperature: 22,
-      temperatureRange: [18, 28],
+      temperatureRange: [18, 28] as [number, number],
       fanSpeed: 50,
       mode: 'cooling',
     }
@@ -47,7 +47,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
   const handleRangeChange = (index: number, value: number) => {
     setProfile((prev) => {
-      const newRange = [...(prev.temperatureRange || [18, 28])];
+      const newRange = [...(prev.temperatureRange || [18, 28])] as [number, number];
       newRange[index] = value;
       return { ...prev, temperatureRange: newRange };
     });

@@ -1,6 +1,7 @@
 import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { clearAuthToken, getMe, setAuthToken } from '../services/api';
 
-import api from '../services/api';
+import { authService } from '@/services';
 
 interface User {
   _id: string;
@@ -43,14 +44,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          api.setAuthToken(token);
-          const userData = await api.getMe();
+          setAuthToken(token);
+          const userData = await getMe();
           setUser(userData);
         } catch (err) {
           console.error('Authentication check failed:', err);
           // Clear invalid token
           localStorage.removeItem('token');
-          api.clearAuthToken();
+          clearAuthToken();
         }
       }
       setLoading(false);
@@ -64,9 +65,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true);
     setError(null);
     try {
-      const data = await api.login(email, password);
-      localStorage.setItem('token', data.token);
-      api.setAuthToken(data.token);
+      const data = await authService.login ({email, password});
+      localStorage.setItem('token', data.token as string);
+      setAuthToken(data.token  as string);
       setUser(data);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -79,7 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
-    api.clearAuthToken();
+   clearAuthToken();
     setUser(null);
   };
 

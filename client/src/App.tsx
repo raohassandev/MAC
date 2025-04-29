@@ -14,6 +14,7 @@ import DeviceManagement from './pages/DeviceManagement';
 import Login from './pages/Login';
 import ProfileManagement from './pages/ProfileManagement';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import Register from './pages/Register';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Router>
         <Routes>
           <Route path='/login' element={<Login />} />
+          <Route path='/register' element={<Register />} />
           <Route path='/' element={<ProtectedRoute />}>
             <Route index element={<Dashboard />} />
             <Route path='devices' element={<DeviceManagement />} />

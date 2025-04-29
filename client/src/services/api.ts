@@ -1,23 +1,23 @@
-import axios from 'axios';
+// import axios from 'axios';
 
-// Create the axios instance
-const api = axios.create({
-  baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// // Create the axios instance
+// const api = axios.create({
+//   baseURL: '/api',
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+// });
 
-// Auth token functions
-export const setAuthToken = (token: string) => {
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-};
+// // Auth token functions
+// export const setAuthToken = (token: string) => {
+//   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+// };
 
-export const clearAuthToken = () => {
-  delete api.defaults.headers.common['Authorization'];
-};
+// export const clearAuthToken = () => {
+//   delete api.defaults.headers.common['Authorization'];
+// };
 
-// Auth API calls
+// // Auth API calls
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post('/auth/login', { email, password });
@@ -36,7 +36,7 @@ export const getMe = async () => {
   }
 };
 
-// Device API calls
+// // Device API calls
 export const getDevices = async () => {
   try {
     const response = await api.get('/devices');
@@ -155,5 +155,36 @@ export const applyProfile = async (id: string) => {
   }
 };
 
-// Export the api instance for direct use in other services
+// // Export the api instance for direct use in other services
+// export default api;
+
+import axios from 'axios';
+
+// Create the axios instance with the correct base URL
+const api = axios.create({
+  baseURL: '/api', // This should match your backend API prefix
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Auth token functions
+export const setAuthToken = (token: string) => {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+  // Also store the token in localStorage for persistence across page refreshes
+  localStorage.setItem('token', token);
+};
+
+export const clearAuthToken = () => {
+  delete api.defaults.headers.common['Authorization'];
+  localStorage.removeItem('token');
+};
+
+// Load token from storage on initial load
+const token = localStorage.getItem('token');
+if (token) {
+  setAuthToken(token);
+}
+
 export default api;
