@@ -4,11 +4,8 @@ import { AlertCircle, Loader } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 
+import { authService } from '../services/auth';
 import { useAuth } from '../contexts/AuthContext';
-
-const apiUrl = `${
-  'http://localhost:3333'
-}/api/auth/register`;
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
@@ -57,91 +54,43 @@ const Register: React.FC = () => {
     return true;
   };
 
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-//     if (!validateForm()) {
-//       return;
-//     }
-
-//     try {
-//       setIsSubmitting(true);
-//       setError(null);
-
-//       // Use the authentication service to register
-//       await authService.register({
-//         name,
-//         email,
-//         password,
-//       });
-
-//       // Redirect to dashboard after successful registration
-//       navigate('/');
-//     } catch (err: any) {
-//       // Handle registration errors
-//       setError(
-//         err.response?.data?.message || err.message || 'Registration failed'
-//       );
-//       console.error('Registration error:', err);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!validateForm()) {
-    return;
-  }
-
-  try {
-    setIsSubmitting(true);
-    setError(null);
-
-    console.log('Attempting to register with:', {
-      name,
-      email,
-      password: '****',
-    });
-
-    // Use the direct API call with proper error handling
-    const response = await fetch(
-      apiUrl,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Registration failed');
+    if (!validateForm()) {
+      return;
     }
 
-    // Store user data and token
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
+    try {
+      setIsSubmitting(true);
+      setError(null);
 
-    console.log('Registration successful:', data);
+      console.log('Attempting to register with:', {
+        name,
+        email,
+        password: '****',
+      });
 
-    // Redirect to dashboard after successful registration
-    navigate('/');
-  } catch (err: any) {
-    // Handle registration errors
-    setError(err.message || 'Registration failed. Please try again.');
-    console.error('Registration error:', err);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      // Use the auth service instead of direct fetch
+      await authService.register({
+        name,
+        email,
+        password,
+      });
+
+      console.log('Registration successful');
+
+      // Redirect to dashboard after successful registration
+      navigate('/');
+    } catch (err: any) {
+      // Handle registration errors
+      setError(err.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Redirect if already authenticated
   if (isAuthenticated) {
     return <Navigate to='/' replace />;

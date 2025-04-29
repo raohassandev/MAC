@@ -7,26 +7,29 @@ import mongoose from 'mongoose';
 import path from 'path';
 import routes from './routes/index';
 
+console.log('Starting MacSys backend server initialization...');
+
 // Load environment variables
 dotenv.config();
+console.log('Environment loaded, PORT:', process.env.PORT || '3333 (default)');
 
 // Create Express app
 const app: Express = express();
 const PORT: number = parseInt(process.env.PORT || '3333', 10);
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/macsys')
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+try {
+  app.use(cors());
+  app.use(express.json());
+  console.log('Middleware configured');
+} catch (error) {
+  console.error('Error setting up middleware:', error);
+}
 
 // Initialize admin user if none exists
 const initAdminUser = async () => {
   try {
+    console.log('Checking for admin user...');
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
       console.log('Creating default admin user...');
@@ -45,6 +48,8 @@ const initAdminUser = async () => {
         ],
       });
       console.log('Default admin user created');
+    } else {
+      console.log('Admin user already exists');
     }
   } catch (error) {
     console.error('Error creating admin user:', error);
@@ -52,72 +57,126 @@ const initAdminUser = async () => {
 };
 
 // API routes
-app.use('/api', routes);
-app.get('/', (req, res) => {
-  res.send('Backend is working');
-});
+try {
+  app.use('/api', routes);
+  app.get('/', (req, res) => {
+    res.send('Backend is working');
+  });
+  console.log('Routes configured');
+} catch (error) {
+  console.error('Error setting up routes:', error);
+}
 
 // Mock data for backward compatibility
-app.get('/api/getDevices', (req: Request, res: Response) => {
-  // Temporary mock data
-  const devices = [
-    {
-      _id: '1',
-      name: 'Server Room Cooler',
-      ip: '192.168.1.100',
-      port: 502,
-      slaveId: 1,
-      enabled: true,
-      registers: [
-        {
-          name: 'Temperature',
-          address: 0,
-          length: 2,
-          unit: '°C',
-        },
-      ],
-    },
-    {
-      _id: '2',
-      name: 'Office AC',
-      ip: '192.168.1.101',
-      port: 502,
-      slaveId: 2,
-      enabled: false,
-      registers: [
-        {
-          name: 'Humidity',
-          address: 2,
-          length: 2,
-          unit: '%',
-        },
-      ],
-    },
-  ];
+try {
+  app.get('/api/getDevices', (req: Request, res: Response) => {
+    // Temporary mock data
+    const devices = [
+      {
+        _id: '1',
+        name: 'Server Room Cooler',
+        ip: '192.168.1.100',
+        port: 502,
+        slaveId: 1,
+        enabled: true,
+        registers: [
+          {
+            name: 'Temperature',
+            address: 0,
+            length: 2,
+            unit: '°C',
+          },
+        ],
+      },
+      {
+        _id: '2',
+        name: 'Office AC',
+        ip: '192.168.1.101',
+        port: 502,
+        slaveId: 2,
+        enabled: false,
+        registers: [
+          {
+            name: 'Humidity',
+            address: 2,
+            length: 2,
+            unit: '%',
+          },
+        ],
+      },
+    ];
 
-  res.json(devices);
-});
+    res.json(devices);
+  });
+  console.log('Mock data routes configured');
+} catch (error) {
+  console.error('Error setting up mock data routes:', error);
+}
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static('client/build'));
+  try {
+    // Set static folder
+    app.use(express.static('client/build'));
 
-  app.get('*', (req: Request, res: Response) => {
-    res.sendFile(
-      path.resolve(__dirname, '..', 'client', 'build', 'index.html')
-    );
-  });
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(
+        path.resolve(__dirname, '..', 'client', 'build', 'index.html')
+      );
+    });
+    console.log('Static assets configured for production');
+  } catch (error) {
+    console.error('Error setting up static assets:', error);
+  }
 }
 
-// Initialize admin user when MongoDB connection is established
-mongoose.connection.once('open', () => {
-  initAdminUser();
-});
+// MongoDB Connection and Server Start
+console.log('Attempting to connect to MongoDB...');
+mongoose
+  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/macsys')
+  .then(() => {
+    console.log('MongoDB connected successfully');
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`MacSys Backend running on port ${PORT}`);
-});
+    // Initialize admin user when MongoDB connection is established
+    try {
+      initAdminUser();
+    } catch (error) {
+      console.error('Error during admin user initialization:', error);
+    }
+
+    // Start server after successful MongoDB connection
+    app
+      .listen(PORT, () => {
+        console.log(`MacSys Backend running on port ${PORT}`);
+      })
+      .on('error', (err) => {
+        console.error('Error starting server:', err);
+        if ((err as any).code === 'EADDRINUSE') {
+          console.error(
+            `Port ${PORT} is already in use. Try a different port.`
+          );
+        }
+      });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    console.log('Attempting to start server without MongoDB connection...');
+
+    // Try to start server even if MongoDB connection fails
+    app
+      .listen(PORT, () => {
+        console.log(`MacSys Backend running on port ${PORT} (without MongoDB)`);
+      })
+      .on('error', (err) => {
+        console.error('Error starting server:', err);
+        if ((err as any).code === 'EADDRINUSE') {
+          console.error(
+            `Port ${PORT} is already in use. Try a different port.`
+          );
+        }
+      });
+  });
+
+console.log('Server initialization complete, waiting for connections...');
 
 export default app;

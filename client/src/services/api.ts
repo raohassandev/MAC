@@ -1,4 +1,36 @@
+import axios from 'axios';
 
+// Use environment variable for the API URL instead of hardcoding
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+
+// Create the axios instance with the correct base URL
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Auth token functions
+export const setAuthToken = (token: string) => {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+  // Also store the token in localStorage for persistence across page refreshes
+  localStorage.setItem('token', token);
+};
+
+export const clearAuthToken = () => {
+  delete api.defaults.headers.common['Authorization'];
+  localStorage.removeItem('token');
+};
+
+// Load token from storage on initial load
+const token = localStorage.getItem('token');
+if (token) {
+  setAuthToken(token);
+}
+
+// Login API call
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post('/auth/login', { email, password });
@@ -8,6 +40,7 @@ export const login = async (email: string, password: string) => {
   }
 };
 
+// Get current user API call
 export const getMe = async () => {
   try {
     const response = await api.get('/auth/me');
@@ -17,7 +50,7 @@ export const getMe = async () => {
   }
 };
 
-// // Device API calls
+// Device API calls
 export const getDevices = async () => {
   try {
     const response = await api.get('/devices');
@@ -135,37 +168,5 @@ export const applyProfile = async (id: string) => {
     throw error;
   }
 };
-
-// // Export the api instance for direct use in other services
-// export default api;
-
-import axios from 'axios';
-
-// Create the axios instance with the correct base URL
-const api = axios.create({
-  baseURL: 'http://localhost:3333/api', // This should match your backend API prefix
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Auth token functions
-export const setAuthToken = (token: string) => {
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-  // Also store the token in localStorage for persistence across page refreshes
-  localStorage.setItem('token', token);
-};
-
-export const clearAuthToken = () => {
-  delete api.defaults.headers.common['Authorization'];
-  localStorage.removeItem('token');
-};
-
-// Load token from storage on initial load
-const token = localStorage.getItem('token');
-if (token) {
-  setAuthToken(token);
-}
 
 export default api;
