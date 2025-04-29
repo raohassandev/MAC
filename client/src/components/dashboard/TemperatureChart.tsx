@@ -8,86 +8,52 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useEffect, useState } from 'react';
 
-const TemperatureChart = () => {
-  const [data, setData] = useState([]);
+import React from 'react';
 
-  useEffect(() => {
-    // In a real app, this would come from an API
-    // Generating sample data for demonstration
-    const now = new Date();
-    const sampleData = Array.from({ length: 24 }, (_, i) => {
-      const time = new Date(now);
-      time.setHours(now.getHours() - 23 + i);
+interface DataPoint {
+  time: string;
+  temperature: number;
+}
 
-      return {
-        time: time.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        'Server Room': Math.round((22 + Math.sin(i / 3) * 3) * 10) / 10,
-        'Office Area': Math.round((24 + Math.cos(i / 4) * 2) * 10) / 10,
-        'Data Center': Math.round((20 + Math.sin(i / 2) * 1) * 10) / 10,
-      };
-    });
+interface TemperatureChartProps {
+  data: DataPoint[];
+  title?: string;
+}
 
-    setData(sampleData);
-  }, []);
+const TemperatureChart: React.FC<TemperatureChartProps> = ({
+  data = [],
+  title = 'Temperature Over Time',
+}) => {
+  if (!data || data.length === 0) {
+    return <div>No temperature data available</div>;
+  }
 
   return (
-    <div className='h-64'>
-      <ResponsiveContainer width='100%' height='100%'>
-        {data && data.length > 0 ? (
-          <LineChart
-            data={data}
-            margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
-            <XAxis
-              dataKey='time'
-              tick={{ fontSize: 12 }}
-              interval='preserveStartEnd'
-            />
-            <YAxis
-              label={{
-                value: '°C',
-                angle: -90,
-                position: 'insideLeft',
-                style: { textAnchor: 'middle' },
-              }}
-              domain={[16, 30]}
-            />
-            <Tooltip />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line
-              type='monotone'
-              dataKey='Server Room'
-              stroke='#3b82f6'
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 5 }}
-            />
-            <Line
-              type='monotone'
-              dataKey='Office Area'
-              stroke='#10b981'
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 5 }}
-            />
-            <Line
-              type='monotone'
-              dataKey='Data Center'
-              stroke='#f59e0b'
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        ) : (
-          <p>No data available</p>
-        )}
+    <div className='chart-container'>
+      <h3>{title}</h3>
+      <ResponsiveContainer width='100%' height={300}>
+        <LineChart
+          data={data}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+        >
+          <CartesianGrid strokeDasharray='3 3' />
+          <XAxis dataKey='time' />
+          <YAxis unit='°C' />
+          <Tooltip />
+          <Legend />
+          <Line
+            type='monotone'
+            dataKey='temperature'
+            stroke='#8884d8'
+            activeDot={{ r: 8 }}
+          />
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );

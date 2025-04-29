@@ -7,8 +7,10 @@ import mongoose from 'mongoose';
 import path from 'path';
 import routes from './routes';
 
+// Load environment variables
 dotenv.config();
 
+// Create Express app
 const app: Express = express();
 const PORT: number = parseInt(process.env.PORT || '3333', 10);
 
@@ -23,7 +25,7 @@ mongoose
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // Initialize admin user if none exists
-const initAdminUser = async (): Promise => {
+const initAdminUser = async () => {
   try {
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
@@ -105,7 +107,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Initialize admin user
+// Initialize admin user when MongoDB connection is established
 mongoose.connection.once('open', () => {
   initAdminUser();
 });
@@ -114,3 +116,5 @@ mongoose.connection.once('open', () => {
 app.listen(PORT, () => {
   console.log(`MacSys Backend running on port ${PORT}`);
 });
+
+export default app;

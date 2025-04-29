@@ -1,114 +1,110 @@
-import React, { ReactNode, createContext, useEffect, useState } from 'react';
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
-type UserRole = 'user' | 'engineer' | 'admin';
+import api from '../services/api';
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: string;
   permissions: string[];
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  loading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  hasPermission: (permission: string) => boolean;
 }
 
-export const AuthContext = createContext<AuthContextType>({
+// Create context with default values
+const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  loading: true,
+  error: null,
   login: async () => {},
   logout: () => {},
-  hasPermission: () => false,
 });
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+// Context Provider component
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Check if user is already logged in (token exists)
   useEffect(() => {
-    // Simulate checking for a stored token or session
     const checkAuth = async () => {
-      try {
-        // In a real app, you would verify the token with your backend
-        const storedUser = localStorage.getItem('user');
-
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          api.setAuthToken(token);
+          const userData = await api.getMe();
+          setUser(userData);
+        } catch (err) {
+          console.error('Authentication check failed:', err);
+          // Clear invalid token
+          localStorage.removeItem('token');
+          api.clearAuthToken();
         }
-      } catch (error) {
-        console.error('Auth error:', error);
-        localStorage.removeItem('user');
-      } finally {
-        setIsLoading(false);
       }
+      setLoading(false);
     };
 
     checkAuth();
   }, []);
 
+  // Login function
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-
+    setLoading(true);
+    setError(null);
     try {
-      // In a real app, you would validate credentials with your backend
-      // This is mock data for demonstration
-      const mockUser: User = {
-        id: '1',
-        name: 'Admin User',
-        email: email,
-        role: 'admin',
-        permissions: [
-          'manage_devices',
-          'manage_profiles',
-          'manage_users',
-          'view_analytics',
-        ],
-      };
-
-      // Store the user in localStorage
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      const data = await api.login(email, password);
+      localStorage.setItem('token', data.token);
+      api.setAuthToken(data.token);
+      setUser(data);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      throw err;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  // Logout function
   const logout = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    api.clearAuthToken();
     setUser(null);
   };
 
-  const hasPermission = (permission: string): boolean => {
-    if (!user) return false;
-    return user.permissions.includes(permission);
+  // Define context value with all required properties
+  const contextValue: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    loading,
+    error,
+    login,
+    logout,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-        hasPermission,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
+
+// Custom hook for using the auth context
+export const useAuth = () => useContext(AuthContext);
+
+export default AuthContext;
