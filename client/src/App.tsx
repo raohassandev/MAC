@@ -1,143 +1,51 @@
-import {
-  BrowserRouter,
-  NavLink,
-  Outlet,
-  Route,
-  Routes,
-} from 'react-router-dom';
-import {
-  HardDrive,
-  LayoutGrid,
-  Menu,
-  Thermometer,
-  User,
-  X,
-} from 'lucide-react';
-import React, { useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-// Import pages
+import { AuthProvider } from './contexts/AuthContext';
 import Dashboard from './pages/Dashboard';
+import DeviceDetails from './pages/DeviceDetails';
 import DeviceManagement from './pages/DeviceManagement';
+// Pages
+import Login from './pages/Login';
+// Layouts
+import MainLayout from './layouts/MainLayout';
+import NotFound from './pages/NotFound';
+import ProfileEditor from './pages/ProfileEditor';
 import ProfileForm from './components/profiles/ProfileForm';
 import ProfileManagement from './pages/ProfileManagement';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+// client/src/App.tsx
+import React from 'react';
 
-// Layout component for app structure
-const AppLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  return (
-    <div className='flex min-h-screen bg-gray-100'>
-      {/* Sidebar */}
-      <aside
-        className={`bg-indigo-800 text-white w-64 fixed h-full transition-all duration-300 ease-in-out z-30 ${
-          sidebarOpen ? 'left-0' : '-left-64'
-        }`}
-      >
-        <div className='p-4 flex justify-between items-center border-b border-indigo-700'>
-          <h1 className='text-xl font-bold'>MacSys</h1>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className='p-1 rounded-md hover:bg-indigo-700 md:hidden'
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <nav className='mt-4'>
-          <NavItem to='/' icon={<LayoutGrid size={18} />} label='Dashboard' />
-          <NavItem
-            to='/devices'
-            icon={<HardDrive size={18} />}
-            label='Devices'
-          />
-          <NavItem
-            to='/profiles'
-            icon={<Thermometer size={18} />}
-            label='Cooling Profiles'
-          />
-        </nav>
-      </aside>
-
-      {/* Main content */}
-      <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          sidebarOpen ? 'ml-64' : 'ml-0'
-        }`}
-      >
-        {/* Header */}
-        <header className='bg-white shadow-sm flex justify-between items-center h-16 px-4'>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className='p-2 rounded-md hover:bg-gray-100'
-          >
-            <Menu size={20} />
-          </button>
-
-          <div className='flex items-center space-x-4'>
-            <div className='flex items-center'>
-              <div className='w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white'>
-                <User size={16} />
-              </div>
-              <span className='ml-2'>Administrator</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className='p-6'>
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  );
-};
-
-// Navigation Item Component
-const NavItem = ({
-  to,
-  icon,
-  label,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-}) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) =>
-      `flex items-center px-4 py-2 text-sm ${
-        isActive
-          ? 'bg-indigo-900 text-white'
-          : 'text-indigo-100 hover:bg-indigo-700'
-      }`
-    }
-    end={to === '/'}
-  >
-    <span className='mr-3'>{icon}</span>
-    <span>{label}</span>
-  </NavLink>
-);
-
-// Main App component with routes
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<AppLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path='devices' element={<DeviceManagement />} />
-          <Route path='profiles' element={<ProfileManagement />} />
-          <Route
-            path='profiles/new'
-            element={<ProfileForm onSave={() => {}} />}
-          />
-          <Route
-            path='profiles/:id'
-            element={<ProfileForm onSave={() => {}} isEdit={true} />}
-          />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path='/login' element={<Login />} />
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path='/' element={<MainLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path='devices'>
+                <Route index element={<DeviceManagement />} />
+                <Route path=':deviceId' element={<DeviceDetails />} />
+              </Route>
+              <Route path='profiles'>
+                <Route index element={<ProfileManagement />} />
+                <Route path='new' element={<ProfileEditor />} />
+                <Route path=':profileId' element={<ProfileEditor />} />
+              </Route>
+              <Route path='*' element={<NotFound />} />
+            </Route>
+          </Route>
+
+          {/* Redirect to login if no route matches */}
+          <Route path='*' element={<Navigate to='/login' replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 
