@@ -1,45 +1,56 @@
-// routes/profileRoutes.js
-const express = require('express');
-const {
-  getProfiles,
-  getProfileById,
-  createProfile,
-  updateProfile,
-  deleteProfile,
-  duplicateProfile,
-  applyProfile,
-  getTemplateProfiles,
-  createFromTemplate,
-} = require('../controllers/profileController');
-const { protect, checkPermission } = require('../middleware/authMiddleware');
+import * as profileController from '../controllers/profileController';
 
-const router = express.Router();
+import { checkPermission, protect } from '../middleware/authMiddleware';
+
+import { Router } from 'express';
+import express from 'express';
+
+const router: Router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(protect);
+router.use(protect as express.RequestHandler);
 
 router
   .route('/')
-  .get(getProfiles)
-  .post(checkPermission(['manage_profiles']), createProfile);
+  .get(profileController.getProfiles as express.RequestHandler)
+  .post(
+    checkPermission(['manage_profiles']) as express.RequestHandler,
+    profileController.createProfile as express.RequestHandler
+  );
 
 router
   .route('/:id')
-  .get(getProfileById)
-  .put(checkPermission(['manage_profiles']), updateProfile)
-  .delete(checkPermission(['manage_profiles']), deleteProfile);
+  .get(profileController.getProfileById as express.RequestHandler)
+  .put(
+    checkPermission(['manage_profiles']) as express.RequestHandler,
+    profileController.updateProfile as express.RequestHandler
+  )
+  .delete(
+    checkPermission(['manage_profiles']) as express.RequestHandler,
+    profileController.deleteProfile as express.RequestHandler
+  );
 
 router.post(
   '/:id/duplicate',
-  checkPermission(['manage_profiles']),
-  duplicateProfile
-);
-router.post('/:id/apply', checkPermission(['manage_profiles']), applyProfile);
-router.get('/templates', getTemplateProfiles);
-router.post(
-  '/from-template/:templateId',
-  checkPermission(['manage_profiles']),
-  createFromTemplate
+  checkPermission(['manage_profiles']) as express.RequestHandler,
+  profileController.duplicateProfile as express.RequestHandler
 );
 
-module.exports = router;
+router.post(
+  '/:id/apply',
+  checkPermission(['manage_profiles']) as express.RequestHandler,
+  profileController.applyProfile as express.RequestHandler
+);
+
+router.get(
+  '/templates',
+  profileController.getTemplateProfiles as express.RequestHandler
+);
+
+router.post(
+  '/from-template/:templateId',
+  checkPermission(['manage_profiles']) as express.RequestHandler,
+  profileController.createFromTemplate as express.RequestHandler
+);
+
+export default router;

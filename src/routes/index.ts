@@ -1,9 +1,10 @@
+import { Router } from 'express';
 import authRoutes from './authRoutes';
 import deviceRoutes from './deviceRoutes';
 import express from 'express';
 import profileRoutes from './profileRoutes';
 
-const router = express.Router();
+const router: Router = express.Router();
 
 // Mount routes
 router.use('/auth', authRoutes);

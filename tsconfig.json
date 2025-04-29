@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": ["dom", "es6", "es2017", "esnext.asynciterable"],
+    "lib": ["es6", "es2017", "esnext.asynciterable"],
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -14,11 +14,10 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "client", "**/*.test.ts"]
+  "exclude": ["node_modules", "client", "dist"]
 }
