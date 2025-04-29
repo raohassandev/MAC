@@ -1,7 +1,8 @@
-import { Device, Profile } from '../models';
 import { Request, Response } from 'express';
 
+import { IDevice } from '../models/Device'; // Import the Device interface
 import ModbusRTU from 'modbus-serial';
+import { Profile } from '../models';
 
 // @desc    Get all profiles
 // @route   GET /api/profiles
@@ -147,8 +148,11 @@ export const applyProfile = async (req: Request, res: Response) => {
     // Results of applying profile to each device
     const results = [];
 
+    // Type assertion to tell TypeScript that these are full Device documents, not just ObjectIds
+    const devices = profile.assignedDevices as unknown as IDevice[];
+
     // For each assigned device, apply the profile settings
-    for (const device of profile.assignedDevices) {
+    for (const device of devices) {
       if (!device.enabled) {
         results.push({
           deviceId: device._id,

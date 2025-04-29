@@ -14,7 +14,6 @@ import DeviceManagement from './pages/DeviceManagement';
 import Login from './pages/Login';
 import ProfileManagement from './pages/ProfileManagement';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import React from 'react';
 
 function App() {
   return (
