@@ -12,7 +12,7 @@ export interface IUser extends Document {
   permissions: string[];
   createdAt: Date;
   updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const UserSchema = new Schema({
@@ -26,26 +26,30 @@ const UserSchema = new Schema({
 });
 
 // Hash password before saving
-UserSchema.pre('save', async function (next) {
-  this.updatedAt = new Date();
+UserSchema.pre(
+  'save',
+  async function (this: IUser, next: mongoose.CallbackWithoutResult) {
+    this.updatedAt = new Date();
 
-  // Only hash the password if it's modified or new
-  if (!this.isModified('password')) return next();
+    // Only hash the password if it's modified or new
+    if (!this.isModified('password')) return next();
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+      next();
+    } catch (err) {
+      next(err as mongoose.CallbackError);
+    }
   }
-});
+);
 
 // Compare password method
 UserSchema.methods.comparePassword = async function (
+  this: IUser,
   candidatePassword: string
-): Promise {
+): Promise<boolean> {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-export default mongoose.model('User', UserSchema);
+export default mongoose.model<IUser>('User', UserSchema);

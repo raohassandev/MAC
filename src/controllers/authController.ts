@@ -1,19 +1,18 @@
-// controllers/authController.js
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const { User } = require('../models');
+import { Request, Response } from 'express';
 
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+import { User } from '../models';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+// Type-safe token generation
+const generateToken = (id: string): string => {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'your_jwt_secret_here', {
     expiresIn: '30d',
   });
 };
 
-// @desc    Register new user
-// @route   POST /api/auth/register
-// @access  Public
-exports.register = async (req, res) => {
+// Register user
+export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
@@ -45,16 +44,14 @@ exports.register = async (req, res) => {
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// @desc    Authenticate a user
-// @route   POST /api/auth/login
-// @access  Public
-exports.login = async (req, res) => {
+// Login user
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -80,17 +77,16 @@ exports.login = async (req, res) => {
       permissions: user.permissions,
       token: generateToken(user._id),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
-exports.getMe = async (req, res) => {
+// Get current user
+export const getMe = async (req: Request, res: Response) => {
   try {
+    // User is attached to request in auth middleware
     const user = {
       _id: req.user.id,
       name: req.user.name,
@@ -100,7 +96,7 @@ exports.getMe = async (req, res) => {
     };
 
     res.json(user);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get me error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }

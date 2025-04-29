@@ -1,8 +1,7 @@
-// routes/index.js
-const express = require('express');
-const authRoutes = require('./authRoutes');
-const deviceRoutes = require('./deviceRoutes');
-const profileRoutes = require('./profileRoutes');
+import authRoutes from './authRoutes';
+import deviceRoutes from './deviceRoutes';
+import express from 'express';
+import profileRoutes from './profileRoutes';
 
 const router = express.Router();
 
@@ -11,4 +10,4 @@ router.use('/auth', authRoutes);
 router.use('/devices', deviceRoutes);
 router.use('/profiles', profileRoutes);
 
-module.exports = router;
+export default router;
