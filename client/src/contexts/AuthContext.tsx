@@ -1,7 +1,13 @@
-import React, { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { clearAuthToken, getMe, setAuthToken } from '../services/api';
 
-import { authService } from '@/services';
+import { authService } from '../services/auth';
 
 interface User {
   _id: string;
@@ -65,9 +71,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.login ({email, password});
+      const data = await authService.login({ email, password });
       localStorage.setItem('token', data.token as string);
-      setAuthToken(data.token  as string);
+      setAuthToken(data.token as string);
       setUser(data);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -80,7 +86,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
-   clearAuthToken();
+    clearAuthToken();
     setUser(null);
   };
 

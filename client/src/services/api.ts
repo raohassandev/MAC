@@ -1,23 +1,4 @@
-// import axios from 'axios';
 
-// // Create the axios instance
-// const api = axios.create({
-//   baseURL: '/api',
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-// });
-
-// // Auth token functions
-// export const setAuthToken = (token: string) => {
-//   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-// };
-
-// export const clearAuthToken = () => {
-//   delete api.defaults.headers.common['Authorization'];
-// };
-
-// // Auth API calls
 export const login = async (email: string, password: string) => {
   try {
     const response = await api.post('/auth/login', { email, password });
@@ -162,7 +143,7 @@ import axios from 'axios';
 
 // Create the axios instance with the correct base URL
 const api = axios.create({
-  baseURL: '/api', // This should match your backend API prefix
+  baseURL: 'http://localhost:3333/api', // This should match your backend API prefix
   headers: {
     'Content-Type': 'application/json',
   },

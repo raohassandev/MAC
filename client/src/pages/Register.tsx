@@ -10,7 +10,6 @@ const apiUrl = `${
   'http://localhost:3333'
 }/api/auth/register`;
 
-
 const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

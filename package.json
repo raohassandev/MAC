@@ -6,7 +6,7 @@
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "dev": "nodemon src/index.ts",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc && cd client && NODE_OPTIONS='--max-old-space-size=4096' npm run build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc && cd client && NODE_OPTIONS='--max-old-space-size=6000' npm run build",
     "client": "cd client && npm run dev",
     "dev:full": "concurrently \"npm run dev\" \"npm run client\"",
     "install-all": "npm install && cd client && npm install",
