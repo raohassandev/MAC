@@ -1,18 +1,34 @@
 import {
+  BarChart2,
+  CreditCard,
   HardDrive,
+  Home,
   LayoutGrid,
   Menu,
+  Settings,
+  Sliders,
   Thermometer,
+  Tool,
   User,
+  Users,
   X,
 } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
+
+import { useAuth } from '../contexts/AuthContext';
 
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className='flex min-h-screen bg-gray-100'>
@@ -23,7 +39,10 @@ const MainLayout: React.FC = () => {
         }`}
       >
         <div className='p-4 flex justify-between items-center border-b border-indigo-700'>
-          <h1 className='text-xl font-bold'>MacSys</h1>
+          <Link to='/' className='flex items-center gap-2'>
+            <HardDrive size={24} />
+            <h1 className='text-xl font-bold'>MacSys</h1>
+          </Link>
           <button
             onClick={toggleSidebar}
             className='p-1 rounded-md hover:bg-indigo-700 md:hidden'
@@ -33,7 +52,15 @@ const MainLayout: React.FC = () => {
         </div>
 
         <nav className='mt-4'>
-          <NavItem to='/' icon={<LayoutGrid size={18} />} label='Dashboard' />
+          <div className='px-4 py-2 text-xs text-indigo-300 uppercase font-semibold'>
+            Main
+          </div>
+          <NavItem
+            to='/'
+            icon={<Home size={18} />}
+            label='Dashboard'
+            end={true}
+          />
           <NavItem
             to='/devices'
             icon={<HardDrive size={18} />}
@@ -44,7 +71,74 @@ const MainLayout: React.FC = () => {
             icon={<Thermometer size={18} />}
             label='Cooling Profiles'
           />
+          <NavItem
+            to='/templates'
+            icon={<CreditCard size={18} />}
+            label='Device Templates'
+          />
+          <NavItem
+            to='/schedules'
+            icon={<BarChart2 size={18} />}
+            label='Schedules'
+          />
+
+          <div className='mt-6 px-4 py-2 text-xs text-indigo-300 uppercase font-semibold'>
+            Administration
+          </div>
+          <NavItem
+            to='/users'
+            icon={<Users size={18} />}
+            label='User Management'
+          />
+          <NavItem
+            to='/roles'
+            icon={<Sliders size={18} />}
+            label='Roles & Permissions'
+          />
+          <NavItem
+            to='/deployment'
+            icon={<Tool size={18} />}
+            label='Deployment Tools'
+          />
+          <NavItem
+            to='/settings'
+            icon={<Settings size={18} />}
+            label='System Settings'
+          />
         </nav>
+
+        <div className='absolute bottom-0 left-0 right-0 p-4 border-t border-indigo-700'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+              <div className='w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white'>
+                <User size={16} />
+              </div>
+              <div className='ml-2'>
+                <p className='text-sm font-medium'>{user?.name || 'User'}</p>
+                <p className='text-xs text-indigo-300'>
+                  {user?.role || 'Role'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className='text-indigo-300 hover:text-white'
+            >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                className='h-5 w-5'
+                viewBox='0 0 20 20'
+                fill='currentColor'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm9 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-1 8a1 1 0 100-2 1 1 0 000 2z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Main content */}
@@ -63,11 +157,13 @@ const MainLayout: React.FC = () => {
           </button>
 
           <div className='flex items-center space-x-4'>
-            <div className='flex items-center'>
-              <div className='w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white'>
-                <User size={16} />
-              </div>
-              <span className='ml-2'>Administrator</span>
+            <div className='relative'>
+              <Link to='/profile' className='flex items-center'>
+                <div className='w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white'>
+                  <User size={16} />
+                </div>
+                <span className='ml-2'>{user?.name || 'User'}</span>
+              </Link>
             </div>
           </div>
         </header>
@@ -82,15 +178,14 @@ const MainLayout: React.FC = () => {
 };
 
 // Navigation Item Component
-const NavItem = ({
-  to,
-  icon,
-  label,
-}: {
+interface NavItemProps {
   to: string;
   icon: React.ReactNode;
   label: string;
-}) => (
+  end?: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ to, icon, label, end = false }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
@@ -100,7 +195,7 @@ const NavItem = ({
           : 'text-indigo-100 hover:bg-indigo-700'
       }`
     }
-    end={to === '/'}
+    end={end}
   >
     <span className='mr-3'>{icon}</span>
     <span>{label}</span>
