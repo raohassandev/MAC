@@ -383,19 +383,34 @@ const DeviceDataChart: React.FC<DeviceDataChartProps> = ({
         </div>
 
         <div className='flex space-x-2'>
-          <button
-            onClick={handleRefresh}
-            className='p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100'
-            aria-label='Refresh data'
-          >
-            <RefreshCw size={16} />
-          </button>
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <button
+                  onClick={handleRefresh}
+                  className='p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100'
+                  aria-label='Refresh data'
+                >
+                  <RefreshCw size={16} />
+                </button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content
+                  className='bg-white shadow-md rounded-md px-3 py-1.5 text-sm'
+                  sideOffset={5}
+                >
+                  Refresh data
+                  <Tooltip.Arrow className='fill-white' />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>
         </div>
       </Card.Header>
 
       <Card.Content>
         <div className='mb-4 flex flex-wrap gap-2 justify-between'>
-          {/* Chart Type Selector */}
+          {/* Chart Type Selector - now using Radix Tabs properly */}
           <Tabs.Root
             value={chartType}
             onValueChange={(value) => setChartType(value as ChartType)}
@@ -425,9 +440,7 @@ const DeviceDataChart: React.FC<DeviceDataChartProps> = ({
                     </Tooltip.Content>
                   </Tooltip.Portal>
                 </Tooltip.Root>
-              </Tooltip.Provider>
 
-              <Tooltip.Provider>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Tabs.Trigger
@@ -451,9 +464,7 @@ const DeviceDataChart: React.FC<DeviceDataChartProps> = ({
                     </Tooltip.Content>
                   </Tooltip.Portal>
                 </Tooltip.Root>
-              </Tooltip.Provider>
 
-              <Tooltip.Provider>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <Tabs.Trigger
@@ -482,7 +493,7 @@ const DeviceDataChart: React.FC<DeviceDataChartProps> = ({
           </Tabs.Root>
 
           <div className='flex flex-wrap gap-2'>
-            {/* Metric Selector */}
+            {/* Metric Selector - now using Radix Select properly */}
             <Select.Root
               value={metric}
               onValueChange={(value) => setMetric(value as MetricType)}
@@ -522,7 +533,7 @@ const DeviceDataChart: React.FC<DeviceDataChartProps> = ({
               </Select.Portal>
             </Select.Root>
 
-            {/* Time Range Selector */}
+            {/* Time Range Selector - now using Radix Select properly */}
             <Select.Root
               value={timeRange}
               onValueChange={(value) => setTimeRange(value as TimeRange)}

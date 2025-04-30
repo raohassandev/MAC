@@ -26,7 +26,6 @@ import NewDeviceForm from '../components/devices/NewDeviceForm';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../hooks/useDevices';
 import { Device } from '../types/device.types';
-import DeviceGroupSelector from '../components/devices/DeviceGroupSelector';
 
 type ViewMode = 'grid' | 'list' | 'map';
 
@@ -78,6 +77,7 @@ const DeviceManagement: React.FC = () => {
   const [sortField, setSortField] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [testingDevice, setTestingDevice] = useState<string | null>(null);
+  const [isNewDeviceFormOpen, setIsNewDeviceFormOpen] = useState(false);
   const [testResults, setTestResults] = useState<{
     deviceId: string;
     success: boolean;
@@ -392,6 +392,12 @@ const DeviceManagement: React.FC = () => {
     return { total, online, offline };
   };
 
+  const onNewDeviceFormSubmit = (value: any) => {
+    console.log(value);
+  };
+
+  const onNewDeviceFormClose = () => {};
+
   const stats = getDeviceStats();
 
   return (
@@ -406,6 +412,20 @@ const DeviceManagement: React.FC = () => {
             Manage and monitor your Modbus devices
           </p>
         </div>
+        <button
+          onClick={() =>
+            isNewDeviceFormOpen
+              ? setIsNewDeviceFormOpen(false)
+              : setIsNewDeviceFormOpen(true)
+          }
+        >
+          Add Device
+        </button>
+        <NewDeviceForm
+          isOpen={isNewDeviceFormOpen}
+          onClose={onNewDeviceFormClose}
+          onSubmit={onNewDeviceFormSubmit}
+        />
         <div className='flex space-x-2'>
           {canAddDevices && (
             <button
