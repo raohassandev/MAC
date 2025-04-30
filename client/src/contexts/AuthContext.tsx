@@ -1,111 +1,111 @@
-import React, {
+import {
   ReactNode,
   createContext,
   useContext,
   useEffect,
   useState,
 } from 'react';
-import { clearAuthToken, getMe, setAuthToken } from '../services/api';
 
-import { authService } from '../services/auth';
+import api from '../api/client';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
-  _id: string;
-  name: string;
+  id: string;
+  username: string;
   email: string;
   role: string;
-  permissions: string[];
 }
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  isLoading: boolean;
 }
 
-// Create context with default values
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  loading: true,
-  error: null,
-  login: async () => {},
-  logout: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Context Provider component
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem('token')
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Check if user is already logged in (token exists)
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          setAuthToken(token);
-          const userData = await getMe();
-          setUser(userData);
-        } catch (err) {
-          console.error('Authentication check failed:', err);
-          // Clear invalid token
-          localStorage.removeItem('token');
-          clearAuthToken();
-        }
-      }
-      setLoading(false);
-    };
+    // Check if user is already logged in
+    if (token) {
+      fetchUserData();
+    }
+  }, [token]);
 
-    checkAuth();
-  }, []);
-
-  // Login function
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchUserData = async () => {
     try {
-      const data = await authService.login({ email, password });
-      localStorage.setItem('token', data.token as string);
-      setAuthToken(data.token as string);
-      setUser(data);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-      throw err;
+      setIsLoading(true);
+      const response = await api.get('/users/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user data', error);
+      // Token might be invalid or expired
+      logout();
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  // Logout function
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.post('/auth/login', { email, password });
+      const { token: newToken, user: userData } = response.data;
+
+      localStorage.setItem('token', newToken);
+      setToken(newToken);
+      setUser(userData);
+
+      toast.success('Login successful!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login failed', error);
+      toast.error('Invalid email or password');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
-    clearAuthToken();
+    setToken(null);
     setUser(null);
+    navigate('/login');
+    toast.info('You have been logged out');
   };
 
-  // Define context value with all required properties
-  const contextValue: AuthContextType = {
+  const value = {
     user,
+    token,
     isAuthenticated: !!user,
-    loading,
-    error,
     login,
     logout,
+    isLoading,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
-  );
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-// Export the useAuth hook - this is what was missing
-export const useAuth = () => useContext(AuthContext);
-
-export default AuthContext;
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

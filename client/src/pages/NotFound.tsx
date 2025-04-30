@@ -1,28 +1,28 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Home } from 'lucide-react';
+
 import { Link } from 'react-router-dom';
 
 const NotFound = () => {
   return (
-    <div className='min-h-screen bg-gray-100 flex flex-col justify-center items-center px-6 py-12'>
-      <div className='max-w-md w-full bg-white shadow-md rounded-lg overflow-hidden'>
-        <div className='p-8'>
-          <div className='flex items-center justify-center mb-6'>
-            <AlertCircle size={48} className='text-red-500' />
-          </div>
-          <h1 className='text-3xl font-bold text-center text-gray-800 mb-4'>
-            404 - Page Not Found
-          </h1>
-          <p className='text-gray-600 text-center mb-8'>
-            The page you are looking for doesn't exist or has been moved.
-          </p>
-          <div className='flex justify-center'>
-            <Link
-              to='/'
-              className='bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition-colors'
-            >
-              Back to Home
-            </Link>
-          </div>
+    <div className='min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8'>
+      <div className='flex flex-col items-center'>
+        <div className='rounded-full bg-red-100 p-3'>
+          <AlertCircle size={36} className='text-red-600' />
+        </div>
+        <h1 className='mt-4 text-3xl font-bold text-gray-900'>
+          Page Not Found
+        </h1>
+        <p className='mt-2 text-center text-gray-600'>
+          Sorry, we couldn't find the page you're looking for.
+        </p>
+        <div className='mt-8'>
+          <Link
+            to='/'
+            className='inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+          >
+            <Home size={18} className='mr-2' />
+            Back to Dashboard
+          </Link>
         </div>
       </div>
     </div>
