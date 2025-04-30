@@ -1,7 +1,6 @@
 import {
   Activity,
   FileText,
-  HardDrive,
   List,
   Plus,
   Settings,

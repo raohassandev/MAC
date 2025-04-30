@@ -23,7 +23,7 @@ import {
 import { useEffect, useState } from 'react';
 
 import { format } from 'date-fns';
-import { systemApi } from '../services/endpoints';
+import { systemApi } from '../api/endpoints';
 
 interface SystemStatus {
   status: 'online' | 'offline' | 'warning';

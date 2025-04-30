@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 import { useEffect, useState } from 'react';
 
-import { dashboardApi } from '../services/endpoints';
+import { dashboardApi } from '../api/endpoints';
 import { format } from 'date-fns';
 
 interface DashboardSummary {

@@ -8,7 +8,7 @@ import {
   User,
 } from 'lucide-react';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
-import { settingsApi, userApi } from '../services/endpoints';
+import { settingsApi, userApi } from '../api/endpoints';
 import { useEffect, useState } from 'react';
 
 import { toast } from 'react-toastify';

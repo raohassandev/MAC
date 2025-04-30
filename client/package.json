@@ -11,6 +11,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.6.0",
     "date-fns": "^4.1.0",
     "formik": "^2.4.6",
