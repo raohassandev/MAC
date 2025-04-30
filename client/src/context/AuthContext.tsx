@@ -9,7 +9,6 @@ import {
 import { User } from '../types/user.types';
 import api from '../api/client';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 
 export interface AuthContextType {
   user: User | null;
@@ -32,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem('token')
   );
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -72,7 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
 
       toast.success('Login successful!');
-      navigate('/dashboard');
+
+      // Instead of using useNavigate, we'll use window.location
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Login failed', error);
       toast.error('Invalid email or password');
@@ -86,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
-    navigate('/login');
+
+    // Instead of using useNavigate, we'll use window.location
+    window.location.href = '/login';
     toast.info('You have been logged out');
   };
 
