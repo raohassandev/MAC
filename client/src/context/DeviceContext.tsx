@@ -5,20 +5,11 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { toast } from 'react-toastify';
 import API from '../services/api';
 import { Device } from '../types/device.types';
 
-interface Register {
-  name: string;
-  address: number;
-  length: number;
-  functionCode?: number;
-  scaleFactor?: number;
-  decimalPoint?: number;
-  byteOrder?: string;
-  unit?: string;
-}
-
+// Define the context type with all the functionality we need
 interface DeviceContextType {
   devices: Device[];
   loading: boolean;
@@ -31,6 +22,22 @@ interface DeviceContextType {
     id: string
   ) => Promise<{ success: boolean; message: string }>;
   readRegisters: (id: string) => Promise<any>;
+  filteredDevices: Device[];
+  setFilterQuery: (query: string) => void;
+  setStatusFilter: (status: 'all' | 'online' | 'offline') => void;
+  getFilteredDeviceCount: () => {
+    total: number;
+    online: number;
+    offline: number;
+  };
+  selectedDevices: string[];
+  selectDevice: (id: string) => void;
+  deselectDevice: (id: string) => void;
+  selectAllDevices: () => void;
+  deselectAllDevices: () => void;
+  bulkEnableDevices: () => Promise<void>;
+  bulkDisableDevices: () => Promise<void>;
+  bulkDeleteDevices: () => Promise<void>;
 }
 
 export const DeviceContext = createContext<DeviceContextType>({
@@ -43,6 +50,18 @@ export const DeviceContext = createContext<DeviceContextType>({
   deleteDevice: async () => {},
   testConnection: async () => ({ success: false, message: '' }),
   readRegisters: async () => ({}),
+  filteredDevices: [],
+  setFilterQuery: () => {},
+  setStatusFilter: () => {},
+  getFilteredDeviceCount: () => ({ total: 0, online: 0, offline: 0 }),
+  selectedDevices: [],
+  selectDevice: () => {},
+  deselectDevice: () => {},
+  selectAllDevices: () => {},
+  deselectAllDevices: () => {},
+  bulkEnableDevices: async () => {},
+  bulkDisableDevices: async () => {},
+  bulkDeleteDevices: async () => {},
 });
 
 interface DeviceProviderProps {
@@ -50,10 +69,22 @@ interface DeviceProviderProps {
 }
 
 export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
+  // State for devices and loading
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // State for filtering
+  const [filterQuery, setFilterQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'online' | 'offline'
+  >('all');
+  const [filteredDevices, setFilteredDevices] = useState<Device[]>([]);
+
+  // State for selected devices (for bulk operations)
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+
+  // Fetch all devices
   const fetchDevices = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -87,10 +118,39 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Apply filters whenever devices, filterQuery, or statusFilter changes
+  useEffect(() => {
+    let result = [...devices];
+
+    // Apply search filter
+    if (filterQuery) {
+      const query = filterQuery.toLowerCase();
+      result = result.filter(
+        (device) =>
+          device.name.toLowerCase().includes(query) ||
+          device.ip?.toLowerCase().includes(query) ||
+          device.make?.toLowerCase().includes(query) ||
+          device.model?.toLowerCase().includes(query) ||
+          device.tags?.some((tag) => tag.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      result = result.filter((device) =>
+        statusFilter === 'online' ? device.enabled : !device.enabled
+      );
+    }
+
+    setFilteredDevices(result);
+  }, [devices, filterQuery, statusFilter]);
+
+  // Initial fetch
   useEffect(() => {
     fetchDevices();
   }, [fetchDevices]);
 
+  // Function to add a new device
   const addDevice = async (device: Omit<Device, '_id'>) => {
     try {
       // Ensure required fields
@@ -112,13 +172,16 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
       // Update local state with new device
       setDevices((prevDevices) => [...prevDevices, response.data]);
 
+      toast.success(`Device "${response.data.name}" added successfully`);
       return response.data;
     } catch (err) {
       console.error('Error adding device:', err);
+      toast.error('Failed to add device');
       throw err instanceof Error ? err : new Error('Failed to add device');
     }
   };
 
+  // Function to update a device
   const updateDevice = async (device: Device) => {
     try {
       // Ensure required fields
@@ -142,13 +205,16 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
         prev.map((d) => (d._id === device._id ? response.data : d))
       );
 
+      toast.success(`Device "${response.data.name}" updated successfully`);
       return response.data;
     } catch (err) {
       console.error('Error updating device:', err);
+      toast.error('Failed to update device');
       throw err instanceof Error ? err : new Error('Failed to update device');
     }
   };
 
+  // Function to delete a device
   const deleteDevice = async (id: string) => {
     try {
       // Try the standard API endpoint first
@@ -161,12 +227,19 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
 
       // Update local state
       setDevices((prev) => prev.filter((d) => d._id !== id));
+
+      // Also remove from selected devices if present
+      setSelectedDevices((prev) => prev.filter((deviceId) => deviceId !== id));
+
+      toast.success('Device deleted successfully');
     } catch (err) {
       console.error('Error deleting device:', err);
+      toast.error('Failed to delete device');
       throw err instanceof Error ? err : new Error('Failed to delete device');
     }
   };
 
+  // Function to test device connection
   const testConnection = async (
     id: string
   ): Promise<{ success: boolean; message: string }> => {
@@ -186,11 +259,16 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
             return d;
           })
         );
+
+        toast.success('Connection test successful');
+      } else {
+        toast.error('Connection test failed');
       }
 
       return response.data;
     } catch (err) {
       console.error('Error testing device connection:', err);
+      toast.error('Connection test failed');
       return {
         success: false,
         message:
@@ -201,6 +279,7 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
     }
   };
 
+  // Function to read registers from a device
   const readRegisters = async (id: string): Promise<any> => {
     try {
       const response = await API.get(`/devices/${id}/read`);
@@ -221,10 +300,145 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
       return response.data;
     } catch (err) {
       console.error('Error reading device registers:', err);
+      toast.error('Failed to read device registers');
       throw err instanceof Error
         ? err
         : new Error('Failed to read device registers');
     }
+  };
+
+  // Get filtered device count statistics
+  const getFilteredDeviceCount = () => {
+    const total = filteredDevices.length;
+    const online = filteredDevices.filter((device) => device.enabled).length;
+    const offline = total - online;
+
+    return { total, online, offline };
+  };
+
+  // Selection functions
+  const selectDevice = (id: string) => {
+    setSelectedDevices((prev) => {
+      if (prev.includes(id)) return prev;
+      return [...prev, id];
+    });
+  };
+
+  const deselectDevice = (id: string) => {
+    setSelectedDevices((prev) => prev.filter((deviceId) => deviceId !== id));
+  };
+
+  const selectAllDevices = () => {
+    setSelectedDevices(filteredDevices.map((device) => device._id));
+  };
+
+  const deselectAllDevices = () => {
+    setSelectedDevices([]);
+  };
+
+  // Bulk operations
+  const bulkEnableDevices = async () => {
+    if (selectedDevices.length === 0) {
+      toast.info('No devices selected');
+      return;
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const deviceId of selectedDevices) {
+      try {
+        const device = devices.find((d) => d._id === deviceId);
+        if (device && !device.enabled) {
+          await updateDevice({ ...device, enabled: true });
+          successCount++;
+        }
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`Enabled ${successCount} devices successfully`);
+    }
+
+    if (failCount > 0) {
+      toast.error(`Failed to enable ${failCount} devices`);
+    }
+
+    // Refresh device list
+    await fetchDevices();
+  };
+
+  const bulkDisableDevices = async () => {
+    if (selectedDevices.length === 0) {
+      toast.info('No devices selected');
+      return;
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const deviceId of selectedDevices) {
+      try {
+        const device = devices.find((d) => d._id === deviceId);
+        if (device && device.enabled) {
+          await updateDevice({ ...device, enabled: false });
+          successCount++;
+        }
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`Disabled ${successCount} devices successfully`);
+    }
+
+    if (failCount > 0) {
+      toast.error(`Failed to disable ${failCount} devices`);
+    }
+
+    // Refresh device list
+    await fetchDevices();
+  };
+
+  const bulkDeleteDevices = async () => {
+    if (selectedDevices.length === 0) {
+      toast.info('No devices selected');
+      return;
+    }
+
+    const confirmResult = confirm(
+      `Are you sure you want to delete ${selectedDevices.length} devices? This action cannot be undone.`
+    );
+    if (!confirmResult) return;
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const deviceId of selectedDevices) {
+      try {
+        await deleteDevice(deviceId);
+        successCount++;
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`Deleted ${successCount} devices successfully`);
+    }
+
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} devices`);
+    }
+
+    // Clear selection
+    setSelectedDevices([]);
+
+    // Refresh device list
+    await fetchDevices();
   };
 
   return (
@@ -239,6 +453,18 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
         deleteDevice,
         testConnection,
         readRegisters,
+        filteredDevices,
+        setFilterQuery,
+        setStatusFilter,
+        getFilteredDeviceCount,
+        selectedDevices,
+        selectDevice,
+        deselectDevice,
+        selectAllDevices,
+        deselectAllDevices,
+        bulkEnableDevices,
+        bulkDisableDevices,
+        bulkDeleteDevices,
       }}
     >
       {children}

@@ -1,16 +1,19 @@
 import {
   Activity,
+  AlertCircle,
   FileText,
   List,
   Plus,
   Save,
+  Server,
   Settings,
-  X,
-  AlertCircle,
   Trash,
+  X,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
+// Device register interface
 interface DeviceRegister {
   name: string;
   address: number;
@@ -22,6 +25,7 @@ interface DeviceRegister {
   unit?: string;
 }
 
+// Device template interface
 interface DeviceTemplate {
   id: string;
   name: string;
@@ -41,10 +45,15 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [tab, setTab] = useState<
+  // Active tab state
+  const [activeTab, setActiveTab] = useState<
     'connection' | 'registers' | 'template' | 'data'
   >('connection');
+
+  // Connection type state
   const [connectionType, setConnectionType] = useState<'tcp' | 'rtu'>('tcp');
+
+  // Registers state
   const [registers, setRegisters] = useState<DeviceRegister[]>([]);
   const [newRegister, setNewRegister] = useState<DeviceRegister>({
     name: '',
@@ -56,12 +65,19 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     byteOrder: 'AB CD',
     unit: '',
   });
-  const [templateMode, setTemplateMode] = useState<'select' | 'create'>('select');
+
+  // Template state
+  const [templateMode, setTemplateMode] = useState<'select' | 'create'>(
+    'select'
+  );
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [templates, setTemplates] = useState<DeviceTemplate[]>([]);
+
+  // Loading and error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
+  // Device data state
   const [deviceData, setDeviceData] = useState({
     name: '',
     make: '',
@@ -78,40 +94,115 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     enabled: true,
     tags: [] as string[],
   });
-  
+
   // Fetch device templates
   useEffect(() => {
     const fetchTemplates = async () => {
       setLoading(true);
       try {
-        // This would be an API call in a real app
+        // In a real app, this would be an API call
         // const response = await fetch('/api/device-templates');
         // const data = await response.json();
         // setTemplates(data);
-        
-        // For demo purposes, use mock data
+
+        // Sample data for demonstration
         await new Promise((resolve) => setTimeout(resolve, 500));
         setTemplates([
           {
             id: '1',
             name: 'Energy Analyzer',
-            description: 'Standard template for energy analyzers with voltage, current, and power readings',
+            description:
+              'Standard template for energy analyzers with voltage, current, and power readings',
             deviceType: 'Energy Analyzer',
             registers: [
-              { name: 'Voltage L1', address: 0, length: 1, functionCode: 3, unit: 'V' },
-              { name: 'Current L1', address: 1, length: 1, functionCode: 3, unit: 'A' },
-              { name: 'Active Power', address: 2, length: 1, functionCode: 3, unit: 'W' },
+              {
+                name: 'Voltage L1',
+                address: 0,
+                length: 1,
+                functionCode: 3,
+                unit: 'V',
+              },
+              {
+                name: 'Current L1',
+                address: 1,
+                length: 1,
+                functionCode: 3,
+                unit: 'A',
+              },
+              {
+                name: 'Active Power',
+                address: 2,
+                length: 1,
+                functionCode: 3,
+                unit: 'W',
+              },
             ],
           },
           {
             id: '2',
             name: 'Temperature Controller',
-            description: 'Template for temperature controllers with setpoint and measurement',
+            description:
+              'Template for temperature controllers with setpoint and measurement',
             deviceType: 'Temperature Controller',
             registers: [
-              { name: 'Current Temperature', address: 0, length: 1, functionCode: 3, unit: '°C' },
-              { name: 'Setpoint', address: 1, length: 1, functionCode: 3, unit: '°C' },
-              { name: 'Status', address: 2, length: 1, functionCode: 1, unit: '' },
+              {
+                name: 'Current Temperature',
+                address: 0,
+                length: 1,
+                functionCode: 3,
+                unit: '°C',
+              },
+              {
+                name: 'Setpoint',
+                address: 1,
+                length: 1,
+                functionCode: 3,
+                unit: '°C',
+              },
+              {
+                name: 'Status',
+                address: 2,
+                length: 1,
+                functionCode: 1,
+                unit: '',
+              },
+            ],
+          },
+          {
+            id: '3',
+            name: 'HVAC Controller',
+            description:
+              'Template for HVAC systems with temperature, humidity and fan control',
+            deviceType: 'HVAC',
+            registers: [
+              {
+                name: 'Room Temperature',
+                address: 0,
+                length: 1,
+                functionCode: 3,
+                unit: '°C',
+              },
+              {
+                name: 'Humidity',
+                address: 1,
+                length: 1,
+                functionCode: 3,
+                unit: '%',
+              },
+              {
+                name: 'Fan Speed',
+                address: 2,
+                length: 1,
+                functionCode: 3,
+                unit: '%',
+              },
+              {
+                name: 'Operation Mode',
+                address: 3,
+                length: 1,
+                functionCode: 3,
+                unit: '',
+              },
             ],
           },
         ]);
@@ -121,16 +212,18 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
         setLoading(false);
       }
     };
-    
+
     fetchTemplates();
   }, []);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value, type } = e.target;
     const newValue =
-      (type === 'checkbox' ? (e.target as HTMLInputElement).checked : value);
+      type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
 
     setDeviceData({
       ...deviceData,
@@ -142,16 +235,15 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    const newValue = name === 'name' || name === 'unit' 
-      ? value 
-      : parseInt(value);
-    
+    const newValue =
+      name === 'name' || name === 'unit' ? value : parseInt(value);
+
     setNewRegister({
       ...newRegister,
       [name]: newValue,
     });
   };
-  
+
   const handleAddRegister = () => {
     if (!newRegister.name || newRegister.address < 0) {
       setError('Please fill out all required register fields');
@@ -170,42 +262,46 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
       unit: '',
     });
     setError(null);
+    toast.success('Register added successfully');
   };
-  
+
   const handleDeleteRegister = (index: number) => {
     setRegisters(registers.filter((_, i) => i !== index));
+    toast.info('Register removed');
   };
-  
+
   const handleSelectTemplate = (templateId: string) => {
     setSelectedTemplateId(templateId);
-    
+
     // Find the selected template
-    const template = templates.find(t => t.id === templateId);
+    const template = templates.find((t) => t.id === templateId);
     if (template) {
       // Set the registers from the template
       setRegisters([...template.registers]);
+      toast.success('Template applied successfully');
     }
   };
-  
+
   const validateForm = (): boolean => {
     // Basic validation
     if (!deviceData.name) {
       setError('Device name is required');
       return false;
     }
-    
+
     if (connectionType === 'tcp') {
       if (!deviceData.ip) {
         setError('IP address is required for TCP connections');
         return false;
       }
-    } else { // rtu
+    } else {
+      // rtu
       if (!deviceData.serialPort) {
         setError('Serial port is required for RTU connections');
         return false;
       }
     }
-    
+
     return true;
   };
 
@@ -213,7 +309,7 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     if (!validateForm()) {
       return;
     }
-    
+
     // Prepare the device data for submission
     const deviceForSubmission = {
       ...deviceData,
@@ -225,10 +321,12 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
       connectionType,
       registers,
     };
-    
+
     onSubmit(deviceForSubmission);
+    toast.success('Device added successfully');
   };
 
+  // Early return if not open
   if (!isOpen) return null;
 
   return (
@@ -239,7 +337,7 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
           <button
             onClick={onClose}
             className='text-gray-500 hover:text-gray-700'
-            aria-label="Close"
+            aria-label='Close'
           >
             <X size={20} />
           </button>
@@ -324,10 +422,10 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
           <div className='border-b border-gray-200 mb-4'>
             <nav className='flex space-x-4'>
               <button
-                onClick={() => setTab('connection')}
+                onClick={() => setActiveTab('connection')}
                 className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
                   ${
-                    tab === 'connection'
+                    activeTab === 'connection'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
@@ -336,10 +434,10 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 Connection
               </button>
               <button
-                onClick={() => setTab('registers')}
+                onClick={() => setActiveTab('registers')}
                 className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
                   ${
-                    tab === 'registers'
+                    activeTab === 'registers'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
@@ -348,10 +446,10 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 Registers
               </button>
               <button
-                onClick={() => setTab('template')}
+                onClick={() => setActiveTab('template')}
                 className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
                   ${
-                    tab === 'template'
+                    activeTab === 'template'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
@@ -360,10 +458,10 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 Template
               </button>
               <button
-                onClick={() => setTab('data')}
+                onClick={() => setActiveTab('data')}
                 className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
                   ${
-                    tab === 'data'
+                    activeTab === 'data'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
@@ -374,7 +472,7 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
             </nav>
           </div>
 
-          {tab === 'connection' && (
+          {activeTab === 'connection' && (
             <div className='space-y-4'>
               <div>
                 <label className='block text-sm font-medium text-gray-700'>
@@ -526,9 +624,11 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
             </div>
           )}
 
-          {tab === 'registers' && (
+          {activeTab === 'registers' && (
             <div>
-              <h2 className='text-lg font-semibold mb-4'>Register Configuration</h2>
+              <h2 className='text-lg font-semibold mb-4'>
+                Register Configuration
+              </h2>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -651,6 +751,15 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                       {registers.map((register, index) => (
                         <tr key={index}>
                           <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                            {register.name}
+                          </td>
+                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                            {register.address}
+                          </td>
+                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                            {register.length}
+                          </td>
+                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                             {register.functionCode}
                           </td>
                           <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
@@ -671,13 +780,15 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 </div>
               ) : (
                 <div className='bg-gray-50 p-4 rounded'>
-                  <p className='text-center text-gray-500'>No registers added yet. Add registers for this device above.</p>
+                  <p className='text-center text-gray-500'>
+                    No registers added yet. Add registers for this device above.
+                  </p>
                 </div>
               )}
             </div>
           )}
 
-          {tab === 'template' && (
+          {activeTab === 'template' && (
             <div>
               <div className='flex items-center gap-4 mb-4'>
                 <label className='text-sm font-medium text-gray-700'>
@@ -717,7 +828,9 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                   {loading ? (
                     <div className='text-center py-4'>
                       <div className='animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mx-auto'></div>
-                      <p className='mt-2 text-sm text-gray-500'>Loading templates...</p>
+                      <p className='mt-2 text-sm text-gray-500'>
+                        Loading templates...
+                      </p>
                     </div>
                   ) : templates.length > 0 ? (
                     <div className='space-y-4'>
@@ -733,24 +846,32 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                           </option>
                         ))}
                       </select>
-                      
+
                       {selectedTemplateId && (
                         <div className='bg-gray-50 p-4 rounded'>
-                          <h3 className='font-medium text-gray-700 mb-2'>Template Details</h3>
+                          <h3 className='font-medium text-gray-700 mb-2'>
+                            Template Details
+                          </h3>
                           <p className='text-sm text-gray-600 mb-2'>
-                            {templates.find((t) => t.id === selectedTemplateId)?.description}
+                            {
+                              templates.find((t) => t.id === selectedTemplateId)
+                                ?.description
+                            }
                           </p>
                           <p className='text-sm text-gray-600'>
-                            This template includes {
-                              templates.find((t) => t.id === selectedTemplateId)?.registers.length || 0
-                            } preconfigured registers.
+                            This template includes{' '}
+                            {templates.find((t) => t.id === selectedTemplateId)
+                              ?.registers.length || 0}{' '}
+                            preconfigured registers.
                           </p>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className='bg-gray-50 p-4 rounded'>
-                      <p className='text-center text-gray-500'>No templates available.</p>
+                      <p className='text-center text-gray-500'>
+                        No templates available.
+                      </p>
                     </div>
                   )}
 
@@ -782,7 +903,7 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>
                       Description
@@ -792,12 +913,13 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                       className='p-2 border rounded w-full h-20 resize-none'
                     />
                   </div>
-                  
+
                   <p className='text-sm text-gray-500'>
-                    Saving as a template will save the current register configuration for future use.
-                    This makes it easy to create multiple devices of the same type.
+                    Saving as a template will save the current register
+                    configuration for future use. This makes it easy to create
+                    multiple devices of the same type.
                   </p>
-                  
+
                   <div className='pt-2'>
                     <button
                       type='button'
@@ -812,7 +934,7 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
             </div>
           )}
 
-          {tab === 'data' && (
+          {activeTab === 'data' && (
             <div>
               <div className='bg-yellow-50 text-yellow-800 p-4 rounded-lg mb-4'>
                 <h3 className='font-medium'>Data Reader</h3>
