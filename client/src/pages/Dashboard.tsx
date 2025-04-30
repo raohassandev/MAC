@@ -185,6 +185,14 @@ const Dashboard = () => {
     }
   };
 
+  // Fix for the charAt and slice error in the original code
+  const formatName = (name: string) => {
+    if (typeof name === 'string') {
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+    return String(name);
+  };
+
   return (
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
@@ -297,10 +305,7 @@ const Dashboard = () => {
               />
               <YAxis />
               <Tooltip
-                formatter={(value, name) => [
-                  `${value}%`,
-                  name.charAt(0).toUpperCase() + name.slice(1),
-                ]}
+                formatter={(value, name) => [`${value}%`, formatName(name as string)]}
                 labelFormatter={(label) =>
                   format(new Date(label), 'MMMM dd, yyyy')
                 }

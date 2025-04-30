@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { AuthProvider } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
-import Layout from './components/layout/Layout';
+import Layout from './layouts/Layout';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/common/ProtectedRoute';

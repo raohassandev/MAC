@@ -4,7 +4,7 @@ import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 
 interface LocationState {

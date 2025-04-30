@@ -1,17 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-
 import API from '../services/api';
-
-interface Device {
-  _id: string;
-  name: string;
-  ip?: string;
-  port?: number;
-  slaveId: number;
-  enabled: boolean;
-  registers: any[];
-  lastSeen?: Date;
-}
+import { Device } from '../types/device.types';
 
 interface UseDevicesReturn {
   devices: Device[];
@@ -41,12 +30,14 @@ export const useDevices = (): UseDevicesReturn => {
       const response = await API.get('/getDevices');
 
       // Add a lastSeen field to each device for demo purposes
-      const devicesWithLastSeen = response.data.map((device: Device) => ({
+      // Also ensure each device has a tags array
+      const devicesWithDefaults = response.data.map((device: Device) => ({
         ...device,
         lastSeen: device.enabled ? new Date() : undefined,
+        tags: device.tags || [], // Ensure tags property exists, default to empty array
       }));
 
-      setDevices(devicesWithLastSeen);
+      setDevices(devicesWithDefaults);
     } catch (err) {
       console.error('Error fetching devices:', err);
       setError(
@@ -91,7 +82,13 @@ export const useDevices = (): UseDevicesReturn => {
 
   const addDevice = async (device: Omit<Device, '_id'>): Promise<Device> => {
     try {
-      const response = await API.post('/addDevice', device);
+      // Ensure device has tags property
+      const deviceWithTags = {
+        ...device,
+        tags: device.tags || [],
+      };
+
+      const response = await API.post('/addDevice', deviceWithTags);
       await fetchDevices(); // Refresh the devices list
       return response.data;
     } catch (err) {
@@ -102,7 +99,16 @@ export const useDevices = (): UseDevicesReturn => {
 
   const updateDevice = async (device: Device): Promise<Device> => {
     try {
-      const response = await API.put(`/updateDevice/${device._id}`, device);
+      // Ensure device has tags property
+      const deviceWithTags = {
+        ...device,
+        tags: device.tags || [],
+      };
+
+      const response = await API.put(
+        `/updateDevice/${device._id}`,
+        deviceWithTags
+      );
 
       // Update the local state
       setDevices((prevDevices) =>

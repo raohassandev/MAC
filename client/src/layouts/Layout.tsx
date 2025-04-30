@@ -1,7 +1,7 @@
-import Footer from './Footer';
-import Header from './Header';
+import Footer from '../layouts/Footer';
+import Header from '../layouts/Header';
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import Sidebar from '../layouts/Sidebar';
 import { useState } from 'react';
 
 const Layout = () => {

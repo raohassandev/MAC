@@ -11,30 +11,35 @@ import api from '../api/client';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  isLoading: boolean;
   updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create a context with a default undefined value, will be initialized in the provider
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(
     localStorage.getItem('token')
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in
     if (token) {
       fetchUserData();
+    } else {
+      setIsLoading(false);
     }
   }, [token]);
 
@@ -104,16 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     token,
     isAuthenticated: !!user,
+    isLoading,
     login,
     logout,
-    isLoading,
     updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

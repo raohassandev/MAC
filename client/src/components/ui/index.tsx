@@ -383,7 +383,7 @@ export function Table<T>({
                 >
                   {column.render
                     ? column.render(item)
-                    : item[column.key as keyof T]}
+                    : (item[column.key as keyof T] as React.ReactNode)}
                 </td>
               ))}
             </tr>

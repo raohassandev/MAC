@@ -3,20 +3,19 @@ import {
   CreditCard,
   HardDrive,
   Home,
-  LayoutGrid,
   Menu,
   Settings,
   Sliders,
   Thermometer,
-  Tool,
-  User,
   Users,
+  Wrench,
+  User,
   X,
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const MainLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -97,7 +96,7 @@ const MainLayout: React.FC = () => {
           />
           <NavItem
             to='/deployment'
-            icon={<Tool size={18} />}
+            icon={<Wrench size={18} />}
             label='Deployment Tools'
           />
           <NavItem

@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from 'react';
 
 // import API from '../../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 // Types
 interface UserData {
@@ -689,10 +689,10 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: checked }));
-  };
+  // const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, checked } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: checked }));
+  // };
 
   const handlePermissionChange = (permission: string) => {
     setFormData((prev) => {

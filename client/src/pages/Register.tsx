@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 
 import { authService } from '../services/auth';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');

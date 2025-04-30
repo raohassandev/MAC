@@ -26,23 +26,23 @@ import {
   Table,
   Tabs,
 } from '../components/ui';
-import { Device, DeviceRegister } from '../types/device.types';
+import { Device } from '../types/device.types';
 import React, { useEffect, useState } from 'react';
 
 import NewDeviceForm from '../components/devices/NewDeviceForm';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../hooks/useDevices';
 
 type ViewMode = 'grid' | 'list' | 'map';
 type DeviceTab = 'devices' | 'connection' | 'registers' | 'template' | 'data';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  permissions?: string[];
-}
+// interface User {
+//   id: string;
+//   username: string;
+//   email: string;
+//   role: string;
+//   permissions?: string[];
+// }
 
 const DeviceManagement: React.FC = () => {
   // Hooks
@@ -95,7 +95,8 @@ const DeviceManagement: React.FC = () => {
 
     const tags = new Set<string>();
     devices.forEach((device) => {
-      if (device.tags) {
+      // Ensure device.tags exists before iterating
+      if (device.tags && Array.isArray(device.tags)) {
         device.tags.forEach((tag) => tags.add(tag));
       }
     });
@@ -133,7 +134,10 @@ const DeviceManagement: React.FC = () => {
     // Apply tag filter
     if (tagFilter) {
       filtered = filtered.filter(
-        (device) => device.tags && device.tags.includes(tagFilter)
+        (device) =>
+          device.tags &&
+          Array.isArray(device.tags) &&
+          device.tags.includes(tagFilter)
       );
     }
 
@@ -964,11 +968,13 @@ const DeviceListView: React.FC<DeviceListViewProps> = ({
       header: 'Tags',
       render: (device: Device) => (
         <div className='flex flex-wrap gap-1'>
-          {device.tags?.map((tag) => (
-            <Badge key={tag} variant='primary'>
-              {tag}
-            </Badge>
-          ))}
+          {device.tags && device.tags.length > 0
+            ? device.tags.map((tag) => (
+                <Badge key={tag} variant='primary'>
+                  {tag}
+                </Badge>
+              ))
+            : null}
         </div>
       ),
     },

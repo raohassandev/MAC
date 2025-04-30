@@ -1,6 +1,5 @@
 import { Bell, LogOut, Menu, Settings, User } from 'lucide-react';
-
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -89,7 +88,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
               className='flex items-center text-gray-500 focus:outline-none'
             >
               <span className='hidden md:block mr-2 text-sm'>
-                {user?.username}
+                {user?.username || user?.name}
               </span>
               <div className='h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white'>
                 <User size={16} />

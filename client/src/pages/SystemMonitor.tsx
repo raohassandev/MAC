@@ -1,11 +1,9 @@
 import {
   Activity,
-  BarChart,
   Cpu,
   Database,
   HardDrive,
-  Memory,
-  NetworkIcon,
+  Network,
   RefreshCw,
   Thermometer,
 } from 'lucide-react';
@@ -231,7 +229,7 @@ const SystemMonitor = () => {
           </div>
 
           <div className='flex items-center p-4 bg-gray-50 rounded-md'>
-            <Memory size={24} className='text-purple-500' />
+            <HardDrive size={24} className='text-purple-500' />
             <div className='ml-4'>
               <p className='text-sm text-gray-500'>Memory Usage</p>
               <p className='text-xl font-semibold'>
@@ -241,7 +239,7 @@ const SystemMonitor = () => {
           </div>
 
           <div className='flex items-center p-4 bg-gray-50 rounded-md'>
-            <HardDrive size={24} className='text-yellow-500' />
+            <Database size={24} className='text-yellow-500' />
             <div className='ml-4'>
               <p className='text-sm text-gray-500'>Disk Usage</p>
               <p className='text-xl font-semibold'>
@@ -271,7 +269,7 @@ const SystemMonitor = () => {
           </div>
 
           <div className='flex items-center p-4 bg-gray-50 rounded-md'>
-            <NetworkIcon size={24} className='text-blue-500' />
+            <Network size={24} className='text-blue-500' />
             <div className='ml-4'>
               <p className='text-sm text-gray-500'>Network Traffic</p>
               <p className='text-xl font-semibold'>

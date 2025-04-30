@@ -12,7 +12,7 @@ import { settingsApi, userApi } from '../api/endpoints';
 import { useEffect, useState } from 'react';
 
 import { toast } from 'react-toastify';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 interface SystemSettings {
   refreshInterval: number;
