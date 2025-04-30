@@ -157,15 +157,61 @@ MacSys (Modbus Device Management System) is a full-stack application for monitor
 - Email: admin@macsys.com
 - Password: admin123
 
+## Environment Variables
+
+### Backend (.env)
+```
+# Server Configuration
+PORT=3333
+
+# MongoDB Connection
+MONGO_URI=mongodb://localhost:27017/macsys
+
+# JWT Secret for Authentication
+JWT_SECRET=your_jwt_secret_here
+
+# Other Configuration
+NODE_ENV=development
+```
+
+### Frontend (client/.env.development, client/.env.production)
+```
+# Development
+VITE_API_URL=http://localhost:3333
+
+# Production
+VITE_API_URL=/api
+```
+
+## State Management
+- **Authentication**: Managed via AuthContext, with JWT stored in localStorage
+- **Devices**: Managed through useDevices hook with context-based caching
+- **Profiles**: Managed through custom hooks with API calls
+- **UI State**: Managed locally in components using useState/useReducer
+
+## Error Handling Strategy
+- Backend errors return consistent JSON structure with message field
+- Frontend uses try/catch blocks around API calls
+- Error states stored in component state (e.g., `const [error, setError] = useState<string | null>(null)`)
+- Error notifications displayed via toast notifications or inline messages
+- Network errors handled with retries for device communication
+- Form validation errors shown inline with input fields
+
 ## Known Issues and Requirements
 - Integration with real Modbus devices needs proper configuration
 - Proper error handling for network issues
 - UI/UX improvements for the device management interface
 - Enhanced reporting and analytics features
+- Handling of concurrent profile applications to the same device
+- Better error visualization for device communication failures
+- Performance optimization for large device lists
 
 ## Development Roadmap
 - Complete core device and profile management features
 - Implement real-time monitoring with WebSockets
-- Add advanced scheduling capabilities
+- Add advanced scheduling capabilities 
 - Develop reporting and analytics dashboard
 - Implement user management for administrators
+- Add support for different Modbus device types and protocols
+- Implement backup and restore functionality
+- Create mobile-responsive interface

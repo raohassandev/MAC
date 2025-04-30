@@ -2,6 +2,14 @@
 
 ## Core Components
 
+### Supported Modbus Device Types
+- **Temperature Controllers**: HVAC and cooling system controllers
+- **Energy Analyzers**: Power monitoring devices
+- **Programmable Logic Controllers (PLCs)**: Industrial automation devices
+- **Variable Frequency Drives (VFDs)**: Motor speed controllers
+- **Sensors**: Temperature, humidity, pressure sensors
+- **Custom Devices**: User-defined device configurations
+
 ### Backend Services
 
 #### 1. Device Communication Service
@@ -216,4 +224,3 @@ interface User {
 - Implement pagination for device/profile lists
 - Optimize Modbus communication for multiple devices
 - Use React.memo for frequently re-rendered components
-- 
