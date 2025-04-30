@@ -128,3 +128,19 @@ export enum DeviceAction {
   Read = 'read',
   Apply = 'apply',
 }
+
+
+
+export interface DeviceFilter {
+  search?: string;
+  status?: 'online' | 'offline' | null;
+  tags?: string[];
+  make?: string;
+  model?: string;
+  group?: string;
+  connectionType?: 'tcp' | 'rtu' | null;
+  lastSeen?: {
+    from?: Date;
+    to?: Date;
+  };
+}
