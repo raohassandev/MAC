@@ -1,11 +1,7 @@
-import {
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts';
+
+import * as Tooltip from '@radix-ui/react-tooltip';
+import { Card } from '@/components/ui/Card';
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 interface DeviceStatusChartProps {
   online: number;
@@ -21,9 +17,11 @@ const DeviceStatusChart = ({ online, offline }: DeviceStatusChartProps) => {
   // Only show the chart if we have devices to display
   if (online + offline === 0) {
     return (
-      <div className='flex items-center justify-center h-48 bg-gray-50 rounded'>
-        <p className='text-gray-500'>No device data available</p>
-      </div>
+      <Card.Root className='h-48 bg-gray-50 rounded'>
+        <Card.Content className='flex items-center justify-center h-full'>
+          <p className='text-gray-500'>No device data available</p>
+        </Card.Content>
+      </Card.Root>
     );
   }
 
@@ -47,7 +45,27 @@ const DeviceStatusChart = ({ online, offline }: DeviceStatusChartProps) => {
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip formatter={(value) => [`${value} devices`, 'Count']} />
+          <Tooltip.Provider>
+            {data.map((entry, index) => (
+              <Tooltip.Root key={`tooltip-${index}`}>
+                <Tooltip.Trigger asChild>
+                  <g></g> {/* Empty group to attach tooltip to pie segments */}
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    className='bg-white shadow-md rounded-md px-3 py-2 text-sm'
+                    sideOffset={5}
+                  >
+                    <div>
+                      <span className='font-medium'>{entry.name}</span>:{' '}
+                      {entry.value} devices
+                    </div>
+                    <Tooltip.Arrow className='fill-white' />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            ))}
+          </Tooltip.Provider>
           <Legend />
         </PieChart>
       </ResponsiveContainer>

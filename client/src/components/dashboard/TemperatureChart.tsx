@@ -1,3 +1,8 @@
+
+// src/components/dashboard/TemperatureChart.tsx
+import React from 'react';
+import { Card } from '@/components/ui/Card';
+
 import {
   CartesianGrid,
   Legend,
@@ -8,8 +13,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-import React from 'react';
 
 interface DataPoint {
   time: string;
@@ -26,36 +29,48 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({
   title = 'Temperature Over Time',
 }) => {
   if (!data || data.length === 0) {
-    return <div>No temperature data available</div>;
+    return (
+      <Card.Root className="p-6 text-center bg-gray-50 rounded-lg">
+        <Card.Content>
+          <div>No temperature data available</div>
+        </Card.Content>
+      </Card.Root>
+    );
   }
 
   return (
-    <div className='chart-container'>
-      <h3>{title}</h3>
-      <ResponsiveContainer width='100%' height={300}>
-        <LineChart
-          data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='time' />
-          <YAxis unit='°C' />
-          <Tooltip />
-          <Legend />
-          <Line
-            type='monotone'
-            dataKey='temperature'
-            stroke='#8884d8'
-            activeDot={{ r: 8 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <Card.Root className="chart-container">
+      <Card.Header className="p-4 border-b border-gray-200">
+        <h3 className="text-lg font-medium">{title}</h3>
+      </Card.Header>
+      <Card.Content className="p-4">
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="time" />
+              <YAxis unit="°C" />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="temperature"
+                stroke="#8884d8"
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </Card.Content>
+    </Card.Root>
   );
 };
 

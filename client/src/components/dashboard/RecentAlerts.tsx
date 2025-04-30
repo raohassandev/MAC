@@ -1,10 +1,11 @@
+
+import { Card } from '@/components/ui/Card';
 import {
   AlertCircle,
   AlertTriangle,
   Info,
   Link as LinkIcon,
 } from 'lucide-react';
-
 import { Link } from 'react-router-dom';
 
 interface Alert {
@@ -24,10 +25,12 @@ interface RecentAlertsProps {
 const RecentAlerts = ({ alerts }: RecentAlertsProps) => {
   if (!alerts || alerts.length === 0) {
     return (
-      <div className='text-center py-8 text-gray-500'>
-        <Info className='mx-auto mb-2' size={24} />
-        <p>No alerts found</p>
-      </div>
+      <Card.Root className='text-center py-8 text-gray-500'>
+        <Card.Content className='flex flex-col items-center'>
+          <Info className='mx-auto mb-2' size={24} />
+          <p>No alerts found</p>
+        </Card.Content>
+      </Card.Root>
     );
   }
 
@@ -58,7 +61,7 @@ const RecentAlerts = ({ alerts }: RecentAlertsProps) => {
   };
 
   const getAlertClass = (severity: string, isRead: boolean) => {
-    let baseClass = 'p-3 border-l-4 rounded-r-md mb-2 ';
+    let baseClass = 'mb-2 ';
 
     if (isRead) baseClass += 'bg-gray-50 ';
     else baseClass += 'bg-white ';
@@ -77,32 +80,36 @@ const RecentAlerts = ({ alerts }: RecentAlertsProps) => {
   return (
     <div className='space-y-3'>
       {alerts.map((alert) => (
-        <div
+        <Card.Root
           key={alert.id}
           className={getAlertClass(alert.severity, alert.isRead)}
         >
-          <div className='flex items-start'>
-            <div className='mr-3 mt-0.5'>{getAlertIcon(alert.severity)}</div>
-            <div className='flex-1 min-w-0'>
-              <div className='flex justify-between'>
-                <p className='font-medium text-gray-800'>{alert.deviceName}</p>
-                <span className='text-xs text-gray-500'>
-                  {formatTimeAgo(alert.timestamp)}
-                </span>
-              </div>
-              <p className='text-sm text-gray-600'>{alert.message}</p>
-              <div className='mt-1'>
-                <Link
-                  to={`/devices/${alert.deviceId}`}
-                  className='flex items-center text-xs text-blue-500 hover:text-blue-700'
-                >
-                  <LinkIcon size={12} className='mr-1' />
-                  View device
-                </Link>
+          <Card.Content className='p-3 border-l-4 rounded-r-md'>
+            <div className='flex items-start'>
+              <div className='mr-3 mt-0.5'>{getAlertIcon(alert.severity)}</div>
+              <div className='flex-1 min-w-0'>
+                <div className='flex justify-between'>
+                  <p className='font-medium text-gray-800'>
+                    {alert.deviceName}
+                  </p>
+                  <span className='text-xs text-gray-500'>
+                    {formatTimeAgo(alert.timestamp)}
+                  </span>
+                </div>
+                <p className='text-sm text-gray-600'>{alert.message}</p>
+                <div className='mt-1'>
+                  <Link
+                    to={`/devices/${alert.deviceId}`}
+                    className='flex items-center text-xs text-blue-500 hover:text-blue-700'
+                  >
+                    <LinkIcon size={12} className='mr-1' />
+                    View device
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </Card.Content>
+        </Card.Root>
       ))}
     </div>
   );

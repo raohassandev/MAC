@@ -1,3 +1,7 @@
+// src/components/dashboard/QuickActionPanel.tsx
+import React from 'react';
+import { Card } from '@/components/ui/Card';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import {
   BarChart,
   Bell,
@@ -10,8 +14,6 @@ import {
   User,
 } from 'lucide-react';
 
-import React from 'react';
-
 const QuickActionPanel: React.FC = () => {
   // In a real app, these actions would trigger actual functionality
   const handleAction = (action: string) => {
@@ -20,76 +22,78 @@ const QuickActionPanel: React.FC = () => {
   };
 
   return (
-    <div className='bg-white rounded-lg shadow-sm p-4'>
-      <div className='flex justify-between items-center mb-4'>
+    <Card.Root className='bg-white rounded-lg shadow-sm p-4'>
+      <Card.Header className='flex justify-between items-center mb-4'>
         <h2 className='text-lg font-semibold'>Quick Actions</h2>
-      </div>
+      </Card.Header>
 
-      <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-4'>
-        <ActionButton
-          icon={<Plus size={20} />}
-          label='Add Device'
-          color='bg-blue-500'
-          onClick={() => handleAction('add_device')}
-        />
+      <Card.Content>
+        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-4'>
+          <ActionButton
+            icon={<Plus size={20} />}
+            label='Add Device'
+            color='bg-blue-500'
+            onClick={() => handleAction('add_device')}
+          />
 
-        <ActionButton
-          icon={<RefreshCw size={20} />}
-          label='Refresh Devices'
-          color='bg-green-500'
-          onClick={() => handleAction('refresh_devices')}
-        />
+          <ActionButton
+            icon={<RefreshCw size={20} />}
+            label='Refresh Devices'
+            color='bg-green-500'
+            onClick={() => handleAction('refresh_devices')}
+          />
 
-        <ActionButton
-          icon={<Settings size={20} />}
-          label='Apply Profile'
-          color='bg-purple-500'
-          onClick={() => handleAction('apply_profile')}
-        />
+          <ActionButton
+            icon={<Settings size={20} />}
+            label='Apply Profile'
+            color='bg-purple-500'
+            onClick={() => handleAction('apply_profile')}
+          />
 
-        <ActionButton
-          icon={<Bell size={20} />}
-          label='Check Alerts'
-          color='bg-amber-500'
-          onClick={() => handleAction('check_alerts')}
-        />
+          <ActionButton
+            icon={<Bell size={20} />}
+            label='Check Alerts'
+            color='bg-amber-500'
+            onClick={() => handleAction('check_alerts')}
+          />
 
-        <ActionButton
-          icon={<Download size={20} />}
-          label='Export Data'
-          color='bg-indigo-500'
-          onClick={() => handleAction('export_data')}
-        />
+          <ActionButton
+            icon={<Download size={20} />}
+            label='Export Data'
+            color='bg-indigo-500'
+            onClick={() => handleAction('export_data')}
+          />
 
-        <ActionButton
-          icon={<User size={20} />}
-          label='User Settings'
-          color='bg-cyan-500'
-          onClick={() => handleAction('user_settings')}
-        />
+          <ActionButton
+            icon={<User size={20} />}
+            label='User Settings'
+            color='bg-cyan-500'
+            onClick={() => handleAction('user_settings')}
+          />
 
-        <ActionButton
-          icon={<HardDrive size={20} />}
-          label='Test Devices'
-          color='bg-rose-500'
-          onClick={() => handleAction('test_devices')}
-        />
+          <ActionButton
+            icon={<HardDrive size={20} />}
+            label='Test Devices'
+            color='bg-rose-500'
+            onClick={() => handleAction('test_devices')}
+          />
 
-        <ActionButton
-          icon={<FileText size={20} />}
-          label='View Logs'
-          color='bg-emerald-500'
-          onClick={() => handleAction('view_logs')}
-        />
+          <ActionButton
+            icon={<FileText size={20} />}
+            label='View Logs'
+            color='bg-emerald-500'
+            onClick={() => handleAction('view_logs')}
+          />
 
-        <ActionButton
-          icon={<BarChart size={20} />}
-          label='Reports'
-          color='bg-orange-500'
-          onClick={() => handleAction('view_reports')}
-        />
-      </div>
-    </div>
+          <ActionButton
+            icon={<BarChart size={20} />}
+            label='Reports'
+            color='bg-orange-500'
+            onClick={() => handleAction('view_reports')}
+          />
+        </div>
+      </Card.Content>
+    </Card.Root>
   );
 };
 
@@ -107,13 +111,30 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   onClick,
 }) => {
   return (
-    <button
-      onClick={onClick}
-      className='flex flex-col items-center justify-center p-4 rounded-lg transition-all hover:shadow-md'
-    >
-      <div className={`p-3 rounded-full ${color} text-white mb-2`}>{icon}</div>
-      <span className='text-xs font-medium text-gray-700'>{label}</span>
-    </button>
+    <Tooltip.Provider>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <button
+            onClick={onClick}
+            className='flex flex-col items-center justify-center p-4 rounded-lg transition-all hover:shadow-md'
+          >
+            <div className={`p-3 rounded-full ${color} text-white mb-2`}>
+              {icon}
+            </div>
+            <span className='text-xs font-medium text-gray-700'>{label}</span>
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            className='bg-white shadow-md rounded-md px-3 py-1.5 text-sm'
+            sideOffset={5}
+          >
+            {label}
+            <Tooltip.Arrow className='fill-white' />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
   );
 };
 

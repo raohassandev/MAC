@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { Card } from '@/components/ui/Card';
 
 interface StatusCardProps {
   title: string;
@@ -16,17 +18,21 @@ const StatusCard: React.FC<StatusCardProps> = ({
   textColor = 'text-gray-800',
 }) => {
   return (
-    <div
-      className={`${bgColor} rounded-lg shadow-sm p-5 transition-all hover:shadow-md`}
+    <Card.Root
+      className={`${bgColor} rounded-lg shadow-sm transition-all hover:shadow-md`}
     >
-      <div className='flex justify-between items-start'>
-        <div>
-          <h3 className='text-sm font-medium text-gray-500'>{title}</h3>
-          <p className={`text-2xl font-semibold mt-1 ${textColor}`}>{value}</p>
+      <Card.Content className='p-5'>
+        <div className='flex justify-between items-start'>
+          <div>
+            <h3 className='text-sm font-medium text-gray-500'>{title}</h3>
+            <p className={`text-2xl font-semibold mt-1 ${textColor}`}>
+              {value}
+            </p>
+          </div>
+          <div className='text-2xl'>{icon}</div>
         </div>
-        <div className='text-2xl'>{icon}</div>
-      </div>
-    </div>
+      </Card.Content>
+    </Card.Root>
   );
 };
 
