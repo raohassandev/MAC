@@ -1,6 +1,7 @@
 import {
-  Activity,
   AlertCircle,
+  CheckCircle,
+  ChevronDown,
   Download,
   Edit,
   FileText,
@@ -9,9 +10,11 @@ import {
   HardDrive,
   List,
   Map as MapIcon,
+  MoreHorizontal,
   Plus,
   RefreshCw,
   Search,
+  Server,
   Settings,
   Trash,
   X,
@@ -23,6 +26,7 @@ import NewDeviceForm from '../components/devices/NewDeviceForm';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../hooks/useDevices';
 import { Device } from '../types/device.types';
+import DeviceGroupSelector from '../components/devices/DeviceGroupSelector';
 
 type ViewMode = 'grid' | 'list' | 'map';
 
@@ -36,6 +40,7 @@ const DeviceManagement: React.FC = () => {
     addDevice,
     updateDevice,
     deleteDevice,
+    testConnection,
   } = useDevices();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -59,13 +64,52 @@ const DeviceManagement: React.FC = () => {
   const [isNewDeviceModalOpen, setIsNewDeviceModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [groupFilter, setGroupFilter] = useState<string | null>(null);
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState<string | null>(null);
   const [filteredDevices, setFilteredDevices] = useState<Device[]>([]);
+  const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [deviceTypes, setDeviceTypes] = useState<string[]>([]);
+  const [sortField, setSortField] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [testingDevice, setTestingDevice] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<{
+    deviceId: string;
+    success: boolean;
+    message: string;
+  } | null>(null);
 
-  // Apply filters when devices, search, or filters change
+  // Extract all tags and device types from devices
+  useEffect(() => {
+    if (devices && devices.length > 0) {
+      // Extract unique tags
+      const allTags = devices.reduce((acc: string[], device) => {
+        if (device.tags && device.tags.length > 0) {
+          return [...acc, ...device.tags];
+        }
+        return acc;
+      }, []);
+
+      setTags([...new Set(allTags)]);
+
+      // Extract unique device types based on make/model
+      const types = devices.reduce((acc: string[], device) => {
+        if (device.make && !acc.includes(device.make)) {
+          return [...acc, device.make];
+        }
+        return acc;
+      }, []);
+
+      setDeviceTypes([...new Set(types)]);
+    }
+  }, [devices]);
+
+  // Apply filters, sorting and search when dependencies change
   useEffect(() => {
     if (!devices) return;
 
@@ -77,7 +121,9 @@ const DeviceManagement: React.FC = () => {
       filtered = filtered.filter(
         (device) =>
           device.name.toLowerCase().includes(query) ||
-          (device.ip && device.ip.toLowerCase().includes(query))
+          (device.ip && device.ip.toLowerCase().includes(query)) ||
+          (device.make && device.make.toLowerCase().includes(query)) ||
+          (device.model && device.model.toLowerCase().includes(query))
       );
     }
 
@@ -88,13 +134,61 @@ const DeviceManagement: React.FC = () => {
       );
     }
 
+    // Apply type filter
+    if (typeFilter) {
+      filtered = filtered.filter((device) => device.make === typeFilter);
+    }
+
+    // Apply tag filters
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((device) =>
+        selectedTags.some((tag) => device.tags && device.tags.includes(tag))
+      );
+    }
+
+    // Apply group filter (placeholder for future implementation)
+    if (groupFilter) {
+      // This would filter by device group once implemented
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let valueA = a[sortField as keyof Device];
+      let valueB = b[sortField as keyof Device];
+
+      // Handle special cases
+      if (sortField === 'lastSeen') {
+        valueA = valueA ? new Date(valueA).getTime() : 0;
+        valueB = valueB ? new Date(valueB).getTime() : 0;
+      }
+
+      if (valueA === undefined) valueA = '';
+      if (valueB === undefined) valueB = '';
+
+      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
     setFilteredDevices(filtered);
-  }, [devices, searchQuery, statusFilter]);
+  }, [
+    devices,
+    searchQuery,
+    statusFilter,
+    typeFilter,
+    groupFilter,
+    selectedTags,
+    sortField,
+    sortDirection,
+  ]);
 
   // Reset all filters
   const resetFilters = () => {
     setSearchQuery('');
     setStatusFilter(null);
+    setTypeFilter(null);
+    setGroupFilter(null);
+    setSelectedTags([]);
   };
 
   // Handle device selection for bulk operations
@@ -132,6 +226,7 @@ const DeviceManagement: React.FC = () => {
     await refreshDevices();
     // Clear selection
     setSelectedDevices([]);
+    setBulkActionMenuOpen(false);
   };
 
   // Handle bulk delete
@@ -140,6 +235,7 @@ const DeviceManagement: React.FC = () => {
 
     setDeviceToDelete('bulk');
     setShowDeleteModal(true);
+    setBulkActionMenuOpen(false);
   };
 
   // Handle single device delete
@@ -190,6 +286,29 @@ const DeviceManagement: React.FC = () => {
     navigate(`/devices/${deviceId}`);
   };
 
+  // Handle test connection
+  const handleTestConnection = async (deviceId: string) => {
+    setTestingDevice(deviceId);
+    setTestResults(null);
+
+    try {
+      const result = await testConnection(deviceId);
+      setTestResults({
+        deviceId,
+        success: result.success,
+        message: result.message,
+      });
+    } catch (error: any) {
+      setTestResults({
+        deviceId,
+        success: false,
+        message: error.message || 'Connection test failed',
+      });
+    } finally {
+      setTestingDevice(null);
+    }
+  };
+
   // Export devices to CSV
   const handleExportDevices = () => {
     if (!filteredDevices.length) return;
@@ -202,7 +321,11 @@ const DeviceManagement: React.FC = () => {
       'Status',
       'Slave ID',
       'Last Seen',
+      'Make',
+      'Model',
+      'Tags',
     ].join(',');
+
     const rows = filteredDevices.map((device) =>
       [
         device.name,
@@ -211,6 +334,9 @@ const DeviceManagement: React.FC = () => {
         device.enabled ? 'Enabled' : 'Disabled',
         device.slaveId,
         device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'Never',
+        device.make || '',
+        device.model || '',
+        device.tags ? device.tags.join(';') : '',
       ].join(',')
     );
 
@@ -230,6 +356,25 @@ const DeviceManagement: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  // Toggle tag selection
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  // Handle sort change
+  const handleSortChange = (field: string) => {
+    if (sortField === field) {
+      // If already sorting by this field, toggle direction
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      // Otherwise, sort by this field in ascending order
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
   // Format date for display
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return 'Never';
@@ -238,11 +383,29 @@ const DeviceManagement: React.FC = () => {
     return date.toLocaleString();
   };
 
+  // Get device statistics
+  const getDeviceStats = () => {
+    const total = filteredDevices.length;
+    const online = filteredDevices.filter((device) => device.enabled).length;
+    const offline = total - online;
+
+    return { total, online, offline };
+  };
+
+  const stats = getDeviceStats();
+
   return (
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex justify-between items-center'>
-        <h1 className='text-2xl font-bold text-gray-800'>Device Management</h1>
+        <div>
+          <h1 className='text-2xl font-bold text-gray-800'>
+            Device Management
+          </h1>
+          <p className='text-sm text-gray-500 mt-1'>
+            Manage and monitor your Modbus devices
+          </p>
+        </div>
         <div className='flex space-x-2'>
           {canAddDevices && (
             <button
@@ -256,7 +419,7 @@ const DeviceManagement: React.FC = () => {
           {filteredDevices.length > 0 && (
             <button
               onClick={handleExportDevices}
-              className='flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300'
+              className='flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200'
             >
               <Download size={16} />
               Export
@@ -265,9 +428,42 @@ const DeviceManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Device Stats */}
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+        <div className='bg-white rounded-lg shadow-sm p-4 flex items-center'>
+          <div className='rounded-full bg-blue-100 p-3 mr-4'>
+            <Server size={20} className='text-blue-500' />
+          </div>
+          <div>
+            <p className='text-sm text-gray-500'>Total Devices</p>
+            <p className='text-xl font-semibold'>{stats.total}</p>
+          </div>
+        </div>
+
+        <div className='bg-white rounded-lg shadow-sm p-4 flex items-center'>
+          <div className='rounded-full bg-green-100 p-3 mr-4'>
+            <CheckCircle size={20} className='text-green-500' />
+          </div>
+          <div>
+            <p className='text-sm text-gray-500'>Online Devices</p>
+            <p className='text-xl font-semibold'>{stats.online}</p>
+          </div>
+        </div>
+
+        <div className='bg-white rounded-lg shadow-sm p-4 flex items-center'>
+          <div className='rounded-full bg-red-100 p-3 mr-4'>
+            <AlertCircle size={20} className='text-red-500' />
+          </div>
+          <div>
+            <p className='text-sm text-gray-500'>Offline Devices</p>
+            <p className='text-xl font-semibold'>{stats.offline}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Search and Filters */}
       <div className='bg-white rounded-lg shadow p-4'>
-        <div className='flex flex-col md:flex-row gap-4'>
+        <div className='flex flex-col md:flex-row gap-4 mb-4'>
           {/* Search */}
           <div className='relative flex-grow'>
             <Search
@@ -302,11 +498,31 @@ const DeviceManagement: React.FC = () => {
             <option value='offline'>Offline</option>
           </select>
 
+          {/* Device Type Filter */}
+          <select
+            value={typeFilter || ''}
+            onChange={(e) => setTypeFilter(e.target.value || null)}
+            className='px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+          >
+            <option value=''>All Types</option>
+            {deviceTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+
           {/* Reset Filters */}
           <button
             onClick={resetFilters}
             className='px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50'
-            disabled={!searchQuery && !statusFilter}
+            disabled={
+              !searchQuery &&
+              !statusFilter &&
+              !typeFilter &&
+              !groupFilter &&
+              selectedTags.length === 0
+            }
           >
             <div className='flex items-center gap-1'>
               <Filter size={16} />
@@ -363,6 +579,25 @@ const DeviceManagement: React.FC = () => {
           </button>
         </div>
 
+        {/* Tag Filters */}
+        {tags.length > 0 && (
+          <div className='flex flex-wrap gap-2 mb-4'>
+            {tags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 text-sm rounded-full border ${
+                  selectedTags.includes(tag)
+                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    : 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Bulk Actions */}
         {selectedDevices.length > 0 && (
           <div className='mt-4 pt-4 border-t border-gray-200'>
@@ -371,32 +606,87 @@ const DeviceManagement: React.FC = () => {
                 {selectedDevices.length} devices selected
               </span>
               <div className='flex gap-2'>
+                <div className='relative'>
+                  <button
+                    onClick={() => setBulkActionMenuOpen(!bulkActionMenuOpen)}
+                    className='px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 flex items-center gap-1'
+                  >
+                    Bulk Actions
+                    <ChevronDown size={16} />
+                  </button>
+
+                  {bulkActionMenuOpen && (
+                    <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1'>
+                      <button
+                        onClick={() => handleBulkStatusChange(true)}
+                        className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                        disabled={!canEditDevices}
+                      >
+                        Enable Selected
+                      </button>
+                      <button
+                        onClick={() => handleBulkStatusChange(false)}
+                        className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                        disabled={!canEditDevices}
+                      >
+                        Disable Selected
+                      </button>
+                      <button
+                        onClick={handleBulkDelete}
+                        className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100'
+                        disabled={!canDeleteDevices}
+                      >
+                        Delete Selected
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <button
-                  onClick={() => handleBulkStatusChange(true)}
-                  className='px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600'
-                  disabled={!canEditDevices}
+                  onClick={() => setSelectedDevices([])}
+                  className='px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50'
                 >
-                  Enable Selected
-                </button>
-                <button
-                  onClick={() => handleBulkStatusChange(false)}
-                  className='px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600'
-                  disabled={!canEditDevices}
-                >
-                  Disable Selected
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className='px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600'
-                  disabled={!canDeleteDevices}
-                >
-                  Delete Selected
+                  Clear Selection
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Test Results Message */}
+      {testResults && (
+        <div
+          className={`p-4 rounded-md ${
+            testResults.success
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
+          } border`}
+        >
+          <div className='flex items-start'>
+            {testResults.success ? (
+              <CheckCircle size={20} className='text-green-500 mr-3 mt-0.5' />
+            ) : (
+              <AlertCircle size={20} className='text-red-500 mr-3 mt-0.5' />
+            )}
+            <div>
+              <p
+                className={
+                  testResults.success ? 'text-green-800' : 'text-red-800'
+                }
+              >
+                {testResults.message}
+              </p>
+              <button
+                onClick={() => setTestResults(null)}
+                className='text-sm text-gray-500 mt-1 hover:text-gray-700'
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -424,19 +714,30 @@ const DeviceManagement: React.FC = () => {
             No devices found
           </h3>
           <p className='text-gray-500 mb-4'>
-            {searchQuery || statusFilter
+            {searchQuery ||
+            statusFilter ||
+            typeFilter ||
+            groupFilter ||
+            selectedTags.length > 0
               ? 'Try adjusting your filters'
               : "You haven't added any devices yet."}
           </p>
-          {canAddDevices && !(searchQuery || statusFilter) && (
-            <button
-              onClick={() => setIsNewDeviceModalOpen(true)}
-              className='inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
-            >
-              <Plus size={16} className='mr-2' />
-              Add your first device
-            </button>
-          )}
+          {canAddDevices &&
+            !(
+              searchQuery ||
+              statusFilter ||
+              typeFilter ||
+              groupFilter ||
+              selectedTags.length > 0
+            ) && (
+              <button
+                onClick={() => setIsNewDeviceModalOpen(true)}
+                className='inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+              >
+                <Plus size={16} className='mr-2' />
+                Add your first device
+              </button>
+            )}
         </div>
       ) : viewMode === 'list' ? (
         <div className='bg-white rounded-lg shadow overflow-hidden'>
@@ -458,26 +759,82 @@ const DeviceManagement: React.FC = () => {
                         onChange={handleSelectAll}
                         className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
                       />
-                      <span className='ml-2'>Name</span>
+                      <button
+                        className='ml-2 flex items-center'
+                        onClick={() => handleSortChange('name')}
+                      >
+                        <span>Name</span>
+                        {sortField === 'name' && (
+                          <span className='ml-1'>
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </button>
                     </div>
                   </th>
                   <th
                     scope='col'
                     className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
                   >
-                    Status
+                    <button
+                      className='flex items-center'
+                      onClick={() => handleSortChange('enabled')}
+                    >
+                      <span>Status</span>
+                      {sortField === 'enabled' && (
+                        <span className='ml-1'>
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
                   </th>
                   <th
                     scope='col'
                     className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
                   >
-                    Connection Info
+                    <button
+                      className='flex items-center'
+                      onClick={() => handleSortChange('ip')}
+                    >
+                      <span>Connection Info</span>
+                      {sortField === 'ip' && (
+                        <span className='ml-1'>
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
                   </th>
                   <th
                     scope='col'
                     className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
                   >
-                    Last Seen
+                    <button
+                      className='flex items-center'
+                      onClick={() => handleSortChange('make')}
+                    >
+                      <span>Make/Model</span>
+                      {sortField === 'make' && (
+                        <span className='ml-1'>
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                  >
+                    <button
+                      className='flex items-center'
+                      onClick={() => handleSortChange('lastSeen')}
+                    >
+                      <span>Last Seen</span>
+                      {sortField === 'lastSeen' && (
+                        <span className='ml-1'>
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </button>
                   </th>
                   <th
                     scope='col'
@@ -498,20 +855,34 @@ const DeviceManagement: React.FC = () => {
                           onChange={() => handleSelectDevice(device._id)}
                           className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
                         />
-                        <div className='ml-4 flex items-center'>
+                        <div
+                          className='ml-4 flex items-center cursor-pointer hover:text-blue-600'
+                          onClick={() => handleViewDevice(device._id)}
+                        >
                           <div
                             className={`h-2.5 w-2.5 rounded-full mr-2 ${
                               device.enabled ? 'bg-green-500' : 'bg-red-500'
                             }`}
                           ></div>
-                          <div
-                            className='font-medium text-gray-900 cursor-pointer hover:text-blue-600'
-                            onClick={() => handleViewDevice(device._id)}
-                          >
+                          <div className='font-medium text-gray-900'>
                             {device.name}
                           </div>
                         </div>
                       </div>
+
+                      {/* Tags */}
+                      {device.tags && device.tags.length > 0 && (
+                        <div className='ml-6 mt-1 flex flex-wrap gap-1'>
+                          {device.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className='inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded-full'
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
                       <span
@@ -530,34 +901,58 @@ const DeviceManagement: React.FC = () => {
                         : 'N/A'}
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      {device.make && device.model
+                        ? `${device.make} ${device.model}`
+                        : device.make || device.model || 'N/A'}
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                       {formatDate(device.lastSeen)}
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                      <button
-                        onClick={() => handleViewDevice(device._id)}
-                        className='text-blue-600 hover:text-blue-900 mr-3'
-                        title='View'
-                      >
-                        <Activity size={16} />
-                      </button>
-                      {canEditDevices && (
+                      <div className='flex justify-end space-x-3'>
                         <button
-                          onClick={() => handleEditDevice(device._id)}
-                          className='text-indigo-600 hover:text-indigo-900 mr-3'
-                          title='Edit'
+                          onClick={() => handleViewDevice(device._id)}
+                          title='View Details'
+                          className='text-blue-600 hover:text-blue-900'
                         >
-                          <Edit size={16} />
+                          <FileText size={16} />
                         </button>
-                      )}
-                      {canDeleteDevices && (
-                        <button
-                          onClick={() => handleDeleteDevice(device._id)}
-                          className='text-red-600 hover:text-red-900'
-                          title='Delete'
-                        >
-                          <Trash size={16} />
-                        </button>
-                      )}
+
+                        {canTestDevices && (
+                          <button
+                            onClick={() => handleTestConnection(device._id)}
+                            title='Test Connection'
+                            className='text-blue-600 hover:text-blue-900'
+                            disabled={testingDevice === device._id}
+                          >
+                            {testingDevice === device._id ? (
+                              <RefreshCw size={16} className='animate-spin' />
+                            ) : (
+                              <Server size={16} />
+                            )}
+                          </button>
+                        )}
+
+                        {canEditDevices && (
+                          <button
+                            onClick={() => handleEditDevice(device._id)}
+                            title='Edit'
+                            className='text-indigo-600 hover:text-indigo-900'
+                          >
+                            <Edit size={16} />
+                          </button>
+                        )}
+
+                        {canDeleteDevices && (
+                          <button
+                            onClick={() => handleDeleteDevice(device._id)}
+                            title='Delete'
+                            className='text-red-600 hover:text-red-900'
+                          >
+                            <Trash size={16} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -566,60 +961,103 @@ const DeviceManagement: React.FC = () => {
           </div>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
           {filteredDevices.map((device) => (
             <div
               key={device._id}
-              className='bg-white rounded-lg shadow hover:shadow-md transition-shadow'
+              className='bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow'
             >
-              <div className='p-4 border-b'>
+              <div className='p-4 border-b relative'>
                 <div className='flex justify-between items-start'>
-                  <div
-                    className='text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600'
-                    onClick={() => handleViewDevice(device._id)}
-                  >
-                    {device.name}
+                  <div className='flex-1'>
+                    <h3
+                      className='text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600'
+                      onClick={() => handleViewDevice(device._id)}
+                    >
+                      {device.name}
+                    </h3>
+                    {device.make && device.model && (
+                      <p className='text-sm text-gray-500'>
+                        {device.make} {device.model}
+                      </p>
+                    )}
                   </div>
                   <div
-                    className={`h-2.5 w-2.5 rounded-full ${
+                    className={`h-3 w-3 rounded-full ${
                       device.enabled ? 'bg-green-500' : 'bg-red-500'
                     }`}
                   ></div>
                 </div>
-                <p className='mt-1 text-sm text-gray-500'>
-                  {device.ip
-                    ? `${device.ip}:${device.port}`
-                    : 'No connection info'}
-                </p>
+
+                <div className='mt-2'>
+                  <p className='text-sm text-gray-600'>
+                    {device.ip
+                      ? `${device.ip}:${device.port}`
+                      : 'No connection info'}
+                  </p>
+                </div>
+
+                {device.tags && device.tags.length > 0 && (
+                  <div className='mt-2 flex flex-wrap gap-1'>
+                    {device.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className='inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded-full'
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <input
+                  type='checkbox'
+                  checked={selectedDevices.includes(device._id)}
+                  onChange={() => handleSelectDevice(device._id)}
+                  className='absolute top-4 right-4 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+                />
               </div>
-              <div className='p-4 flex justify-between items-center'>
-                <span className='text-xs text-gray-500'>
-                  Last seen: {formatDate(device.lastSeen)}
-                </span>
-                <div className='flex space-x-2'>
+
+              <div className='p-4 bg-gray-50'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-xs text-gray-500'>
+                    Last seen: {formatDate(device.lastSeen)}
+                  </span>
+
+                  <div className='relative'>
+                    <button
+                      id={`device-actions-${device._id}`}
+                      aria-haspopup='true'
+                      className='p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none'
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {/* Dropdown menu would go here */}
+                  </div>
+                </div>
+
+                <div className='mt-3 flex justify-between space-x-2'>
                   <button
                     onClick={() => handleViewDevice(device._id)}
-                    className='p-1 text-blue-600 hover:text-blue-900'
-                    title='View'
+                    className='flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded hover:bg-gray-200'
                   >
-                    <Activity size={16} />
+                    View Details
                   </button>
-                  {canEditDevices && (
+
+                  {canTestDevices && (
                     <button
-                      onClick={() => handleEditDevice(device._id)}
-                      className='p-1 text-indigo-600 hover:text-indigo-900'
-                      title='Edit'
+                      onClick={() => handleTestConnection(device._id)}
+                      className='flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200'
+                      disabled={testingDevice === device._id}
                     >
-                      <Edit size={16} />
-                    </button>
-                  )}
-                  {canDeleteDevices && (
-                    <button
-                      onClick={() => handleDeleteDevice(device._id)}
-                      className='p-1 text-red-600 hover:text-red-900'
-                      title='Delete'
-                    >
-                      <Trash size={16} />
+                      {testingDevice === device._id ? (
+                        <span className='flex items-center justify-center'>
+                          <RefreshCw size={12} className='animate-spin mr-1' />
+                          Testing...
+                        </span>
+                      ) : (
+                        'Test Connection'
+                      )}
                     </button>
                   )}
                 </div>
