@@ -38,7 +38,7 @@ const Login = () => {
   const handleSubmit = async (values: typeof initialValues) => {
     try {
       await login(values.email, values.password);
-      navigate(from, { replace: true });
+      // navigate(from, { replace: true });
     } catch (error) {
       // Error handling is done in the AuthContext
       console.error('Login failed', error);

@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Settings from './pages/Settings';
 import SystemMonitor from './pages/SystemMonitor';
+import Register from './pages/Register';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +35,7 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path='/login' element={<Login />} />
+        <Route path='/register' element={<Register />} />
         <Route
           path='/'
           element={

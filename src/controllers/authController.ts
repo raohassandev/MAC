@@ -40,7 +40,7 @@ export const registerUser = async (req: Request, res: Response) => {
       name,
       email,
       password: hashedPassword,
-      role: 'operator', // Default role
+      role: 'user', // Default role
       permissions: ['view_devices', 'view_profiles'], // Default permissions
     });
 
