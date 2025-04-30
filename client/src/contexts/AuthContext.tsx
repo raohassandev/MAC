@@ -6,16 +6,10 @@ import {
   useState,
 } from 'react';
 
+import { User } from '../types/user.types';
 import api from '../api/client';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,6 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.info('You have been logged out');
   };
 
+  const updateUser = async (userData: Partial<User>) => {
+    try {
+      setIsLoading(true);
+      const response = await api.put('/users/me', userData);
+      setUser({ ...user, ...response.data });
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Failed to update user', error);
+      toast.error('Failed to update profile');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     token,
@@ -97,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     isLoading,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
