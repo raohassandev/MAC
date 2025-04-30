@@ -67,19 +67,41 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const newValue =
+      type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
     setDeviceData({
       ...deviceData,
-      [name]: value,
+      [name]: newValue,
     });
   };
 
   const handleAddRegister = () => {
+    if (
+      !newRegister.startAddress ||
+      !newRegister.length ||
+      !newRegister.functionCode
+    ) {
+      alert('Please fill in all register fields');
+      return;
+    }
+
     setRegisters([...registers, newRegister]);
     setNewRegister({ startAddress: '', length: '', functionCode: '' });
   };
 
   const handleSubmit = () => {
+    if (
+      !deviceData.name ||
+      !deviceData.ip ||
+      !deviceData.port ||
+      !deviceData.slaveId
+    ) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
     onSubmit({
       ...deviceData,
       connectionType,
@@ -129,34 +151,67 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
         <div className='p-4'>
           <div className='mb-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <input
-                placeholder='Device Name'
-                name='name'
-                value={deviceData.name}
-                onChange={handleInputChange}
-                className='p-2 border rounded w-full'
-              />
-              <input
-                placeholder='Make'
-                name='make'
-                value={deviceData.make}
-                onChange={handleInputChange}
-                className='p-2 border rounded w-full'
-              />
-              <input
-                placeholder='Model'
-                name='model'
-                value={deviceData.model}
-                onChange={handleInputChange}
-                className='p-2 border rounded w-full'
-              />
-              <input
-                placeholder='Description'
-                name='description'
-                value={deviceData.description}
-                onChange={handleInputChange}
-                className='p-2 border rounded w-full'
-              />
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Device Name *
+                </label>
+                <input
+                  placeholder='Enter device name'
+                  name='name'
+                  value={deviceData.name}
+                  onChange={handleInputChange}
+                  className='p-2 border rounded w-full'
+                  required
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Make/Manufacturer
+                </label>
+                <input
+                  placeholder='E.g., Schneider, ABB'
+                  name='make'
+                  value={deviceData.make}
+                  onChange={handleInputChange}
+                  className='p-2 border rounded w-full'
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Model
+                </label>
+                <input
+                  placeholder='Device model'
+                  name='model'
+                  value={deviceData.model}
+                  onChange={handleInputChange}
+                  className='p-2 border rounded w-full'
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Description
+                </label>
+                <input
+                  placeholder='Brief description'
+                  name='description'
+                  value={deviceData.description}
+                  onChange={handleInputChange}
+                  className='p-2 border rounded w-full'
+                />
+              </div>
+              <div className='md:col-span-2'>
+                <label className='flex items-center space-x-2'>
+                  <input
+                    type='checkbox'
+                    name='enabled'
+                    checked={deviceData.enabled}
+                    onChange={handleInputChange}
+                    className='h-4 w-4 text-blue-600'
+                  />
+                  <span className='text-sm text-gray-700'>Device Enabled</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -211,83 +266,133 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
 
               {connectionType === 'tcp' ? (
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <input
-                    placeholder='IP Address'
-                    type='text'
-                    name='ip'
-                    value={deviceData.ip}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
-                  <input
-                    placeholder='Port'
-                    type='number'
-                    name='port'
-                    value={deviceData.port}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
-                  <input
-                    placeholder='Slave ID'
-                    type='number'
-                    name='slaveId'
-                    value={deviceData.slaveId}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      IP Address *
+                    </label>
+                    <input
+                      placeholder='192.168.1.100'
+                      type='text'
+                      name='ip'
+                      value={deviceData.ip}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Port *
+                    </label>
+                    <input
+                      placeholder='502'
+                      type='number'
+                      name='port'
+                      value={deviceData.port}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Slave ID *
+                    </label>
+                    <input
+                      placeholder='1'
+                      type='number'
+                      name='slaveId'
+                      value={deviceData.slaveId}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                      required
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <input
-                    placeholder='Serial Port'
-                    type='text'
-                    name='serialPort'
-                    value={deviceData.serialPort}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
-                  <input
-                    placeholder='Baud Rate'
-                    type='number'
-                    name='baudRate'
-                    value={deviceData.baudRate}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
-                  <input
-                    placeholder='Data Bits'
-                    type='number'
-                    name='dataBits'
-                    value={deviceData.dataBits}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
-                  <input
-                    placeholder='Stop Bits'
-                    type='number'
-                    name='stopBits'
-                    value={deviceData.stopBits}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
-                  <select
-                    className='w-full p-2 border rounded'
-                    name='parity'
-                    value={deviceData.parity}
-                    onChange={handleInputChange}
-                  >
-                    <option value='none'>Parity: None</option>
-                    <option value='even'>Parity: Even</option>
-                    <option value='odd'>Parity: Odd</option>
-                  </select>
-                  <input
-                    placeholder='Slave ID'
-                    type='number'
-                    name='slaveId'
-                    value={deviceData.slaveId}
-                    onChange={handleInputChange}
-                    className='w-full p-2 border rounded'
-                  />
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Serial Port *
+                    </label>
+                    <input
+                      placeholder='COM1, /dev/ttyS0'
+                      type='text'
+                      name='serialPort'
+                      value={deviceData.serialPort}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                      required={connectionType === 'rtu'}
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Baud Rate
+                    </label>
+                    <input
+                      placeholder='9600'
+                      type='number'
+                      name='baudRate'
+                      value={deviceData.baudRate}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Data Bits
+                    </label>
+                    <input
+                      placeholder='8'
+                      type='number'
+                      name='dataBits'
+                      value={deviceData.dataBits}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Stop Bits
+                    </label>
+                    <input
+                      placeholder='1'
+                      type='number'
+                      name='stopBits'
+                      value={deviceData.stopBits}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Parity
+                    </label>
+                    <select
+                      className='w-full p-2 border rounded'
+                      name='parity'
+                      value={deviceData.parity}
+                      onChange={handleInputChange}
+                    >
+                      <option value='none'>None</option>
+                      <option value='even'>Even</option>
+                      <option value='odd'>Odd</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Slave ID *
+                    </label>
+                    <input
+                      placeholder='1'
+                      type='number'
+                      name='slaveId'
+                      value={deviceData.slaveId}
+                      onChange={handleInputChange}
+                      className='w-full p-2 border rounded'
+                      required
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -297,46 +402,61 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
             <div>
               <h2 className='text-lg font-semibold mb-4'>Register Ranges</h2>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
-                <input
-                  placeholder='Start Address'
-                  type='number'
-                  value={newRegister.startAddress}
-                  onChange={(e) =>
-                    setNewRegister({
-                      ...newRegister,
-                      startAddress: e.target.value,
-                    })
-                  }
-                  className='p-2 border rounded'
-                />
-                <input
-                  placeholder='Length'
-                  type='number'
-                  value={newRegister.length}
-                  onChange={(e) =>
-                    setNewRegister({ ...newRegister, length: e.target.value })
-                  }
-                  className='p-2 border rounded'
-                />
-                <select
-                  value={newRegister.functionCode}
-                  onChange={(e) =>
-                    setNewRegister({
-                      ...newRegister,
-                      functionCode: e.target.value,
-                    })
-                  }
-                  className='p-2 border rounded'
-                >
-                  <option value=''>Function Code</option>
-                  <option value='1'>1 - Coil</option>
-                  <option value='2'>2 - Discrete Input</option>
-                  <option value='3'>3 - Holding</option>
-                  <option value='4'>4 - Input</option>
-                  <option value='5'>5 - Write Single Coil</option>
-                  <option value='6'>6 - Write Single Register</option>
-                  <option value='16'>16 - Write Multiple</option>
-                </select>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Start Address
+                  </label>
+                  <input
+                    placeholder='Start Address'
+                    type='number'
+                    value={newRegister.startAddress}
+                    onChange={(e) =>
+                      setNewRegister({
+                        ...newRegister,
+                        startAddress: e.target.value,
+                      })
+                    }
+                    className='p-2 border rounded w-full'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Length
+                  </label>
+                  <input
+                    placeholder='Length'
+                    type='number'
+                    value={newRegister.length}
+                    onChange={(e) =>
+                      setNewRegister({ ...newRegister, length: e.target.value })
+                    }
+                    className='p-2 border rounded w-full'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Function Code
+                  </label>
+                  <select
+                    value={newRegister.functionCode}
+                    onChange={(e) =>
+                      setNewRegister({
+                        ...newRegister,
+                        functionCode: e.target.value,
+                      })
+                    }
+                    className='p-2 border rounded w-full'
+                  >
+                    <option value=''>Select Function Code</option>
+                    <option value='1'>1 - Read Coils</option>
+                    <option value='2'>2 - Read Discrete Inputs</option>
+                    <option value='3'>3 - Read Holding Registers</option>
+                    <option value='4'>4 - Read Input Registers</option>
+                    <option value='5'>5 - Write Single Coil</option>
+                    <option value='6'>6 - Write Single Register</option>
+                    <option value='16'>16 - Write Multiple Registers</option>
+                  </select>
+                </div>
               </div>
               <button
                 onClick={handleAddRegister}
@@ -344,14 +464,22 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
               >
                 <Plus size={16} /> Add Range
               </button>
-              <ul className='mt-4 list-disc list-inside text-sm'>
-                {registers.map((r, idx) => (
-                  <li key={idx}>
-                    Start: {r.startAddress}, Length: {r.length}, FC:{' '}
-                    {r.functionCode}
-                  </li>
-                ))}
-              </ul>
+
+              {registers.length > 0 && (
+                <div className='mt-4'>
+                  <h3 className='text-sm font-medium mb-2'>Added Registers:</h3>
+                  <div className='bg-gray-50 p-3 rounded'>
+                    <ul className='list-disc list-inside text-sm space-y-1'>
+                      {registers.map((r, idx) => (
+                        <li key={idx}>
+                          Start: {r.startAddress}, Length: {r.length}, FC:{' '}
+                          {r.functionCode}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -374,55 +502,98 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
               </div>
 
               {templateMode === 'select' ? (
-                <select className='p-2 border rounded w-full mb-4'>
-                  <option>Select Template</option>
-                  <option>Energy Analyzer</option>
-                  <option>Temperature Sensor</option>
-                </select>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Select Template
+                  </label>
+                  <select className='p-2 border rounded w-full mb-4'>
+                    <option value=''>Select Template</option>
+                    <option value='1'>Energy Analyzer</option>
+                    <option value='2'>Temperature Sensor</option>
+                    <option value='3'>Power Meter</option>
+                    <option value='4'>Generic Modbus Device</option>
+                  </select>
+
+                  <p className='text-sm text-gray-500 mt-2'>
+                    Templates provide predefined register configurations for
+                    common device types. Select a template to automatically
+                    configure the registers for this device.
+                  </p>
+                </div>
               ) : (
                 <div className='space-y-4'>
                   <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <input
-                      placeholder='Name'
-                      className='p-2 border rounded w-full'
-                    />
-                    <input
-                      placeholder='Register Index'
-                      type='number'
-                      className='p-2 border rounded w-full'
-                    />
-                    <select className='p-2 border rounded w-full'>
-                      <option>Data Type</option>
-                      <option value='int16'>int16</option>
-                      <option value='uint16'>uint16</option>
-                      <option value='int32'>int32</option>
-                      <option value='uint32'>uint32</option>
-                      <option value='float32'>float32</option>
-                      <option value='float64'>float64</option>
-                    </select>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Parameter Name
+                      </label>
+                      <input
+                        placeholder='E.g., Voltage, Temperature'
+                        className='p-2 border rounded w-full'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Register Index
+                      </label>
+                      <input
+                        placeholder='Register number'
+                        type='number'
+                        className='p-2 border rounded w-full'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Data Type
+                      </label>
+                      <select className='p-2 border rounded w-full'>
+                        <option value=''>Select Data Type</option>
+                        <option value='int16'>int16</option>
+                        <option value='uint16'>uint16</option>
+                        <option value='int32'>int32</option>
+                        <option value='uint32'>uint32</option>
+                        <option value='float32'>float32</option>
+                        <option value='float64'>float64</option>
+                      </select>
+                    </div>
                   </div>
                   <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <input
-                      placeholder='Scale Factor'
-                      type='number'
-                      className='p-2 border rounded w-full'
-                    />
-                    <input
-                      placeholder='Unit'
-                      className='p-2 border rounded w-full'
-                    />
-                    <select className='p-2 border rounded w-full'>
-                      <option>Byte Order</option>
-                      <option value='AB'>AB</option>
-                      <option value='BA'>BA</option>
-                      <option value='ABCD'>ABCD</option>
-                      <option value='CDAB'>CDAB</option>
-                      <option value='BADC'>BADC</option>
-                      <option value='DCBA'>DCBA</option>
-                    </select>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Scale Factor
+                      </label>
+                      <input
+                        placeholder='E.g., 10, 100'
+                        type='number'
+                        className='p-2 border rounded w-full'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Unit
+                      </label>
+                      <input
+                        placeholder='E.g., V, °C, %'
+                        className='p-2 border rounded w-full'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Byte Order
+                      </label>
+                      <select className='p-2 border rounded w-full'>
+                        <option value=''>Select Byte Order</option>
+                        <option value='AB'>AB</option>
+                        <option value='BA'>BA</option>
+                        <option value='ABCD'>ABCD</option>
+                        <option value='CDAB'>CDAB</option>
+                        <option value='BADC'>BADC</option>
+                        <option value='DCBA'>DCBA</option>
+                      </select>
+                    </div>
                   </div>
-                  <button className='bg-green-600 text-white px-4 py-2 rounded'>
-                    Save Template
+                  <button className='bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2'>
+                    <Plus size={16} /> Add Parameter
                   </button>
                 </div>
               )}
@@ -431,19 +602,12 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
 
           {tab === 'data' && (
             <div>
-              <button className='bg-blue-600 text-white px-4 py-2 rounded mb-4'>
-                Read Data
-              </button>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* Example output */}
-                <div className='bg-white border rounded p-4 shadow'>
-                  <p className='font-semibold'>Voltage L1</p>
-                  <p className='text-gray-600'>230.1 V</p>
-                </div>
-                <div className='bg-white border rounded p-4 shadow'>
-                  <p className='font-semibold'>Current L1</p>
-                  <p className='text-gray-600'>4.2 A</p>
-                </div>
+              <div className='bg-yellow-50 text-yellow-800 p-4 rounded-lg mb-4'>
+                <h3 className='font-medium'>Data Reader</h3>
+                <p className='text-sm mt-1'>
+                  You'll be able to test reading data from this device after
+                  it's created. First, complete the device setup and save it.
+                </p>
               </div>
             </div>
           )}
