@@ -1,5 +1,4 @@
 import {
-  BarChart2,
   CreditCard,
   HardDrive,
   Home,
@@ -11,6 +10,7 @@ import {
   Wrench,
   User,
   X,
+  Activity,
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
@@ -27,6 +27,11 @@ const MainLayout: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Check if user has specific permissions
+  const hasPermission = (permission: string) => {
+    return user?.permissions?.includes(permission) || false;
   };
 
   return (
@@ -55,7 +60,7 @@ const MainLayout: React.FC = () => {
             Main
           </div>
           <NavItem
-            to='/'
+            to='/dashboard'
             icon={<Home size={18} />}
             label='Dashboard'
             end={true}
@@ -76,34 +81,39 @@ const MainLayout: React.FC = () => {
             label='Device Templates'
           />
           <NavItem
-            to='/schedules'
-            icon={<BarChart2 size={18} />}
-            label='Schedules'
+            to='/system'
+            icon={<Activity size={18} />}
+            label='System Monitor'
           />
 
-          <div className='mt-6 px-4 py-2 text-xs text-indigo-300 uppercase font-semibold'>
-            Administration
-          </div>
-          <NavItem
-            to='/users'
-            icon={<Users size={18} />}
-            label='User Management'
-          />
-          <NavItem
-            to='/roles'
-            icon={<Sliders size={18} />}
-            label='Roles & Permissions'
-          />
-          <NavItem
-            to='/deployment'
-            icon={<Wrench size={18} />}
-            label='Deployment Tools'
-          />
-          <NavItem
-            to='/settings'
-            icon={<Settings size={18} />}
-            label='System Settings'
-          />
+          {/* Only show admin section if user has proper permissions */}
+          {hasPermission('manage_users') && (
+            <>
+              <div className='mt-6 px-4 py-2 text-xs text-indigo-300 uppercase font-semibold'>
+                Administration
+              </div>
+              <NavItem
+                to='/users'
+                icon={<Users size={18} />}
+                label='User Management'
+              />
+              <NavItem
+                to='/roles'
+                icon={<Sliders size={18} />}
+                label='Roles & Permissions'
+              />
+              <NavItem
+                to='/deployment'
+                icon={<Wrench size={18} />}
+                label='Deployment Tools'
+              />
+              <NavItem
+                to='/settings'
+                icon={<Settings size={18} />}
+                label='System Settings'
+              />
+            </>
+          )}
         </nav>
 
         <div className='absolute bottom-0 left-0 right-0 p-4 border-t border-indigo-700'>

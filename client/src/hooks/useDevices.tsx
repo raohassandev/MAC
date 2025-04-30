@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import API from '../services/api';
 import { Device } from '../types/device.types';
+import {
+  getDevices,
+  getDeviceById,
+  createDevice,
+  updateDevice as updateDeviceApi,
+  deleteDevice as deleteDeviceApi,
+  testDevice,
+  readDeviceRegisters,
+} from '../services/api';
 
 interface UseDevicesReturn {
   devices: Device[];
@@ -11,6 +19,10 @@ interface UseDevicesReturn {
   addDevice: (device: Omit<Device, '_id'>) => Promise<Device>;
   updateDevice: (device: Device) => Promise<Device>;
   deleteDevice: (id: string) => Promise<void>;
+  testConnection: (
+    id: string
+  ) => Promise<{ success: boolean; message: string }>;
+  readRegisters: (id: string) => Promise<any>;
   loadingDevice: boolean;
   deviceError: Error | null;
 }
@@ -22,22 +34,23 @@ export const useDevices = (): UseDevicesReturn => {
   const [loadingDevice, setLoadingDevice] = useState(false);
   const [deviceError, setDeviceError] = useState<Error | null>(null);
 
+  // Fetch all devices
   const fetchDevices = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await API.get('/getDevices');
+      const response = await getDevices();
 
-      // Add a lastSeen field to each device for demo purposes
-      // Also ensure each device has a tags array
-      const devicesWithDefaults = response.data.map((device: Device) => ({
+      // Ensure each device has required fields
+      const formattedDevices = response.map((device: Device) => ({
         ...device,
-        lastSeen: device.enabled ? new Date() : undefined,
-        tags: device.tags || [], // Ensure tags property exists, default to empty array
+        tags: device.tags || [],
+        registers: device.registers || [],
+        lastSeen: device.lastSeen || undefined,
       }));
 
-      setDevices(devicesWithDefaults);
+      setDevices(formattedDevices);
     } catch (err) {
       console.error('Error fetching devices:', err);
       setError(
@@ -48,27 +61,36 @@ export const useDevices = (): UseDevicesReturn => {
     }
   }, []);
 
+  // Initial fetch of devices
   useEffect(() => {
     fetchDevices();
   }, [fetchDevices]);
 
+  // Get a single device by ID
   const getDevice = async (id: string): Promise<Device> => {
     setLoadingDevice(true);
     setDeviceError(null);
 
     try {
-      // In a real app, you would have a dedicated endpoint for getting a single device
-      // For now, we'll search the existing devices array
-      const device = devices.find((d) => d._id === id);
+      // First check if we already have the device in our state
+      const cachedDevice = devices.find((d) => d._id === id);
 
-      if (!device) {
-        throw new Error(`Device with ID ${id} not found`);
+      if (cachedDevice) {
+        setLoadingDevice(false);
+        return cachedDevice;
       }
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // If not in state, fetch from API
+      const device = await getDeviceById(id);
 
-      return device;
+      // Ensure required fields
+      const formattedDevice = {
+        ...device,
+        tags: device.tags || [],
+        registers: device.registers || [],
+      };
+
+      return formattedDevice;
     } catch (err) {
       console.error('Error fetching device:', err);
       setDeviceError(
@@ -80,57 +102,120 @@ export const useDevices = (): UseDevicesReturn => {
     }
   };
 
+  // Add a new device
   const addDevice = async (device: Omit<Device, '_id'>): Promise<Device> => {
     try {
-      // Ensure device has tags property
-      const deviceWithTags = {
+      // Ensure required fields
+      const deviceToAdd = {
         ...device,
         tags: device.tags || [],
+        registers: device.registers || [],
       };
 
-      const response = await API.post('/addDevice', deviceWithTags);
-      await fetchDevices(); // Refresh the devices list
-      return response.data;
+      const newDevice = await createDevice(deviceToAdd);
+
+      // Update local state
+      setDevices((prev) => [...prev, newDevice]);
+
+      return newDevice;
     } catch (err) {
       console.error('Error adding device:', err);
       throw err instanceof Error ? err : new Error('Failed to add device');
     }
   };
 
+  // Update an existing device
   const updateDevice = async (device: Device): Promise<Device> => {
     try {
-      // Ensure device has tags property
-      const deviceWithTags = {
+      // Ensure required fields
+      const deviceToUpdate = {
         ...device,
         tags: device.tags || [],
+        registers: device.registers || [],
       };
 
-      const response = await API.put(
-        `/updateDevice/${device._id}`,
-        deviceWithTags
+      const updatedDevice = await updateDeviceApi(device._id, deviceToUpdate);
+
+      // Update local state
+      setDevices((prev) =>
+        prev.map((d) => (d._id === device._id ? updatedDevice : d))
       );
 
-      // Update the local state
-      setDevices((prevDevices) =>
-        prevDevices.map((d) => (d._id === device._id ? response.data : d))
-      );
-
-      return response.data;
+      return updatedDevice;
     } catch (err) {
       console.error('Error updating device:', err);
       throw err instanceof Error ? err : new Error('Failed to update device');
     }
   };
 
+  // Delete a device
   const deleteDevice = async (id: string): Promise<void> => {
     try {
-      await API.delete(`/deleteDevice/${id}`);
+      await deleteDeviceApi(id);
 
-      // Update the local state
-      setDevices((prevDevices) => prevDevices.filter((d) => d._id !== id));
+      // Update local state
+      setDevices((prev) => prev.filter((d) => d._id !== id));
     } catch (err) {
       console.error('Error deleting device:', err);
       throw err instanceof Error ? err : new Error('Failed to delete device');
+    }
+  };
+
+  // Test connection to a device
+  const testConnection = async (
+    id: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const result = await testDevice(id);
+
+      // If successful, update the device's lastSeen timestamp in local state
+      if (result.success) {
+        setDevices((prev) =>
+          prev.map((d) => {
+            if (d._id === id) {
+              return {
+                ...d,
+                lastSeen: new Date(),
+              };
+            }
+            return d;
+          })
+        );
+      }
+
+      return result;
+    } catch (err) {
+      console.error('Error testing device connection:', err);
+      throw err instanceof Error
+        ? err
+        : new Error('Failed to test device connection');
+    }
+  };
+
+  // Read registers from a device
+  const readRegisters = async (id: string): Promise<any> => {
+    try {
+      const result = await readDeviceRegisters(id);
+
+      // Update the device's lastSeen timestamp in local state
+      setDevices((prev) =>
+        prev.map((d) => {
+          if (d._id === id) {
+            return {
+              ...d,
+              lastSeen: new Date(),
+            };
+          }
+          return d;
+        })
+      );
+
+      return result;
+    } catch (err) {
+      console.error('Error reading device registers:', err);
+      throw err instanceof Error
+        ? err
+        : new Error('Failed to read device registers');
     }
   };
 
@@ -143,6 +228,8 @@ export const useDevices = (): UseDevicesReturn => {
     addDevice,
     updateDevice,
     deleteDevice,
+    testConnection,
+    readRegisters,
     loadingDevice,
     deviceError,
   };

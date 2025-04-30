@@ -3,25 +3,32 @@ import {
   FileText,
   List,
   Plus,
+  Save,
   Settings,
   X,
+  AlertCircle,
+  Trash,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const TabHeader = ({ tab, current, setTab, icon, label }: any) => (
-  <button
-    onClick={() => setTab(tab)}
-    className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
-      ${
-        current === tab
-          ? 'border-blue-500 text-blue-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      }`}
-  >
-    {icon}
-    {label}
-  </button>
-);
+interface DeviceRegister {
+  name: string;
+  address: number;
+  length: number;
+  functionCode: number;
+  scaleFactor?: number;
+  decimalPoint?: number;
+  byteOrder?: string;
+  unit?: string;
+}
+
+interface DeviceTemplate {
+  id: string;
+  name: string;
+  description: string;
+  deviceType: string;
+  registers: DeviceRegister[];
+}
 
 interface NewDeviceFormProps {
   isOpen: boolean;
@@ -38,15 +45,23 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     'connection' | 'registers' | 'template' | 'data'
   >('connection');
   const [connectionType, setConnectionType] = useState<'tcp' | 'rtu'>('tcp');
-  const [registers, setRegisters] = useState<any[]>([]);
-  const [newRegister, setNewRegister] = useState({
-    startAddress: '',
-    length: '',
-    functionCode: '',
+  const [registers, setRegisters] = useState<DeviceRegister[]>([]);
+  const [newRegister, setNewRegister] = useState<DeviceRegister>({
+    name: '',
+    address: 0,
+    length: 1,
+    functionCode: 3,
+    scaleFactor: 1,
+    decimalPoint: 0,
+    byteOrder: 'AB CD',
+    unit: '',
   });
-  const [templateMode, setTemplateMode] = useState<'select' | 'create'>(
-    'select'
-  );
+  const [templateMode, setTemplateMode] = useState<'select' | 'create'>('select');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [templates, setTemplates] = useState<DeviceTemplate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [deviceData, setDeviceData] = useState({
     name: '',
     make: '',
@@ -61,14 +76,61 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     stopBits: '1',
     parity: 'none',
     enabled: true,
+    tags: [] as string[],
   });
+  
+  // Fetch device templates
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      setLoading(true);
+      try {
+        // This would be an API call in a real app
+        // const response = await fetch('/api/device-templates');
+        // const data = await response.json();
+        // setTemplates(data);
+        
+        // For demo purposes, use mock data
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setTemplates([
+          {
+            id: '1',
+            name: 'Energy Analyzer',
+            description: 'Standard template for energy analyzers with voltage, current, and power readings',
+            deviceType: 'Energy Analyzer',
+            registers: [
+              { name: 'Voltage L1', address: 0, length: 1, functionCode: 3, unit: 'V' },
+              { name: 'Current L1', address: 1, length: 1, functionCode: 3, unit: 'A' },
+              { name: 'Active Power', address: 2, length: 1, functionCode: 3, unit: 'W' },
+            ],
+          },
+          {
+            id: '2',
+            name: 'Temperature Controller',
+            description: 'Template for temperature controllers with setpoint and measurement',
+            deviceType: 'Temperature Controller',
+            registers: [
+              { name: 'Current Temperature', address: 0, length: 1, functionCode: 3, unit: '°C' },
+              { name: 'Setpoint', address: 1, length: 1, functionCode: 3, unit: '°C' },
+              { name: 'Status', address: 2, length: 1, functionCode: 1, unit: '' },
+            ],
+          },
+        ]);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch templates');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTemplates();
+  }, []);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
     const newValue =
-      type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+      (type === 'checkbox' ? (e.target as HTMLInputElement).checked : value);
 
     setDeviceData({
       ...deviceData,
@@ -76,60 +138,95 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
     });
   };
 
+  const handleRegisterInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    const newValue = name === 'name' || name === 'unit' 
+      ? value 
+      : parseInt(value);
+    
+    setNewRegister({
+      ...newRegister,
+      [name]: newValue,
+    });
+  };
+  
   const handleAddRegister = () => {
-    if (
-      !newRegister.startAddress ||
-      !newRegister.length ||
-      !newRegister.functionCode
-    ) {
-      alert('Please fill in all register fields');
+    if (!newRegister.name || newRegister.address < 0) {
+      setError('Please fill out all required register fields');
       return;
     }
 
-    setRegisters([...registers, newRegister]);
-    setNewRegister({ startAddress: '', length: '', functionCode: '' });
+    setRegisters([...registers, { ...newRegister }]);
+    setNewRegister({
+      name: '',
+      address: 0,
+      length: 1,
+      functionCode: 3,
+      scaleFactor: 1,
+      decimalPoint: 0,
+      byteOrder: 'AB CD',
+      unit: '',
+    });
+    setError(null);
+  };
+  
+  const handleDeleteRegister = (index: number) => {
+    setRegisters(registers.filter((_, i) => i !== index));
+  };
+  
+  const handleSelectTemplate = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    
+    // Find the selected template
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      // Set the registers from the template
+      setRegisters([...template.registers]);
+    }
+  };
+  
+  const validateForm = (): boolean => {
+    // Basic validation
+    if (!deviceData.name) {
+      setError('Device name is required');
+      return false;
+    }
+    
+    if (connectionType === 'tcp') {
+      if (!deviceData.ip) {
+        setError('IP address is required for TCP connections');
+        return false;
+      }
+    } else { // rtu
+      if (!deviceData.serialPort) {
+        setError('Serial port is required for RTU connections');
+        return false;
+      }
+    }
+    
+    return true;
   };
 
   const handleSubmit = () => {
-    if (
-      !deviceData.name ||
-      !deviceData.ip ||
-      !deviceData.port ||
-      !deviceData.slaveId
-    ) {
-      alert('Please fill in all required fields');
+    if (!validateForm()) {
       return;
     }
-
-    onSubmit({
+    
+    // Prepare the device data for submission
+    const deviceForSubmission = {
       ...deviceData,
+      port: parseInt(deviceData.port),
+      slaveId: parseInt(deviceData.slaveId),
+      baudRate: parseInt(deviceData.baudRate),
+      dataBits: parseInt(deviceData.dataBits),
+      stopBits: parseInt(deviceData.stopBits),
       connectionType,
-      registers: registers.map((r) => ({
-        address: parseInt(r.startAddress),
-        length: parseInt(r.length),
-        functionCode: parseInt(r.functionCode),
-        type: getFunctionCodeType(r.functionCode),
-        name: `Register ${r.startAddress}`,
-      })),
-    });
-  };
-
-  const getFunctionCodeType = (fc: string) => {
-    switch (fc) {
-      case '1':
-      case '5':
-        return 'coil';
-      case '2':
-        return 'discrete';
-      case '3':
-      case '6':
-      case '16':
-        return 'holding';
-      case '4':
-        return 'input';
-      default:
-        return 'holding';
-    }
+      registers,
+    };
+    
+    onSubmit(deviceForSubmission);
   };
 
   if (!isOpen) return null;
@@ -142,10 +239,20 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
           <button
             onClick={onClose}
             className='text-gray-500 hover:text-gray-700'
+            aria-label="Close"
           >
             <X size={20} />
           </button>
         </div>
+
+        {error && (
+          <div className='mx-4 mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded'>
+            <div className='flex items-center'>
+              <AlertCircle size={20} className='text-red-500 mr-2' />
+              <span className='text-red-700'>{error}</span>
+            </div>
+          </div>
+        )}
 
         <div className='p-4'>
           <div className='mb-6'>
@@ -191,12 +298,12 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Description
                 </label>
-                <input
+                <textarea
                   placeholder='Brief description'
                   name='description'
                   value={deviceData.description}
                   onChange={handleInputChange}
-                  className='p-2 border rounded w-full'
+                  className='p-2 border rounded w-full h-20 resize-none'
                 />
               </div>
               <div className='md:col-span-2'>
@@ -214,35 +321,57 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
             </div>
           </div>
 
-          <div className='border-b border-gray-200 mb-4 flex space-x-4'>
-            <TabHeader
-              tab='connection'
-              current={tab}
-              setTab={setTab}
-              icon={<Settings size={16} />}
-              label='Connection'
-            />
-            <TabHeader
-              tab='registers'
-              current={tab}
-              setTab={setTab}
-              icon={<List size={16} />}
-              label='Registers'
-            />
-            <TabHeader
-              tab='template'
-              current={tab}
-              setTab={setTab}
-              icon={<FileText size={16} />}
-              label='Template'
-            />
-            <TabHeader
-              tab='data'
-              current={tab}
-              setTab={setTab}
-              icon={<Activity size={16} />}
-              label='Data Reader'
-            />
+          <div className='border-b border-gray-200 mb-4'>
+            <nav className='flex space-x-4'>
+              <button
+                onClick={() => setTab('connection')}
+                className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
+                  ${
+                    tab === 'connection'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <Settings size={16} />
+                Connection
+              </button>
+              <button
+                onClick={() => setTab('registers')}
+                className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
+                  ${
+                    tab === 'registers'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <List size={16} />
+                Registers
+              </button>
+              <button
+                onClick={() => setTab('template')}
+                className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
+                  ${
+                    tab === 'template'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <FileText size={16} />
+                Template
+              </button>
+              <button
+                onClick={() => setTab('data')}
+                className={`py-2 px-4 border-b-2 flex items-center gap-2 text-sm font-medium
+                  ${
+                    tab === 'data'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <Activity size={16} />
+                Data Reader
+              </button>
+            </nav>
           </div>
 
           {tab === 'connection' && (
@@ -321,7 +450,7 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                       value={deviceData.serialPort}
                       onChange={handleInputChange}
                       className='w-full p-2 border rounded'
-                      required={connectionType === 'rtu'}
+                      required
                     />
                   </div>
                   <div>
@@ -399,22 +528,31 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
 
           {tab === 'registers' && (
             <div>
-              <h2 className='text-lg font-semibold mb-4'>Register Ranges</h2>
+              <h2 className='text-lg font-semibold mb-4'>Register Configuration</h2>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Start Address
+                    Register Name
+                  </label>
+                  <input
+                    placeholder='e.g., Temperature'
+                    type='text'
+                    name='name'
+                    value={newRegister.name}
+                    onChange={handleRegisterInputChange}
+                    className='p-2 border rounded w-full'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Address
                   </label>
                   <input
                     placeholder='Start Address'
                     type='number'
-                    value={newRegister.startAddress}
-                    onChange={(e) =>
-                      setNewRegister({
-                        ...newRegister,
-                        startAddress: e.target.value,
-                      })
-                    }
+                    name='address'
+                    value={newRegister.address}
+                    onChange={handleRegisterInputChange}
                     className='p-2 border rounded w-full'
                   />
                 </div>
@@ -425,10 +563,9 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                   <input
                     placeholder='Length'
                     type='number'
+                    name='length'
                     value={newRegister.length}
-                    onChange={(e) =>
-                      setNewRegister({ ...newRegister, length: e.target.value })
-                    }
+                    onChange={handleRegisterInputChange}
                     className='p-2 border rounded w-full'
                   />
                 </div>
@@ -437,46 +574,104 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                     Function Code
                   </label>
                   <select
+                    name='functionCode'
                     value={newRegister.functionCode}
-                    onChange={(e) =>
-                      setNewRegister({
-                        ...newRegister,
-                        functionCode: e.target.value,
-                      })
-                    }
+                    onChange={handleRegisterInputChange}
                     className='p-2 border rounded w-full'
                   >
-                    <option value=''>Select Function Code</option>
-                    <option value='1'>1 - Read Coils</option>
-                    <option value='2'>2 - Read Discrete Inputs</option>
-                    <option value='3'>3 - Read Holding Registers</option>
-                    <option value='4'>4 - Read Input Registers</option>
-                    <option value='5'>5 - Write Single Coil</option>
-                    <option value='6'>6 - Write Single Register</option>
-                    <option value='16'>16 - Write Multiple Registers</option>
+                    <option value={1}>1 - Read Coils</option>
+                    <option value={2}>2 - Read Discrete Inputs</option>
+                    <option value={3}>3 - Read Holding Registers</option>
+                    <option value={4}>4 - Read Input Registers</option>
+                    <option value={5}>5 - Write Single Coil</option>
+                    <option value={6}>6 - Write Single Register</option>
+                    <option value={16}>16 - Write Multiple Registers</option>
                   </select>
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Unit
+                  </label>
+                  <input
+                    placeholder='e.g., °C, V, A'
+                    type='text'
+                    name='unit'
+                    value={newRegister.unit}
+                    onChange={handleRegisterInputChange}
+                    className='p-2 border rounded w-full'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Scale Factor
+                  </label>
+                  <input
+                    placeholder='e.g., 10, 100'
+                    type='number'
+                    name='scaleFactor'
+                    value={newRegister.scaleFactor}
+                    onChange={handleRegisterInputChange}
+                    className='p-2 border rounded w-full'
+                  />
                 </div>
               </div>
               <button
                 onClick={handleAddRegister}
-                className='flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded'
+                className='flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4'
               >
-                <Plus size={16} /> Add Range
+                <Plus size={16} /> Add Register
               </button>
 
-              {registers.length > 0 && (
-                <div className='mt-4'>
-                  <h3 className='text-sm font-medium mb-2'>Added Registers:</h3>
-                  <div className='bg-gray-50 p-3 rounded'>
-                    <ul className='list-disc list-inside text-sm space-y-1'>
-                      {registers.map((r, idx) => (
-                        <li key={idx}>
-                          Start: {r.startAddress}, Length: {r.length}, FC:{' '}
-                          {r.functionCode}
-                        </li>
+              {registers.length > 0 ? (
+                <div className='overflow-x-auto'>
+                  <table className='min-w-full divide-y divide-gray-200'>
+                    <thead className='bg-gray-50'>
+                      <tr>
+                        <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                          Name
+                        </th>
+                        <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                          Address
+                        </th>
+                        <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                          Length
+                        </th>
+                        <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                          Function Code
+                        </th>
+                        <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                          Unit
+                        </th>
+                        <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className='bg-white divide-y divide-gray-200'>
+                      {registers.map((register, index) => (
+                        <tr key={index}>
+                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                            {register.functionCode}
+                          </td>
+                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                            {register.unit || '-'}
+                          </td>
+                          <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+                            <button
+                              onClick={() => handleDeleteRegister(index)}
+                              className='text-red-600 hover:text-red-900'
+                            >
+                              <Trash size={16} />
+                            </button>
+                          </td>
+                        </tr>
                       ))}
-                    </ul>
-                  </div>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className='bg-gray-50 p-4 rounded'>
+                  <p className='text-center text-gray-500'>No registers added yet. Add registers for this device above.</p>
                 </div>
               )}
             </div>
@@ -488,32 +683,78 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 <label className='text-sm font-medium text-gray-700'>
                   Mode:
                 </label>
-                <select
-                  value={templateMode}
-                  onChange={(e) =>
-                    setTemplateMode(e.target.value as 'select' | 'create')
-                  }
-                  className='p-2 border rounded'
-                >
-                  <option value='select'>Select Existing</option>
-                  <option value='create'>Create New</option>
-                </select>
+                <div className='flex'>
+                  <button
+                    type='button'
+                    onClick={() => setTemplateMode('select')}
+                    className={`px-3 py-1 border ${
+                      templateMode === 'select'
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'border-gray-300 text-gray-700'
+                    } rounded-l-md`}
+                  >
+                    Use Existing Template
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setTemplateMode('create')}
+                    className={`px-3 py-1 border ${
+                      templateMode === 'create'
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'border-gray-300 text-gray-700'
+                    } rounded-r-md`}
+                  >
+                    Save As New Template
+                  </button>
+                </div>
               </div>
 
               {templateMode === 'select' ? (
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Select Template
+                    Select Device Template
                   </label>
-                  <select className='p-2 border rounded w-full mb-4'>
-                    <option value=''>Select Template</option>
-                    <option value='1'>Energy Analyzer</option>
-                    <option value='2'>Temperature Sensor</option>
-                    <option value='3'>Power Meter</option>
-                    <option value='4'>Generic Modbus Device</option>
-                  </select>
+                  {loading ? (
+                    <div className='text-center py-4'>
+                      <div className='animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mx-auto'></div>
+                      <p className='mt-2 text-sm text-gray-500'>Loading templates...</p>
+                    </div>
+                  ) : templates.length > 0 ? (
+                    <div className='space-y-4'>
+                      <select
+                        className='p-2 border rounded w-full mb-4'
+                        value={selectedTemplateId}
+                        onChange={(e) => handleSelectTemplate(e.target.value)}
+                      >
+                        <option value=''>-- Select a template --</option>
+                        {templates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.name} - {template.deviceType}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      {selectedTemplateId && (
+                        <div className='bg-gray-50 p-4 rounded'>
+                          <h3 className='font-medium text-gray-700 mb-2'>Template Details</h3>
+                          <p className='text-sm text-gray-600 mb-2'>
+                            {templates.find((t) => t.id === selectedTemplateId)?.description}
+                          </p>
+                          <p className='text-sm text-gray-600'>
+                            This template includes {
+                              templates.find((t) => t.id === selectedTemplateId)?.registers.length || 0
+                            } preconfigured registers.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className='bg-gray-50 p-4 rounded'>
+                      <p className='text-center text-gray-500'>No templates available.</p>
+                    </div>
+                  )}
 
-                  <p className='text-sm text-gray-500 mt-2'>
+                  <p className='text-sm text-gray-500 mt-4'>
                     Templates provide predefined register configurations for
                     common device types. Select a template to automatically
                     configure the registers for this device.
@@ -521,79 +762,51 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
                 </div>
               ) : (
                 <div className='space-y-4'>
-                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     <div>
                       <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Parameter Name
+                        Template Name
                       </label>
                       <input
-                        placeholder='E.g., Voltage, Temperature'
+                        placeholder='Energy Analyzer Template'
                         className='p-2 border rounded w-full'
                       />
                     </div>
                     <div>
                       <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Register Index
+                        Device Type
                       </label>
                       <input
-                        placeholder='Register number'
-                        type='number'
+                        placeholder='E.g., Energy Analyzer, Temperature Controller'
                         className='p-2 border rounded w-full'
                       />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Data Type
-                      </label>
-                      <select className='p-2 border rounded w-full'>
-                        <option value=''>Select Data Type</option>
-                        <option value='int16'>int16</option>
-                        <option value='uint16'>uint16</option>
-                        <option value='int32'>int32</option>
-                        <option value='uint32'>uint32</option>
-                        <option value='float32'>float32</option>
-                        <option value='float64'>float64</option>
-                      </select>
                     </div>
                   </div>
-                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Scale Factor
-                      </label>
-                      <input
-                        placeholder='E.g., 10, 100'
-                        type='number'
-                        className='p-2 border rounded w-full'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Unit
-                      </label>
-                      <input
-                        placeholder='E.g., V, °C, %'
-                        className='p-2 border rounded w-full'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Byte Order
-                      </label>
-                      <select className='p-2 border rounded w-full'>
-                        <option value=''>Select Byte Order</option>
-                        <option value='AB'>AB</option>
-                        <option value='BA'>BA</option>
-                        <option value='ABCD'>ABCD</option>
-                        <option value='CDAB'>CDAB</option>
-                        <option value='BADC'>BADC</option>
-                        <option value='DCBA'>DCBA</option>
-                      </select>
-                    </div>
+                  
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Description
+                    </label>
+                    <textarea
+                      placeholder='Describe what this template is used for'
+                      className='p-2 border rounded w-full h-20 resize-none'
+                    />
                   </div>
-                  <button className='bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2'>
-                    <Plus size={16} /> Add Parameter
-                  </button>
+                  
+                  <p className='text-sm text-gray-500'>
+                    Saving as a template will save the current register configuration for future use.
+                    This makes it easy to create multiple devices of the same type.
+                  </p>
+                  
+                  <div className='pt-2'>
+                    <button
+                      type='button'
+                      className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-2'
+                    >
+                      <Save size={16} />
+                      Save Template
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -615,14 +828,15 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
         <div className='flex justify-end p-4 border-t gap-2'>
           <button
             onClick={onClose}
-            className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-100'
+            className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-50'
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+            className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2'
           >
+            <Save size={16} />
             Add Device
           </button>
         </div>
