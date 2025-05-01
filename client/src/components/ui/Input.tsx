@@ -1,95 +1,65 @@
-// client/src/components/core/Input.tsx
 import React from 'react';
-import { cn } from '../../utils/cn';
-import { Eye, EyeOff, Search, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { cn } from '@/utils/cn';
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
   error?: string;
   icon?: React.ReactNode;
   clearable?: boolean;
   onClear?: () => void;
-  type?: string;
-  showPasswordToggle?: boolean;
+  rightElement?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    {
-      className,
-      label,
-      error,
-      icon,
-      clearable,
-      onClear,
-      type = 'text',
-      showPasswordToggle,
-      ...props
-    },
+    { className, error, icon, clearable, onClear, rightElement, ...props },
     ref
   ) => {
-    const [showPassword, setShowPassword] = React.useState(false);
-    const inputType =
-      showPasswordToggle && type === 'password'
-        ? showPassword
-          ? 'text'
-          : 'password'
-        : type;
-
-    const handleClear = () => {
-      if (onClear) {
-        onClear();
-      }
-    };
+    const hasValue = props.value && props.value.toString().length > 0;
+    const showClearButton = clearable && hasValue;
 
     return (
-      <div className='w-full'>
-        {label && (
-          <label className='block text-sm font-medium text-gray-700 mb-1'>
-            {label}
-          </label>
+      <div className='w-full relative'>
+        {icon && (
+          <div className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'>
+            {icon}
+          </div>
         )}
-        <div className='relative rounded-md shadow-sm'>
-          {icon && (
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400'>
-              {icon}
-            </div>
+
+        <input
+          className={cn(
+            'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm',
+            'placeholder:text-gray-400',
+            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-red-500 focus:ring-red-500 focus:border-red-500',
+            icon && 'pl-10',
+            (showClearButton || rightElement) && 'pr-10',
+            className
           )}
-          <input
-            ref={ref}
-            type={inputType}
-            className={cn(
-              'block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
-              icon ? 'pl-10' : '',
-              clearable || showPasswordToggle ? 'pr-10' : '',
-              error
-                ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500'
-                : '',
-              className
-            )}
-            {...props}
-          />
-          {clearable && props.value && (
-            <button
-              type='button'
-              onClick={handleClear}
-              className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600'
-            >
-              <X size={16} />
-            </button>
-          )}
-          {showPasswordToggle && type === 'password' && (
-            <button
-              type='button'
-              onClick={() => setShowPassword(!showPassword)}
-              className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600'
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          )}
-        </div>
-        {error && <p className='mt-1 text-sm text-red-600'>{error}</p>}
+          ref={ref}
+          {...props}
+        />
+
+        {showClearButton && (
+          <button
+            type='button'
+            onClick={onClear}
+            className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none'
+            tabIndex={-1}
+          >
+            <X size={16} />
+          </button>
+        )}
+
+        {rightElement && !showClearButton && (
+          <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
+            {rightElement}
+          </div>
+        )}
+
+        {error && <p className='mt-1 text-sm text-red-500'>{error}</p>}
       </div>
     );
   }
@@ -98,42 +68,3 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = 'Input';
 
 export { Input };
-
-// Search input component that extends the base Input component
-export interface SearchInputProps extends Omit<InputProps, 'icon' | 'type'> {
-  onSearch?: (value: string) => void;
-}
-
-export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ className, onSearch, clearable = true, onClear, ...props }, ref) => {
-    const handleClear = () => {
-      if (onClear) {
-        onClear();
-      }
-      if (onSearch) {
-        onSearch('');
-      }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && onSearch) {
-        onSearch((e.target as HTMLInputElement).value);
-      }
-    };
-
-    return (
-      <Input
-        ref={ref}
-        type='text'
-        icon={<Search size={16} />}
-        clearable={clearable}
-        onClear={handleClear}
-        onKeyDown={handleKeyDown}
-        className={cn('w-full', className)}
-        {...props}
-      />
-    );
-  }
-);
-
-SearchInput.displayName = 'SearchInput';

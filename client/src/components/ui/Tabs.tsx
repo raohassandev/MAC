@@ -1,142 +1,136 @@
-// src/components/ui/Tabs.tsx
 import React from 'react';
-import { cn } from '../../utils/cn';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { cn } from '@/utils/cn';
 
-export interface TabItem {
+type TabItem = {
   id: string;
-  label: React.ReactNode;
-  content: React.ReactNode;
+  label: string;
   icon?: React.ReactNode;
+  content?: React.ReactNode;
   disabled?: boolean;
-}
+};
 
-// Fix the interface by removing the HTMLAttributes extension and defining props explicitly
-export interface TabsProps {
+interface TabsProps {
   tabs: TabItem[];
   activeTab: string;
-  onChange: (tabId: string) => void;
+  onChange: (value: string) => void;
   variant?: 'default' | 'boxed' | 'pills';
+  size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   tabClassName?: string;
   activeTabClassName?: string;
   disabledTabClassName?: string;
   contentClassName?: string;
-  className?: string;
+  orientation?: 'horizontal' | 'vertical';
+  children?: React.ReactNode;
 }
 
-export const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
-  (
-    {
-      className,
-      tabs,
-      activeTab,
-      onChange,
-      variant = 'default',
-      fullWidth = false,
-      tabClassName,
-      activeTabClassName,
-      disabledTabClassName,
-      contentClassName,
-      ...props
+const Tabs = ({
+  tabs,
+  activeTab,
+  onChange,
+  variant = 'default',
+  size = 'md',
+  fullWidth = false,
+  tabClassName,
+  activeTabClassName,
+  disabledTabClassName,
+  contentClassName,
+  orientation = 'horizontal',
+  children,
+}: TabsProps) => {
+  // Base styles for all variants
+  const baseTabStyles = 'focus:outline-none transition-all duration-200';
+
+  // Variant-specific styles
+  const variantStyles = {
+    default: {
+      list: 'border-b border-gray-200',
+      tab: cn(
+        'px-1 py-2.5 border-b-2 border-transparent',
+        'hover:border-gray-300 hover:text-gray-700',
+        'data-[state=active]:border-blue-500 data-[state=active]:text-blue-600'
+      ),
     },
-    ref
-  ) => {
-    // Get the active tab content
-    const activeContent = tabs.find((tab) => tab.id === activeTab)?.content;
+    boxed: {
+      list: 'bg-white border border-gray-200 rounded-md overflow-hidden',
+      tab: cn(
+        'px-4 py-2.5',
+        'hover:bg-gray-50',
+        'data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600'
+      ),
+    },
+    pills: {
+      list: 'space-x-1',
+      tab: cn(
+        'px-4 py-2 rounded-md',
+        'hover:bg-gray-100',
+        'data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+      ),
+    },
+  };
 
-    // Get class names based on variant
-    const getTabListClassName = () => {
-      switch (variant) {
-        case 'boxed':
-          return 'flex p-1 space-x-1 bg-gray-100 rounded-lg';
-        case 'pills':
-          return 'flex space-x-1';
-        default:
-          return 'flex border-b border-gray-200';
-      }
-    };
+  // Size-specific styles
+  const sizeStyles = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base',
+  };
 
-    const getTabClassName = (isActive: boolean, isDisabled: boolean) => {
-      const baseClasses =
-        'flex items-center justify-center px-4 py-2 text-sm font-medium focus:outline-none transition-colors';
-      const widthClasses = fullWidth ? 'flex-1' : '';
+  // Orientation styles
+  const orientationStyles = {
+    horizontal: 'flex space-x-2',
+    vertical: 'flex flex-col space-y-2',
+  };
 
-      if (isDisabled) {
-        return cn(
-          baseClasses,
-          widthClasses,
-          'text-gray-400 cursor-not-allowed',
-          disabledTabClassName
-        );
-      }
+  return (
+    <TabsPrimitive.Root value={activeTab} onValueChange={onChange}>
+      <TabsPrimitive.List
+        className={cn(
+          orientationStyles[orientation],
+          variantStyles[variant].list,
+          fullWidth && 'w-full',
+          'mb-4'
+        )}
+      >
+        {tabs.map((tab) => (
+          <TabsPrimitive.Trigger
+            key={tab.id}
+            value={tab.id}
+            disabled={tab.disabled}
+            className={cn(
+              baseTabStyles,
+              variantStyles[variant].tab,
+              sizeStyles[size],
+              'flex items-center',
+              fullWidth && 'flex-1 text-center justify-center',
+              tabClassName,
+              activeTab === tab.id && activeTabClassName,
+              tab.disabled &&
+                cn('opacity-50 cursor-not-allowed', disabledTabClassName)
+            )}
+          >
+            {tab.icon && <span className='mr-2'>{tab.icon}</span>}
+            {tab.label}
+          </TabsPrimitive.Trigger>
+        ))}
+      </TabsPrimitive.List>
 
-      switch (variant) {
-        case 'boxed':
-          return cn(
-            baseClasses,
-            widthClasses,
-            isActive
-              ? cn(
-                  'bg-white text-gray-900 shadow rounded-md',
-                  activeTabClassName
-                )
-              : cn('text-gray-600 hover:text-gray-900', tabClassName)
-          );
-        case 'pills':
-          return cn(
-            baseClasses,
-            widthClasses,
-            isActive
-              ? cn('bg-blue-500 text-white rounded-md', activeTabClassName)
-              : cn(
-                  'text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md',
-                  tabClassName
-                )
-          );
-        default:
-          return cn(
-            baseClasses,
-            widthClasses,
-            'border-b-2',
-            isActive
-              ? cn('border-blue-500 text-blue-600', activeTabClassName)
-              : cn(
-                  'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                  tabClassName
-                )
-          );
-      }
-    };
-
-    return (
-      <div ref={ref} className={cn('w-full', className)} {...props}>
-        <div className={getTabListClassName()} role='tablist'>
+      {children || (
+        <>
           {tabs.map((tab) => (
-            <button
+            <TabsPrimitive.Content
               key={tab.id}
-              role='tab'
-              type='button'
-              aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
-              disabled={tab.disabled}
-              className={getTabClassName(activeTab === tab.id, !!tab.disabled)}
-              onClick={() => !tab.disabled && onChange(tab.id)}
+              value={tab.id}
+              className={cn('focus:outline-none', contentClassName)}
             >
-              {tab.icon && <span className='mr-2'>{tab.icon}</span>}
-              {tab.label}
-            </button>
+              {tab.content}
+            </TabsPrimitive.Content>
           ))}
-        </div>
-        <div
-          className={cn('mt-4', contentClassName)}
-          role='tabpanel'
-          id={`panel-${activeTab}`}
-        >
-          {activeContent}
-        </div>
-      </div>
-    );
-  }
-);
+        </>
+      )}
+    </TabsPrimitive.Root>
+  );
+};
 
-Tabs.displayName = 'Tabs';
+export { Tabs };

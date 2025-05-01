@@ -1,7 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import * as Tooltip from '@radix-ui/react-tooltip';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   AlertCircle,
   CheckCircle,
@@ -13,7 +11,12 @@ import {
   Pin,
   ChevronRight,
 } from 'lucide-react';
+
+// Import UI components instead of direct usage of Radix
 import { Card } from '@/components/ui/Card';
+import { Tooltip } from '@/components/ui/Tooltip';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { Badge } from '@/components/ui/Badge';
 
 interface Device {
   _id: string;
@@ -70,7 +73,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
   };
 
   return (
-    <Card.Root className='transition-all hover:shadow-md'>
+    <Card className='transition-all hover:shadow-md'>
       <Card.Content className='p-0'>
         <div className='p-4 border-b border-gray-100'>
           <div className='flex justify-between items-start'>
@@ -85,83 +88,60 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
               </div>
             </Link>
 
-            <Tooltip.Provider>
-              <DropdownMenu.Root>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <DropdownMenu.Trigger asChild>
-                      <button className='p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100'>
-                        <MoreVertical size={16} />
-                      </button>
-                    </DropdownMenu.Trigger>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                      className='bg-white shadow-md rounded-md px-3 py-1.5 text-sm z-50'
-                      sideOffset={5}
-                    >
-                      Actions
-                      <Tooltip.Arrow className='fill-white' />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
+            <Tooltip content='Actions'>
+              <Dropdown
+                trigger={
+                  <button className='p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100'>
+                    <MoreVertical size={16} />
+                  </button>
+                }
+                align='end'
+                width='md'
+              >
+                <Dropdown.Item
+                  icon={<Edit size={14} />}
+                  onClick={() => onEdit && onEdit(device)}
+                >
+                  Edit Device
+                </Dropdown.Item>
 
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className='min-w-[180px] bg-white rounded-md shadow-lg z-50 p-1 border border-gray-200'
-                    sideOffset={5}
-                  >
-                    <DropdownMenu.Item
-                      className='flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer'
-                      onSelect={() => onEdit && onEdit(device)}
-                    >
-                      <Edit size={14} className='mr-2' />
-                      Edit Device
-                    </DropdownMenu.Item>
-
-                    <DropdownMenu.Item
-                      className='flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer'
-                      onSelect={() =>
-                        onToggleFavorite && onToggleFavorite(device)
+                <Dropdown.Item
+                  icon={
+                    <Star
+                      size={14}
+                      className={
+                        isFavorite ? 'fill-yellow-400 text-yellow-400' : ''
                       }
-                    >
-                      <Star
-                        size={14}
-                        className={`mr-2 ${
-                          isFavorite ? 'fill-yellow-400 text-yellow-400' : ''
-                        }`}
-                      />
-                      {isFavorite
-                        ? 'Remove from Favorites'
-                        : 'Add to Favorites'}
-                    </DropdownMenu.Item>
+                    />
+                  }
+                  onClick={() => onToggleFavorite && onToggleFavorite(device)}
+                >
+                  {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                </Dropdown.Item>
 
-                    <DropdownMenu.Item
-                      className='flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer'
-                      onSelect={() => onTogglePin && onTogglePin(device)}
-                    >
-                      <Pin
-                        size={14}
-                        className={`mr-2 ${
-                          isPinned ? 'fill-blue-400 text-blue-400' : ''
-                        }`}
-                      />
-                      {isPinned ? 'Unpin Device' : 'Pin Device'}
-                    </DropdownMenu.Item>
+                <Dropdown.Item
+                  icon={
+                    <Pin
+                      size={14}
+                      className={isPinned ? 'fill-blue-400 text-blue-400' : ''}
+                    />
+                  }
+                  onClick={() => onTogglePin && onTogglePin(device)}
+                >
+                  {isPinned ? 'Unpin Device' : 'Pin Device'}
+                </Dropdown.Item>
 
-                    <DropdownMenu.Separator className='h-px bg-gray-200 my-1' />
+                <Dropdown.Separator />
 
-                    <DropdownMenu.Item
-                      className='flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md cursor-pointer'
-                      onSelect={() => onDelete && onDelete(device)}
-                    >
-                      <Trash size={14} className='mr-2' />
-                      Delete Device
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            </Tooltip.Provider>
+                <Dropdown.Item
+                  icon={<Trash size={14} />}
+                  danger
+                  onClick={() => onDelete && onDelete(device)}
+                >
+                  Delete Device
+                </Dropdown.Item>
+              </Dropdown>
+            </Tooltip>
           </div>
 
           {(device.make || device.model) && (
@@ -173,12 +153,9 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
           {device.tags && device.tags.length > 0 && (
             <div className='mt-2 flex flex-wrap gap-1'>
               {device.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className='inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded-full'
-                >
+                <Badge key={index} variant='default' size='sm'>
                   {tag}
-                </span>
+                </Badge>
               ))}
             </div>
           )}
@@ -207,15 +184,21 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
           <div className='mt-2 flex justify-between'>
             <div className='flex items-center'>
               {device.enabled ? (
-                <span className='flex items-center text-xs text-green-600'>
-                  <CheckCircle size={14} className='mr-1' />
+                <Badge
+                  variant='success'
+                  size='sm'
+                  icon={<CheckCircle size={12} />}
+                >
                   Online
-                </span>
+                </Badge>
               ) : (
-                <span className='flex items-center text-xs text-red-600'>
-                  <AlertCircle size={14} className='mr-1' />
+                <Badge
+                  variant='danger'
+                  size='sm'
+                  icon={<AlertCircle size={12} />}
+                >
                   Offline
-                </span>
+                </Badge>
               )}
             </div>
 
@@ -229,7 +212,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
           </div>
         </div>
       </Card.Content>
-    </Card.Root>
+    </Card>
   );
 };
 

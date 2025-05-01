@@ -10,10 +10,15 @@ import {
   MapPin,
   Server,
 } from 'lucide-react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import * as Checkbox from '@radix-ui/react-checkbox';
-import * as Toggle from '@radix-ui/react-toggle';
-import * as Popover from '@radix-ui/react-popover';
+
+// Import UI components
+import { Input } from '@/components/ui/Input';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { Toggle } from '@/components/ui/Toggle';
+import { Popover } from '@/components/ui/Popover';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 
 interface DeviceFilter {
   search?: string;
@@ -46,7 +51,7 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
-  // Dropdown states (we keep these for state management, but use Radix UI for the UI)
+  // Dropdown states
   const [advancedFiltersVisible, setAdvancedFiltersVisible] = useState(false);
 
   // Extract unique values from devices
@@ -165,33 +170,24 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
     <div className={`space-y-3 ${className}`}>
       <div className='flex flex-col md:flex-row gap-3'>
         <div className='relative flex-grow'>
-          <Search
-            size={16}
-            className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'
-          />
-          <input
+          <Input
             type='text'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder='Search devices...'
-            className='pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            icon={<Search size={16} />}
+            clearable
+            onClear={() => setSearchQuery('')}
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
-            >
-              <X size={16} />
-            </button>
-          )}
         </div>
 
-        {/* Status Filter Dropdown - Now using Radix DropdownMenu */}
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button
-              type='button'
-              className='inline-flex justify-between items-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+        {/* Status Filter Dropdown */}
+        <Dropdown
+          trigger={
+            <Button
+              variant='outline'
+              size='md'
+              className='flex justify-between items-center w-full'
             >
               <span className='flex items-center'>
                 {selectedStatus ? (
@@ -210,54 +206,39 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
                 )}
               </span>
               <ChevronDown size={16} className='ml-2' />
-            </button>
-          </DropdownMenu.Trigger>
-
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content
-              className='bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[180px]'
-              sideOffset={5}
-              align='end'
-            >
-              <DropdownMenu.Item
-                className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                onSelect={() => setSelectedStatus(null)}
-              >
-                All
-                {selectedStatus === null && (
-                  <Check size={16} className='text-blue-500' />
-                )}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                onSelect={() => setSelectedStatus('online')}
-              >
-                <div className='flex items-center'>
-                  <div className='h-2 w-2 rounded-full bg-green-500 mr-2'></div>
-                  Online
-                </div>
-                {selectedStatus === 'online' && (
-                  <Check size={16} className='text-blue-500' />
-                )}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                onSelect={() => setSelectedStatus('offline')}
-              >
-                <div className='flex items-center'>
-                  <div className='h-2 w-2 rounded-full bg-red-500 mr-2'></div>
-                  Offline
-                </div>
-                {selectedStatus === 'offline' && (
-                  <Check size={16} className='text-blue-500' />
-                )}
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+            </Button>
+          }
+          align='end'
+          width='md'
+        >
+          <Dropdown.Item
+            onClick={() => setSelectedStatus(null)}
+            selected={selectedStatus === null}
+          >
+            All
+          </Dropdown.Item>
+          <Dropdown.Item
+            onClick={() => setSelectedStatus('online')}
+            selected={selectedStatus === 'online'}
+          >
+            <div className='flex items-center'>
+              <div className='h-2 w-2 rounded-full bg-green-500 mr-2'></div>
+              Online
+            </div>
+          </Dropdown.Item>
+          <Dropdown.Item
+            onClick={() => setSelectedStatus('offline')}
+            selected={selectedStatus === 'offline'}
+          >
+            <div className='flex items-center'>
+              <div className='h-2 w-2 rounded-full bg-red-500 mr-2'></div>
+              Offline
+            </div>
+          </Dropdown.Item>
+        </Dropdown>
 
         {/* Toggle Advanced Filters Button */}
-        <Toggle.Root
+        <Toggle
           pressed={advancedFiltersVisible}
           onPressedChange={setAdvancedFiltersVisible}
           className='inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -265,22 +246,22 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
           <Filter size={16} className='mr-2' />
           {advancedFiltersVisible ? 'Hide Filters' : 'Advanced Filters'}
           {activeFilterCount() > 0 && !advancedFiltersVisible && (
-            <span className='ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full'>
+            <Badge variant='info' size='sm' className='ml-2'>
               {activeFilterCount()}
-            </span>
+            </Badge>
           )}
-        </Toggle.Root>
+        </Toggle>
 
         {/* Reset Filters Button */}
         {activeFilterCount() > 0 && (
-          <button
-            type='button'
+          <Button
+            variant='outline'
             onClick={resetFilters}
-            className='inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            className='inline-flex items-center'
           >
             <X size={16} className='mr-2' />
             Clear Filters
-          </button>
+          </Button>
         )}
       </div>
 
@@ -288,17 +269,18 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
       {advancedFiltersVisible && (
         <div className='bg-gray-50 p-4 rounded-md border border-gray-200 space-y-4'>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            {/* Tags Dropdown - Now using Radix Popover */}
-            <Popover.Root>
-              <div className='relative'>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  <Tag size={14} className='inline mr-1' />
-                  Tags
-                </label>
-                <Popover.Trigger asChild>
-                  <button
-                    type='button'
-                    className='inline-flex justify-between items-center w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            {/* Tags Dropdown - Using Popover */}
+            <Popover
+              trigger={
+                <div className='relative'>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    <Tag size={14} className='inline mr-1' />
+                    Tags
+                  </label>
+                  <Button
+                    variant='outline'
+                    size='md'
+                    className='inline-flex justify-between items-center w-full'
                   >
                     <span className='truncate'>
                       {selectedTags.length
@@ -308,70 +290,62 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
                         : 'Select tags'}
                     </span>
                     <ChevronDown size={16} className='ml-2' />
-                  </button>
-                </Popover.Trigger>
-
-                <Popover.Portal>
-                  <Popover.Content
-                    className='bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto w-full min-w-[220px]'
-                    sideOffset={5}
-                  >
-                    {availableTags.length === 0 ? (
-                      <div className='px-4 py-2 text-sm text-gray-500'>
-                        No tags available
-                      </div>
-                    ) : (
-                      <div className='p-2'>
-                        <div className='mb-2'>
-                          {selectedTags.length > 0 && (
-                            <button
-                              className='text-xs text-blue-600 hover:text-blue-800'
-                              onClick={() => setSelectedTags([])}
-                            >
-                              Clear all
-                            </button>
-                          )}
-                        </div>
-                        {availableTags.map((tag) => (
-                          <div
-                            key={tag}
-                            className='flex items-center px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer rounded-md'
-                            onClick={() => toggleTag(tag)}
-                          >
-                            <Checkbox.Root
-                              className='flex h-4 w-4 items-center justify-center rounded border border-gray-300 bg-white'
-                              checked={selectedTags.includes(tag)}
-                              id={`tag-${tag}`}
-                              onCheckedChange={() => toggleTag(tag)}
-                            >
-                              {selectedTags.includes(tag) && (
-                                <Checkbox.Indicator>
-                                  <Check size={12} className='text-blue-500' />
-                                </Checkbox.Indicator>
-                              )}
-                            </Checkbox.Root>
-                            <label
-                              htmlFor={`tag-${tag}`}
-                              className='ml-2 cursor-pointer'
-                            >
-                              {tag}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
+                  </Button>
+                </div>
+              }
+              align='center'
+              width='md'
+            >
+              {availableTags.length === 0 ? (
+                <div className='px-4 py-2 text-sm text-gray-500'>
+                  No tags available
+                </div>
+              ) : (
+                <div className='p-2'>
+                  <div className='mb-2'>
+                    {selectedTags.length > 0 && (
+                      <Button
+                        size='sm'
+                        variant='link'
+                        onClick={() => setSelectedTags([])}
+                        className='text-xs text-blue-600 hover:text-blue-800'
+                      >
+                        Clear all
+                      </Button>
                     )}
-                    <Popover.Arrow className='fill-white' />
-                  </Popover.Content>
-                </Popover.Portal>
-              </div>
-            </Popover.Root>
+                  </div>
+                  {availableTags.map((tag) => (
+                    <div
+                      key={tag}
+                      className='flex items-center px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer rounded-md'
+                      onClick={() => toggleTag(tag)}
+                    >
+                      <Checkbox
+                        checked={selectedTags.includes(tag)}
+                        id={`tag-${tag}`}
+                        onChange={() => toggleTag(tag)}
+                        className='mr-2'
+                      />
+                      <label
+                        htmlFor={`tag-${tag}`}
+                        className='ml-2 cursor-pointer'
+                      >
+                        {tag}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Popover>
 
             {selectedTags.length > 0 && (
               <div className='mt-2 flex flex-wrap gap-1'>
                 {selectedTags.map((tag) => (
-                  <span
+                  <Badge
                     key={tag}
-                    className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800'
+                    variant='info'
+                    size='sm'
+                    className='inline-flex items-center'
                   >
                     {tag}
                     <button
@@ -381,122 +355,103 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
                     >
                       <X size={12} />
                     </button>
-                  </span>
+                  </Badge>
                 ))}
               </div>
             )}
 
-            {/* Manufacturer Dropdown - Now using Radix DropdownMenu */}
+            {/* Manufacturer Dropdown */}
             <div className='relative'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
                 <Settings size={14} className='inline mr-1' />
                 Manufacturer
               </label>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    type='button'
-                    className='inline-flex justify-between items-center w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              <Dropdown
+                trigger={
+                  <Button
+                    variant='outline'
+                    size='md'
+                    className='inline-flex justify-between items-center w-full'
                   >
                     <span className='truncate'>
                       {selectedMake || 'Any manufacturer'}
                     </span>
                     <ChevronDown size={16} className='ml-2' />
-                  </button>
-                </DropdownMenu.Trigger>
-
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className='bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[220px] max-h-60 overflow-y-auto'
-                    sideOffset={5}
+                  </Button>
+                }
+                align='center'
+                width='md'
+              >
+                <Dropdown.Item
+                  onClick={() => setSelectedMake(null)}
+                  selected={selectedMake === null}
+                >
+                  Any manufacturer
+                </Dropdown.Item>
+                {availableMakes.map((make) => (
+                  <Dropdown.Item
+                    key={make}
+                    onClick={() => setSelectedMake(make)}
+                    selected={selectedMake === make}
                   >
-                    <DropdownMenu.Item
-                      className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                      onSelect={() => setSelectedMake(null)}
-                    >
-                      Any manufacturer
-                      {selectedMake === null && (
-                        <Check size={16} className='text-blue-500' />
-                      )}
-                    </DropdownMenu.Item>
-                    {availableMakes.map((make) => (
-                      <DropdownMenu.Item
-                        key={make}
-                        className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                        onSelect={() => setSelectedMake(make)}
-                      >
-                        {make}
-                        {selectedMake === make && (
-                          <Check size={16} className='text-blue-500' />
-                        )}
-                      </DropdownMenu.Item>
-                    ))}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                    {make}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
             </div>
 
-            {/* Model Dropdown - Now using Radix DropdownMenu */}
+            {/* Model Dropdown */}
             <div className='relative'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
                 <Server size={14} className='inline mr-1' />
                 Model
               </label>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    type='button'
-                    className='inline-flex justify-between items-center w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              <Dropdown
+                trigger={
+                  <Button
+                    variant='outline'
+                    size='md'
+                    className='inline-flex justify-between items-center w-full'
                   >
                     <span className='truncate'>
                       {selectedModel || 'Any model'}
                     </span>
                     <ChevronDown size={16} className='ml-2' />
-                  </button>
-                </DropdownMenu.Trigger>
-
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className='bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[220px] max-h-60 overflow-y-auto'
-                    sideOffset={5}
+                  </Button>
+                }
+                align='center'
+                width='md'
+              >
+                <Dropdown.Item
+                  onClick={() => setSelectedModel(null)}
+                  selected={selectedModel === null}
+                >
+                  Any model
+                </Dropdown.Item>
+                {availableModels.map((model) => (
+                  <Dropdown.Item
+                    key={model}
+                    onClick={() => setSelectedModel(model)}
+                    selected={selectedModel === model}
                   >
-                    <DropdownMenu.Item
-                      className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                      onSelect={() => setSelectedModel(null)}
-                    >
-                      Any model
-                      {selectedModel === null && (
-                        <Check size={16} className='text-blue-500' />
-                      )}
-                    </DropdownMenu.Item>
-                    {availableModels.map((model) => (
-                      <DropdownMenu.Item
-                        key={model}
-                        className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                        onSelect={() => setSelectedModel(model)}
-                      >
-                        {model}
-                        {selectedModel === model && (
-                          <Check size={16} className='text-blue-500' />
-                        )}
-                      </DropdownMenu.Item>
-                    ))}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                    {model}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
             </div>
 
-            {/* Group Dropdown - Now using Radix DropdownMenu */}
+            {/* Group Dropdown */}
             <div className='relative'>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
                 <MapPin size={14} className='inline mr-1' />
                 Device Group
               </label>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    type='button'
-                    className='inline-flex justify-between items-center w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              <Dropdown
+                trigger={
+                  <Button
+                    variant='outline'
+                    size='md'
+                    className='inline-flex justify-between items-center w-full'
                   >
                     <span className='truncate'>
                       {selectedGroup
@@ -505,38 +460,27 @@ const AdvancedDeviceFilter: React.FC<AdvancedDeviceFilterProps> = ({
                         : 'Any group'}
                     </span>
                     <ChevronDown size={16} className='ml-2' />
-                  </button>
-                </DropdownMenu.Trigger>
-
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className='bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[220px] max-h-60 overflow-y-auto'
-                    sideOffset={5}
+                  </Button>
+                }
+                align='center'
+                width='md'
+              >
+                <Dropdown.Item
+                  onClick={() => setSelectedGroup(null)}
+                  selected={selectedGroup === null}
+                >
+                  Any group
+                </Dropdown.Item>
+                {availableGroups.map((group) => (
+                  <Dropdown.Item
+                    key={group.id}
+                    onClick={() => setSelectedGroup(group.id)}
+                    selected={selectedGroup === group.id}
                   >
-                    <DropdownMenu.Item
-                      className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                      onSelect={() => setSelectedGroup(null)}
-                    >
-                      Any group
-                      {selectedGroup === null && (
-                        <Check size={16} className='text-blue-500' />
-                      )}
-                    </DropdownMenu.Item>
-                    {availableGroups.map((group) => (
-                      <DropdownMenu.Item
-                        key={group.id}
-                        className='px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
-                        onSelect={() => setSelectedGroup(group.id)}
-                      >
-                        {group.name}
-                        {selectedGroup === group.id && (
-                          <Check size={16} className='text-blue-500' />
-                        )}
-                      </DropdownMenu.Item>
-                    ))}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                    {group.name}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
             </div>
           </div>
 

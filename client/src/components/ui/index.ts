@@ -8,6 +8,7 @@ export * from './Breadcrumb';
 export * from './Button';
 export * from './Card';
 export * from './Checkbox';
+export * from './Dialog';
 export * from './Dropdown';
 export * from './Empty';
 export * from './Form';
@@ -20,13 +21,27 @@ export * from './Select';
 export * from './Skeleton';
 export * from './Stepper';
 export * from './Switch';
+export * from './Table';
 
 // Handle Table and Tabs with explicit re-exports to resolve naming conflicts
 import { Table, type TableProps } from './Table';
 
-import { Tabs, type TabsProps, type TabItem } from './Tabs';
-
-export { Table, type TableProps, Tabs, type TabsProps, type TabItem };
-
 export * from './Toast';
 export * from './Tooltip';
+// Export all UI components with explicit naming to avoid conflicts
+export { Badge } from './Badge';
+export { Button } from './Button';
+export { Card } from './Card';
+export { Checkbox } from './Checkbox';
+export { Dialog } from './Dialog';
+export { Dropdown } from './Dropdown';
+export { Empty } from './Empty';
+export { Form } from './Form';
+export { Input } from './Input';
+export { Popover } from './Popover';
+export { Switch } from './Switch';
+export { Tabs } from './Tabs';
+export { Toggle } from './Toggle';
+export { Tooltip, TooltipProvider } from './Tooltip';
+
+// Add other UI components as they are created
