@@ -9,31 +9,13 @@ export interface RegisterRange {
   dataParser?: ParameterConfig[]; // Optional array of parameter configurations
 }
 
-// Valid data types for parameter configuration
-export type DataType =
-  | 'INT-16'
-  | 'UINT-16'
-  | 'INT-32'
-  | 'UINT-32'
-  | 'FLOAT'
-  | 'DOUBLE';
-
-// Valid byte orders for single register data types
-export type SingleRegisterByteOrder = 'AB' | 'BA';
-
-// Valid byte orders for multi-register data types
-export type MultiRegisterByteOrder = 'ABCD' | 'DCBA' | 'BADC' | 'CDAB';
-
-// Combined byte order type
-export type ByteOrder = SingleRegisterByteOrder | MultiRegisterByteOrder;
-
 // Parameter configuration interface
 export interface ParameterConfig {
   name: string;
-  dataType: DataType;
+  dataType: string;
   scalingFactor: number;
   decimalPoint: number;
-  byteOrder: ByteOrder;
+  byteOrder: string;
   registerRange?: string; // Optional for standalone parameters
   registerIndex: number;
 }
@@ -55,26 +37,6 @@ export interface DeviceFormData {
   enabled: boolean;
   tags: string[];
 }
-
-// Connection types
-export type ConnectionType = 'tcp' | 'rtu';
-
-// Valid function codes for Modbus
-export enum FunctionCode {
-  ReadCoils = 1,
-  ReadDiscreteInputs = 2,
-  ReadHoldingRegisters = 3,
-  ReadInputRegisters = 4,
-  WriteSingleCoil = 5,
-  WriteSingleRegister = 6,
-  WriteMultipleCoils = 15,
-  WriteMultipleRegisters = 16,
-  MaskWriteRegister = 22,
-  ReadWriteMultipleRegisters = 23,
-}
-
-// Valid parity options
-export type Parity = 'none' | 'even' | 'odd';
 
 // Form field validation state interface
 export interface FieldValidation {
