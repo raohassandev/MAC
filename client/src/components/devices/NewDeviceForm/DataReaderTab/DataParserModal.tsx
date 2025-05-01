@@ -41,6 +41,7 @@ const getByteOrderOptions = (dataType: string) => {
 
 const DataParserModal: React.FC = () => {
   const { state, dispatch } = useDeviceForm();
+  console.log(state)
   const { registerRanges, parameters, uiState, validationState } = state;
   const { currentRangeForDataParser, showDataParserModal } = uiState;
 
@@ -84,6 +85,21 @@ const DataParserModal: React.FC = () => {
     }
   }, [newParameter.dataType]);
 
+  // Clear validation errors when modal opens or closes
+  useEffect(() => {
+    if (showDataParserModal) {
+      // When modal opens, clear parameter validation errors
+      dispatch({
+        type: 'SET_VALIDATION_ERRORS',
+        validation: {
+          ...validationState,
+          parameters: [],
+        },
+      });
+    }
+    console.log("Dispatch captured in DataParserModel.");
+  }, [showDataParserModal]);
+
   // Helper function to get field error
   const getFieldError = (field: string): string | undefined => {
     const error = validationState.parameters.find((err) => err.field === field);
@@ -96,36 +112,8 @@ const DataParserModal: React.FC = () => {
       [field]: value,
     });
 
-    // Validate as user types
-    const tempValidation = createValidationResult(); // Create an empty validation object
-    validateParameterConfig(
-      { ...newParameter, [field]: value },
-      parameters,
-      registerRanges,
-      tempValidation
-    );
-
-    if (!tempValidation.isValid) {
-      // We only want to update with errors for this specific field
-      const fieldErrors = tempValidation.parameters.filter(
-        (err) => err.field === field
-      );
-      if (fieldErrors.length > 0) {
-        dispatch({
-          type: 'SET_VALIDATION_ERRORS',
-          validation: {
-            ...validationState,
-            parameters: [
-              ...validationState.parameters.filter(
-                (err) => err.field !== field
-              ),
-              ...fieldErrors,
-            ],
-          },
-        });
-      }
-    } else {
-      // Clear any errors for this field
+    // Clear validation error for this field if it has a value
+    if (value && getFieldError(field)) {
       dispatch({
         type: 'SET_VALIDATION_ERRORS',
         validation: {
@@ -156,7 +144,6 @@ const DataParserModal: React.FC = () => {
           parameters: tempValidation.parameters,
         },
       });
-      dispatch({ type: 'TOGGLE_VALIDATION_SUMMARY', show: true });
       return;
     }
 
@@ -183,8 +170,20 @@ const DataParserModal: React.FC = () => {
   };
 
   const handleClose = () => {
+    // Clear validation errors when closing the modal
+    dispatch({
+      type: 'SET_VALIDATION_ERRORS',
+      validation: {
+        ...validationState,
+        parameters: [],
+      },
+    });
+
+    // First set show to false, then set current range to null
     dispatch({ type: 'TOGGLE_DATA_PARSER_MODAL', show: false });
-    dispatch({ type: 'SET_CURRENT_RANGE_FOR_DATA_PARSER', index: null });
+    setTimeout(() => {
+      dispatch({ type: 'SET_CURRENT_RANGE_FOR_DATA_PARSER', index: null });
+    }, 100);
   };
 
   // Filter parameters for the current range
@@ -199,23 +198,34 @@ const DataParserModal: React.FC = () => {
       : [];
 
   // If not open or no range selected, don't render
-  if (!showDataParserModal || currentRangeForDataParser === null) return null;
+  if (!showDataParserModal || currentRangeForDataParser === null) {
+    return null;
+  }
 
   const selectedRange = registerRanges[currentRangeForDataParser];
 
   return (
-    <Dialog.Root open={showDataParserModal} onOpenChange={() => handleClose()}>
+    <Dialog.Root
+      open={showDataParserModal}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className='fixed inset-0 bg-gray-600 bg-opacity-50' />
         <Dialog.Content className='fixed inset-0 flex items-center justify-center z-[60]'>
           <div className='bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto'>
             <div className='flex justify-between items-center p-4 border-b'>
               <Dialog.Title className='text-xl font-semibold'>
-                Configure Buffer Data Parser
+                Configure Buffer Data Parser for {selectedRange?.rangeName}
               </Dialog.Title>
-              <Dialog.Close className='text-gray-500 hover:text-gray-700'>
+              <button
+                onClick={handleClose}
+                className='text-gray-500 hover:text-gray-700 cursor-pointer'
+                type='button'
+              >
                 <X size={20} />
-              </Dialog.Close>
+              </button>
             </div>
 
             <div className='p-4'>
@@ -397,6 +407,7 @@ const DataParserModal: React.FC = () => {
                   onClick={handleAddParameter}
                   className='flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600'
                   disabled={!newParameter.name}
+                  type='button'
                 >
                   <Plus size={16} /> Add Parameter
                 </button>
@@ -468,6 +479,7 @@ const DataParserModal: React.FC = () => {
                 <button
                   onClick={handleClose}
                   className='px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50'
+                  type='button'
                 >
                   Close
                 </button>

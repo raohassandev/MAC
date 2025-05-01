@@ -97,10 +97,45 @@ export type DeviceFormAction =
   | { type: 'SET_LOADING'; loading: boolean }
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'SET_VALIDATION_ERRORS'; validation: DeviceFormValidation }
+  | { type: 'CLEAR_VALIDATION_ERRORS' }
   | { type: 'TOGGLE_VALIDATION_SUMMARY'; show: boolean }
   | { type: 'SET_FORM_TOUCHED'; touched: boolean }
   | { type: 'VALIDATE_FORM' }
   | { type: 'RESET_FORM' };
+
+// Helper to check if a field has a value
+const hasValue = (value: any): boolean => {
+  if (value === undefined || value === null) return false;
+  if (typeof value === 'string') return value.trim() !== '';
+  return true;
+};
+
+// Helper to validate field value and clear errors
+const validateAndClearFieldError = (
+  state: DeviceFormState,
+  section: keyof Omit<DeviceFormValidation, 'isValid'>,
+  field: string,
+  value: any
+): DeviceFormValidation => {
+  const validationState = { ...state.validationState };
+
+  // If field has a value, remove any existing error for this field
+  if (hasValue(value)) {
+    validationState[section] = validationState[section].filter(
+      (err) => err.field !== field
+    );
+  }
+
+  // Recalculate overall validation state
+  validationState.isValid =
+    validationState.basicInfo.length === 0 &&
+    validationState.connection.length === 0 &&
+    validationState.registers.length === 0 &&
+    validationState.parameters.length === 0 &&
+    validationState.general.length === 0;
+
+  return validationState;
+};
 
 // Create the reducer function
 export const deviceFormReducer = (
@@ -108,18 +143,28 @@ export const deviceFormReducer = (
   action: DeviceFormAction
 ): DeviceFormState => {
   switch (action.type) {
-    case 'UPDATE_DEVICE_BASIC':
+    case 'UPDATE_DEVICE_BASIC': {
+      // Clear validation errors for this field if it has a value
+      const validationState = validateAndClearFieldError(
+        state,
+        'basicInfo',
+        action.field,
+        action.value
+      );
+
       return {
         ...state,
         deviceBasics: {
           ...state.deviceBasics,
           [action.field]: action.value,
         },
+        validationState,
         uiState: {
           ...state.uiState,
           formTouched: true,
         },
       };
+    }
 
     case 'UPDATE_CONNECTION_TYPE':
       return {
@@ -134,30 +179,65 @@ export const deviceFormReducer = (
         },
       };
 
-    case 'UPDATE_CONNECTION_SETTING':
+    case 'UPDATE_CONNECTION_SETTING': {
+      // Clear validation errors for this field if it has a value
+      const validationState = validateAndClearFieldError(
+        state,
+        'connection',
+        action.field,
+        action.value
+      );
+
+      // Special case for register range validation - if we validate on field change
+      // If we have at least one register range, clear that general error
+      if (
+        action.field === 'registerRanges' &&
+        state.registerRanges.length > 0
+      ) {
+        validationState.general = validationState.general.filter(
+          (err) => !err.message.includes('register range must be defined')
+        );
+      }
+
       return {
         ...state,
         connectionSettings: {
           ...state.connectionSettings,
           [action.field]: action.value,
         },
+        validationState,
         uiState: {
           ...state.uiState,
           formTouched: true,
         },
       };
+    }
 
-    case 'ADD_REGISTER_RANGE':
+    case 'ADD_REGISTER_RANGE': {
+      // When adding a register range, clear any "must define at least one register range" errors
+      const updatedGeneral = state.validationState.general.filter(
+        (err) => !err.message.includes('register range must be defined')
+      );
+
       return {
         ...state,
         registerRanges: [...state.registerRanges, action.range],
+        validationState: {
+          ...state.validationState,
+          general: updatedGeneral,
+          isValid:
+            state.validationState.isValid ||
+            (state.validationState.general.length === 1 &&
+              updatedGeneral.length === 0),
+        },
         uiState: {
           ...state.uiState,
           formTouched: true,
         },
       };
+    }
 
-    case 'UPDATE_REGISTER_RANGE':
+    case 'UPDATE_REGISTER_RANGE': {
       const updatedRanges = [...state.registerRanges];
       updatedRanges[action.index] = action.range;
 
@@ -174,17 +254,25 @@ export const deviceFormReducer = (
         );
       }
 
+      // Clear any register range validation errors for this specific range
+      const validationState = { ...state.validationState };
+      validationState.registers = validationState.registers.filter(
+        (err) => !err.field.includes(oldRangeName)
+      );
+
       return {
         ...state,
         registerRanges: updatedRanges,
         parameters: updatedParameters,
+        validationState,
         uiState: {
           ...state.uiState,
           formTouched: true,
         },
       };
+    }
 
-    case 'DELETE_REGISTER_RANGE':
+    case 'DELETE_REGISTER_RANGE': {
       const rangeName = state.registerRanges[action.index].rangeName;
 
       // Remove any parameters associated with this range
@@ -203,6 +291,7 @@ export const deviceFormReducer = (
           formTouched: true,
         },
       };
+    }
 
     case 'SET_EDITING_RANGE':
       return {
@@ -214,15 +303,23 @@ export const deviceFormReducer = (
         },
       };
 
-    case 'ADD_PARAMETER':
+    case 'ADD_PARAMETER': {
+      // Clear validation errors for this parameter
+      const validationState = { ...state.validationState };
+      validationState.parameters = validationState.parameters.filter(
+        (err) => err.field !== action.parameter.name
+      );
+
       return {
         ...state,
         parameters: [...state.parameters, action.parameter],
+        validationState,
         uiState: {
           ...state.uiState,
           formTouched: true,
         },
       };
+    }
 
     case 'DELETE_PARAMETER':
       return {
@@ -234,14 +331,28 @@ export const deviceFormReducer = (
         },
       };
 
-    case 'SET_CURRENT_TAB':
+    case 'SET_CURRENT_TAB': {
+      // Clear any tab-specific errors when changing tabs
+      let validationState = { ...state.validationState };
+      if (action.tab === 'registers') {
+        // Clear register-related errors
+        validationState.general = validationState.general.filter(
+          (err) => !err.message.includes('register range must be defined')
+        );
+      }
+
       return {
         ...state,
+        validationState,
         uiState: {
           ...state.uiState,
           currentTab: action.tab,
+          // Hide validation summary when switching tabs unless there are real errors
+          showValidationSummary:
+            state.uiState.showValidationSummary && !validationState.isValid,
         },
       };
+    }
 
     case 'SET_CURRENT_RANGE_FOR_DATA_PARSER':
       return {
@@ -252,14 +363,31 @@ export const deviceFormReducer = (
         },
       };
 
-    case 'TOGGLE_DATA_PARSER_MODAL':
+    case 'TOGGLE_DATA_PARSER_MODAL': {
+      // Store previous modal state to detect transitions
+      const wasOpen = state.uiState.showDataParserModal;
+      const willBeOpen = action.show;
+
       return {
         ...state,
+        // When closing the modal, clear parameter validation errors
+        validationState:
+          willBeOpen === false
+            ? {
+                ...state.validationState,
+                parameters: [],
+              }
+            : state.validationState,
         uiState: {
           ...state.uiState,
-          showDataParserModal: action.show,
+          showDataParserModal: willBeOpen,
+          // If we're closing the modal, also reset the currentRangeForDataParser
+          currentRangeForDataParser: willBeOpen
+            ? state.uiState.currentRangeForDataParser
+            : null,
         },
       };
+    }
 
     case 'SET_LOADING':
       return {
@@ -285,6 +413,16 @@ export const deviceFormReducer = (
         validationState: action.validation,
       };
 
+    case 'CLEAR_VALIDATION_ERRORS':
+      return {
+        ...state,
+        validationState: createValidationResult(),
+        uiState: {
+          ...state.uiState,
+          showValidationSummary: false,
+        },
+      };
+
     case 'TOGGLE_VALIDATION_SUMMARY':
       return {
         ...state,
@@ -303,13 +441,32 @@ export const deviceFormReducer = (
         },
       };
 
-    case 'VALIDATE_FORM':
-      const validation = validateDeviceForm(
+    case 'VALIDATE_FORM': {
+      let validation = validateDeviceForm(
         state.deviceBasics,
         state.connectionSettings.type,
         state.registerRanges,
         state.parameters
       );
+
+      // Special case: If we're on the registers tab and just added a register range,
+      // don't show the "must define register range" error
+      if (
+        state.uiState.currentTab === 'registers' &&
+        state.registerRanges.length > 0
+      ) {
+        validation.general = validation.general.filter(
+          (err) => !err.message.includes('register range must be defined')
+        );
+
+        // Recalculate isValid
+        validation.isValid =
+          validation.basicInfo.length === 0 &&
+          validation.connection.length === 0 &&
+          validation.registers.length === 0 &&
+          validation.parameters.length === 0 &&
+          validation.general.length === 0;
+      }
 
       return {
         ...state,
@@ -319,6 +476,7 @@ export const deviceFormReducer = (
           showValidationSummary: !validation.isValid,
         },
       };
+    }
 
     case 'RESET_FORM':
       return initialState;

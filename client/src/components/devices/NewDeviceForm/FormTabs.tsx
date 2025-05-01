@@ -1,55 +1,52 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Settings, List, Activity } from 'lucide-react';
 import { useDeviceForm } from './DeviceFormContext';
 import ConnectionSettings from './tabs/ConnectionSettings';
 import RegisterConfiguration from './tabs/RegisterConfiguration';
 import DataReaderTab from './tabs/DataReaderTab';
-// import ConnectionSettings from './tabs/ConnectionSettings';
-// import RegisterConfiguration from './tabs/RegisterConfiguration';
-// import DataReaderTab from './tabs/DataReaderTab';
 
 const FormTabs: React.FC = () => {
   const { state, dispatch } = useDeviceForm();
 
+  // Clear specific errors when you're on specific tabs
+  useEffect(() => {
+    if (state.uiState.currentTab === 'registers') {
+      // Clear register-related errors when on the register tab
+      if (
+        state.uiState.error ===
+        'You must define at least one register range before proceeding'
+      ) {
+        dispatch({ type: 'SET_ERROR', error: null });
+      }
+
+      // If we've added at least one register range, clear that validation
+      if (state.registerRanges.length > 0) {
+        // Dispatch a clear validation action for register-related errors
+        dispatch({ type: 'CLEAR_VALIDATION_ERRORS' });
+      }
+    }
+  }, [state.uiState.currentTab, state.registerRanges.length]);
+
+  // This function handles tab navigation with minimum validation
   const handleTabChange = (value: string) => {
-    // Skip validation if moving to a previous tab
+    // Always allow tab change regardless of validation state
+    // We'll show validation errors but not block navigation
+    dispatch({ type: 'SET_CURRENT_TAB', tab: value });
+
+    // If moving forward, run validation to show errors
     const tabOrder = ['connection', 'registers', 'data'];
     const currentTabIndex = tabOrder.indexOf(state.uiState.currentTab);
     const newTabIndex = tabOrder.indexOf(value);
 
-    if (newTabIndex <= currentTabIndex) {
-      dispatch({ type: 'SET_CURRENT_TAB', tab: value });
-      return;
-    }
-
-    // Validate current tab content before switching
-    dispatch({ type: 'VALIDATE_FORM' });
-
-    // Check for specific tab validations
-    if (state.uiState.currentTab === 'connection') {
-      // Check for errors in the connection tab
-      const hasConnectionErrors =
-        state.validationState.basicInfo.length > 0 ||
-        state.validationState.connection.length > 0;
-
-      if (hasConnectionErrors) {
-        return; // Don't switch tabs if there are errors
-      }
-    } else if (state.uiState.currentTab === 'registers') {
-      // Validate that at least one register range is defined
-      if (state.registerRanges.length === 0) {
-        dispatch({
-          type: 'SET_ERROR',
-          error:
-            'You must define at least one register range before proceeding',
-        });
-        return;
+    if (newTabIndex > currentTabIndex) {
+      // Validate but don't block
+      dispatch({ type: 'VALIDATE_FORM' });
+      // Show validation summary if there are errors
+      if (!state.validationState.isValid) {
+        dispatch({ type: 'TOGGLE_VALIDATION_SUMMARY', show: true });
       }
     }
-
-    // If validation passes, switch to the new tab
-    dispatch({ type: 'SET_CURRENT_TAB', tab: value });
   };
 
   return (

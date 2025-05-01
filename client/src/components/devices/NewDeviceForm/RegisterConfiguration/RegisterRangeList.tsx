@@ -1,5 +1,5 @@
 // RegisterRangeList.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Server, Settings, Trash, FileCode } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -10,8 +10,11 @@ const RegisterRangeList: React.FC = () => {
   const { state, dispatch } = useDeviceForm();
   const { registerRanges } = state;
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
-  const [rangeToDelete, setRangeToDelete] = React.useState<number | null>(null);
+  // Local state to manage which range index to show parser for
+  const [parserRangeIndex, setParserRangeIndex] = useState<number | null>(null);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [rangeToDelete, setRangeToDelete] = useState<number | null>(null);
 
   const handleEditRegisterRange = (index: number) => {
     dispatch({
@@ -41,7 +44,14 @@ const RegisterRangeList: React.FC = () => {
     setRangeToDelete(null);
   };
 
+  // Direct handler for the parser button
   const handleOpenDataParser = (index: number) => {
+    console.log('Opening parser for range index:', index);
+
+    // Set local state first
+    setParserRangeIndex(index);
+
+    // Then dispatch actions to context
     dispatch({ type: 'SET_CURRENT_RANGE_FOR_DATA_PARSER', index });
     dispatch({ type: 'TOGGLE_DATA_PARSER_MODAL', show: true });
   };
@@ -104,25 +114,29 @@ const RegisterRangeList: React.FC = () => {
               </td>
               <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
                 <div className='flex items-center justify-end space-x-2'>
+                  {/* Enhanced Parser button with more visible styles */}
                   <button
                     onClick={() => handleOpenDataParser(index)}
-                    className='text-green-600 hover:text-green-900'
+                    className='bg-green-50 hover:bg-green-100 text-green-600 p-2 rounded'
                     aria-label='Data Parser'
                     title='Configure Buffer Data Parser'
+                    type='button'
                   >
                     <FileCode size={16} />
                   </button>
                   <button
                     onClick={() => handleEditRegisterRange(index)}
-                    className='text-blue-600 hover:text-blue-900'
+                    className='bg-blue-50 hover:bg-blue-100 text-blue-600 p-2 rounded'
                     aria-label='Edit range'
+                    type='button'
                   >
                     <Settings size={16} />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(index)}
-                    className='text-red-600 hover:text-red-900'
+                    className='bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded'
                     aria-label='Delete range'
+                    type='button'
                   >
                     <Trash size={16} />
                   </button>

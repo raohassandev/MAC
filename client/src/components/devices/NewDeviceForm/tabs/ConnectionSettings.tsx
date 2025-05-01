@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import SelectControl from '../shared/SelectControl';
@@ -43,6 +42,28 @@ const ConnectionSettings: React.FC = () => {
   const { state, dispatch } = useDeviceForm();
   const { connectionSettings } = state;
 
+  // Auto-clear field-specific errors when values are provided
+  useEffect(() => {
+    if (
+      connectionSettings.ip &&
+      connectionSettings.port &&
+      connectionSettings.slaveId
+    ) {
+      // All required fields have values, clear any connection validation errors
+      dispatch({
+        type: 'SET_VALIDATION_ERRORS',
+        validation: {
+          ...state.validationState,
+          connection: [],
+        },
+      });
+    }
+  }, [
+    connectionSettings.ip,
+    connectionSettings.port,
+    connectionSettings.slaveId,
+  ]);
+
   // Helper function to check for field errors
   const getFieldError = (field: string): string | undefined => {
     const error = state.validationState.connection.find(
@@ -55,11 +76,25 @@ const ConnectionSettings: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+
     dispatch({
       type: 'UPDATE_CONNECTION_SETTING',
       field: name,
       value,
     });
+
+    // Clear field-specific validation errors
+    if (value && getFieldError(name)) {
+      dispatch({
+        type: 'SET_VALIDATION_ERRORS',
+        validation: {
+          ...state.validationState,
+          connection: state.validationState.connection.filter(
+            (err) => err.field !== name
+          ),
+        },
+      });
+    }
   };
 
   const handleConnectionTypeChange = (value: string) => {

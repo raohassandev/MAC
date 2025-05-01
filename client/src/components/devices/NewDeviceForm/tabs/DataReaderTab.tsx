@@ -1,8 +1,9 @@
 import React from 'react';
 import ParameterForm from '../DataReaderTab/ParameterForm';
 import ParameterTable from '../DataReaderTab/ParameterTable';
-import DataParserModal from '../DataReaderTab/DataParserModal';
+// import SimpleParserModal from '../DataReaderTab/SimpleParserModal'; // Import the new simple modal
 import { useDeviceForm } from '../DeviceFormContext';
+import SimpleParserModal from '../SimpleParserModal';
 
 const DataReaderTab: React.FC = () => {
   const { state } = useDeviceForm();
@@ -39,8 +40,8 @@ const DataReaderTab: React.FC = () => {
       {/* Parameter list */}
       <ParameterTable />
 
-      {/* Data Parser Modal */}
-      <DataParserModal />
+      {/* New Simple Modal Component */}
+      <SimpleParserModal />
     </div>
   );
 };

@@ -35,6 +35,7 @@ const FormFooter: React.FC<FormFooterProps> = ({ onCancel, onSubmit }) => {
         <button
           onClick={onCancel}
           className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-50'
+          type='button'
         >
           Cancel
         </button>
@@ -42,6 +43,7 @@ const FormFooter: React.FC<FormFooterProps> = ({ onCancel, onSubmit }) => {
           onClick={onSubmit}
           className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2'
           disabled={uiState.loading}
+          type='button'
         >
           {uiState.loading ? (
             <>
