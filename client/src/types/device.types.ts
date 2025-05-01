@@ -1,6 +1,31 @@
-// client/src/types/form.types.ts
+// client/src/types/device.types.ts
 
-// Register range type for the form
+// Basic Device interface
+export interface Device {
+  _id: string;
+  name: string;
+  ip?: string;
+  port?: number;
+  slaveId: number;
+  serialPort?: string;
+  baudRate?: number;
+  dataBits?: number;
+  stopBits?: number;
+  parity?: string;
+  connectionType: 'tcp' | 'rtu';
+  enabled: boolean;
+  lastSeen?: Date | string;
+  make?: string;
+  model?: string;
+  description?: string;
+  tags?: string[];
+  registerRanges?: RegisterRange[];
+  parameterConfigs?: ParameterConfig[];
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+// Register range type
 export interface RegisterRange {
   rangeName: string;
   startRegister: number;
@@ -10,13 +35,14 @@ export interface RegisterRange {
 }
 
 // Valid data types for parameter configuration
-export type DataType =
-  | 'INT-16'
-  | 'UINT-16'
-  | 'INT-32'
-  | 'UINT-32'
-  | 'FLOAT'
-  | 'DOUBLE';
+export enum DataType {
+  INT16 = 'INT-16',
+  UINT16 = 'UINT-16',
+  INT32 = 'INT-32',
+  UINT32 = 'UINT-32',
+  FLOAT = 'FLOAT',
+  DOUBLE = 'DOUBLE',
+}
 
 // Valid byte orders for single register data types
 export type SingleRegisterByteOrder = 'AB' | 'BA';
@@ -30,30 +56,23 @@ export type ByteOrder = SingleRegisterByteOrder | MultiRegisterByteOrder;
 // Parameter configuration interface
 export interface ParameterConfig {
   name: string;
-  dataType: DataType;
+  dataType: string; // Changed from DataType enum to string to match form.types
   scalingFactor: number;
   decimalPoint: number;
-  byteOrder: ByteOrder;
+  byteOrder: string; // Changed from ByteOrder to string to match form.types
   registerRange?: string; // Optional for standalone parameters
   registerIndex: number;
 }
 
-// Device form data interface
-export interface DeviceFormData {
-  name: string;
-  make: string;
-  model: string;
-  description: string;
-  ip: string;
-  port: string;
-  slaveId: string;
-  serialPort: string;
-  baudRate: string;
-  dataBits: string;
-  stopBits: string;
-  parity: string;
-  enabled: boolean;
-  tags: string[];
+// Device reading interface
+export interface DeviceReading {
+  _id: string;
+  deviceId: string;
+  timestamp: Date | string;
+  parameters: {
+    [key: string]: number | boolean | string;
+  };
+  rawData?: Buffer | string;
 }
 
 // Connection types
@@ -76,13 +95,11 @@ export enum FunctionCode {
 // Valid parity options
 export type Parity = 'none' | 'even' | 'odd';
 
-// Form field validation state interface
-export interface FieldValidation {
-  valid: boolean;
-  message: string;
-}
-
-// Form validation state interface
-export interface FormValidation {
-  [key: string]: FieldValidation;
+// Device filter interface
+export interface DeviceFilter {
+  search?: string;
+  status?: 'online' | 'offline';
+  type?: string;
+  tags?: string[];
+  groups?: string[];
 }

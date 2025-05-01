@@ -7,7 +7,10 @@ import { Button, Table } from '@radix-ui/themes';
 import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';
-import { createValidationResult, validateParameterConfig } from '../../../../utils/formValidation';
+import {
+  createValidationResult,
+  validateParameterConfig,
+} from '../../../../utils/formValidation';
 
 // Data types and byte order options from ParameterForm
 const dataTypeOptions = [
@@ -138,7 +141,7 @@ const DataParserModal: React.FC = () => {
     // Validate parameter configuration
     const tempValidation = createValidationResult(); // Create an empty validation object
     validateParameterConfig(
-      { ...newParameter, [field]: value },
+      newParameter,
       parameters,
       registerRanges,
       tempValidation

@@ -1,7 +1,8 @@
 // TypeAdapter.ts
-import { RegisterRange as FormRegisterRange, ParameterConfig as FormParameterConfig } from '../types/form.types';
-// import { RegisterRange as DeviceRegisterRange, ParameterConfig as DeviceParameterConfig, DataType } from '../../types/device.types';
-
+import {
+  RegisterRange as FormRegisterRange,
+  ParameterConfig as FormParameterConfig,
+} from '../types/form.types';
 import {
   RegisterRange as DeviceRegisterRange,
   ParameterConfig as DeviceParameterConfig,
@@ -11,40 +12,40 @@ import {
 /**
  * Adapter to convert string dataType to enum DataType
  */
-export function convertDataTypeToEnum(dataTypeStr: string): DataType {
-  const dataTypeMap: Record<string, DataType> = {
-    'INT-16': DataType.INT16,
-    'UINT-16': DataType.UINT16,
-    'INT-32': DataType.INT32,
-    'UINT-32': DataType.UINT32,
-    'FLOAT': DataType.FLOAT,
-    'DOUBLE': DataType.DOUBLE,
-    // Add other mappings as needed
-  };
-  
-  return dataTypeMap[dataTypeStr] || DataType.UINT16; // Default to UINT16 if not found
+export function convertDataTypeToEnum(dataTypeStr: string): string {
+  // Just return the string directly since we've changed the type to match
+  return dataTypeStr;
+
+  // Original implementation with enums:
+  // const dataTypeMap: Record<string, DataType> = {
+  //   'INT-16': DataType.INT16,
+  //   'UINT-16': DataType.UINT16,
+  //   'INT-32': DataType.INT32,
+  //   'UINT-32': DataType.UINT32,
+  //   'FLOAT': DataType.FLOAT,
+  //   'DOUBLE': DataType.DOUBLE,
+  // };
+  // return dataTypeMap[dataTypeStr] || DataType.UINT16;
 }
 
 /**
  * Converts a form parameter config to a device parameter config
  */
-export function convertToDeviceParameterConfig(formParam: FormParameterConfig): DeviceParameterConfig {
-  return {
-    ...formParam,
-    dataType: convertDataTypeToEnum(formParam.dataType)
-  };
+export function convertToDeviceParameterConfig(
+  formParam: FormParameterConfig
+): DeviceParameterConfig {
+  // Simply return the original parameter as the types now match
+  return formParam;
 }
 
 /**
  * Converts a form register range to a device register range
  */
-export function convertToDeviceRegisterRange(formRange: FormRegisterRange): DeviceRegisterRange {
-  return {
-    ...formRange,
-    dataParser: formRange.dataParser ? 
-      formRange.dataParser.map(convertToDeviceParameterConfig) : 
-      undefined
-  };
+export function convertToDeviceRegisterRange(
+  formRange: FormRegisterRange
+): DeviceRegisterRange {
+  // Simply return the original range as the types now match
+  return formRange;
 }
 
 /**
@@ -67,7 +68,7 @@ export function convertFormToDeviceData(
     ip: connectionSettings.ip,
     serialPort: connectionSettings.serialPort,
     parity: connectionSettings.parity,
-    registerRanges: registerRanges.map(convertToDeviceRegisterRange),
-    parameterConfigs: parameters.map(convertToDeviceParameterConfig),
+    registerRanges: registerRanges,
+    parameterConfigs: parameters,
   };
 }

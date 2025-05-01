@@ -15,17 +15,17 @@ import {
   RefreshCw,
   Search,
   Server,
-  Settings,
   Trash,
   X,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-import NewDeviceForm from '../components/devices/NewDeviceForm';
+import NewDeviceForm from '../components/devices/NewDeviceForm/index';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../hooks/useDevices';
-import { Device } from '../types/device.types';
+import { Device } from '@/services';
+// import { Device } from '../types/device.types';
 
 type ViewMode = 'grid' | 'list' | 'map';
 
@@ -152,9 +152,9 @@ const DeviceManagement: React.FC = () => {
     }
 
     // Apply sorting
-    filtered.sort((a, b) => {
-      let valueA = a[sortField as keyof Device];
-      let valueB = b[sortField as keyof Device];
+    filtered.sort((a:any, b:any) => {
+      let valueA = a[sortField as keyof Device]
+      let valueB = b[sortField as keyof Device] 
 
       // Handle special cases
       if (sortField === 'lastSeen') {

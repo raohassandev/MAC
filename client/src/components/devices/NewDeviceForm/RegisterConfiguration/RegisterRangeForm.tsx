@@ -4,7 +4,10 @@ import { Plus, Save, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useDeviceForm } from '../DeviceFormContext';
 import { RegisterRange } from '../../../../types/form.types';
-import { validateRegisterRange } from '../../../../utils/formValidation';
+import {
+  createValidationResult,
+  validateRegisterRange,
+} from '../../../../utils/formValidation';
 import { FormField } from '../shared/FormField';
 import FunctionCodeSelector from '../shared/FunctionCodeSelector';
 
@@ -44,9 +47,11 @@ const RegisterRangeForm: React.FC = () => {
     });
 
     // Validate as user types
-    const tempValidation = validateRegisterRange(
+    const tempValidation = createValidationResult();
+    validateRegisterRange(
       { ...newRange, [name]: newValue },
       registerRanges,
+      tempValidation,
       uiState.isEditingRange,
       uiState.editingRangeIndex
     );
@@ -91,9 +96,11 @@ const RegisterRangeForm: React.FC = () => {
 
   const handleSubmit = () => {
     // Validate the register range
-    const tempValidation = validateRegisterRange(
+    const tempValidation = createValidationResult();
+    validateRegisterRange(
       newRange,
       registerRanges,
+      tempValidation,
       uiState.isEditingRange,
       uiState.editingRangeIndex
     );

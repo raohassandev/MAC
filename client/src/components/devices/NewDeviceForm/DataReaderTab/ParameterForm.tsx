@@ -4,7 +4,10 @@ import { toast } from 'react-toastify';
 import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';
-import { validateParameterConfig } from '../../../../utils/formValidation';
+import {
+  createValidationResult,
+  validateParameterConfig,
+} from '../../../../utils/formValidation';
 
 // Data types
 const dataTypeOptions = [
@@ -77,10 +80,12 @@ const ParameterForm: React.FC = () => {
 
     // Validate as user types if a range is selected
     if (newParameter.registerRange) {
-      const tempValidation = validateParameterConfig(
+      const tempValidation = createValidationResult();
+      validateParameterConfig(
         { ...newParameter, [field]: value },
         parameters,
-        registerRanges
+        registerRanges,
+        tempValidation
       );
 
       if (!tempValidation.isValid) {
@@ -119,10 +124,12 @@ const ParameterForm: React.FC = () => {
 
   const handleAddParameter = () => {
     // Validate parameter configuration
-    const tempValidation = validateParameterConfig(
+    const tempValidation = createValidationResult();
+    validateParameterConfig(
       newParameter,
       parameters,
-      registerRanges
+      registerRanges,
+      tempValidation
     );
 
     if (!tempValidation.isValid) {
