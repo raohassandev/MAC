@@ -1,0 +1,47 @@
+const a = {
+  name: 'test',
+  make: 'CVM C4',
+  model: 'fdf',
+  description: 'dfdf',
+  ip: '192.168.1.111',
+  port: 502,
+  slaveId: 1,
+  serialPort: '',
+  baudRate: 9600,
+  dataBits: 8,
+  stopBits: 1,
+  parity: 'none',
+  enabled: true,
+  tags: [],
+  connectionType: 'tcp',
+  registerRanges: [
+    {
+      readInfo: {
+        rangeName: 'Device Information',
+        startRegister: 10,
+        length: 4,
+        functionCode: 3,
+      },
+      parsingInfo: [
+        {
+          name: 'Make',
+          dataType: 'STRING',
+          scalingFactor: 1,
+          decimalPoint: 0,
+          byteOrder: 'ABCD',
+          registerRange: 'Device Information',
+          registerIndex: 0,
+        },
+        {
+          name: 'Model',
+          dataType: 'STRING',
+          scalingFactor: 1,
+          decimalPoint: 0,
+          byteOrder: 'ABCD',
+          registerRange: 'Device Information',
+          registerIndex: 2,
+        },
+      ],
+    },
+  ],
+};
