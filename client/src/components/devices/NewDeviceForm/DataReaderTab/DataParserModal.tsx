@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import * as Dialog from '@radix-ui/react-dialog';
-// import * as Table from '@radix-ui/theme/react-table';
-import { Button, Table } from '@radix-ui/themes';
+// Import our custom Table component instead of from Radix UI
+import Table from '../../../../components/ui/Table';
+import { Button } from '../../../../components/ui/Button';
 import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';
@@ -404,28 +405,16 @@ const DataParserModal: React.FC = () => {
               {/* Parameter Configuration Table */}
               {rangeParameters.length > 0 ? (
                 <div className='mt-4'>
-                  <Table.Root variant='surface' size='2'>
+                  <Table>
                     <Table.Header>
                       <Table.Row>
-                        <Table.ColumnHeaderCell>
-                          Parameter Name
-                        </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>
-                          Data Type
-                        </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>
-                          Scaling Factor
-                        </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>
-                          Decimal Point
-                        </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>
-                          Byte Order
-                        </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>
-                          Register Index
-                        </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
+                        <Table.Head>Parameter Name</Table.Head>
+                        <Table.Head>Data Type</Table.Head>
+                        <Table.Head>Scaling Factor</Table.Head>
+                        <Table.Head>Decimal Point</Table.Head>
+                        <Table.Head>Byte Order</Table.Head>
+                        <Table.Head>Register Index</Table.Head>
+                        <Table.Head>Actions</Table.Head>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -439,9 +428,8 @@ const DataParserModal: React.FC = () => {
                           <Table.Cell>{config.registerIndex}</Table.Cell>
                           <Table.Cell>
                             <Button
-                              color='red'
-                              variant='soft'
-                              size='1'
+                              variant='destructive'
+                              size='sm'
                               onClick={() => {
                                 // Find index in the full parameters array
                                 const fullIndex = parameters.findIndex(
@@ -461,7 +449,7 @@ const DataParserModal: React.FC = () => {
                         </Table.Row>
                       ))}
                     </Table.Body>
-                  </Table.Root>
+                  </Table>
                 </div>
               ) : (
                 <div className='bg-gray-50 p-6 rounded text-center'>

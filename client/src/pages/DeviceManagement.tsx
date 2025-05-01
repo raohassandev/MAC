@@ -24,8 +24,10 @@ import { useNavigate } from 'react-router-dom';
 import NewDeviceForm from '../components/devices/NewDeviceForm/index';
 import { useAuth } from '../context/AuthContext';
 import { useDevices } from '../hooks/useDevices';
-import { Device } from '@/services';
-// import { Device } from '../types/device.types';
+// Import Device type from one consistent source
+import { Device } from '../services/devices';
+import { Button } from '../components/ui/Button';
+import Table from '../components/ui/Table';
 
 type ViewMode = 'grid' | 'list' | 'map';
 
@@ -70,6 +72,8 @@ const DeviceManagement: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState<string | null>(null);
   const [filteredDevices, setFilteredDevices] = useState<Device[]>([]);
+  // Remove unused variable warning
+  // const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
   const [bulkActionMenuOpen, setBulkActionMenuOpen] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -151,32 +155,31 @@ const DeviceManagement: React.FC = () => {
       // This would filter by device group once implemented
     }
 
-    // Apply sorting
-    filtered.sort((a:any, b:any) => {
-      let valueA = a[sortField as keyof Device]
-      let valueB = b[sortField as keyof Device] 
+    // Apply sorting with type safety
+    filtered.sort((a, b) => {
+      // Check if the property exists on both devices
+      if (!(sortField in a) || !(sortField in b)) {
+        return 0; // Skip comparison if property doesn't exist
+      }
+
+      let valueA = a[sortField as keyof Device];
+      let valueB = b[sortField as keyof Device];
 
       // Handle special cases
       if (sortField === 'lastSeen') {
-        valueA =
-          valueA &&
-          (typeof valueA === 'string' ||
-            typeof valueA === 'number' ||
-            valueA instanceof Date)
-            ? new Date(valueA).getTime()
-            : 0;
-        valueB =
-          valueB &&
-          (typeof valueB === 'string' ||
-            typeof valueB === 'number' ||
-            valueB instanceof Date)
-            ? new Date(valueB).getTime()
-            : 0;
+        valueA = valueA
+          ? new Date(valueA as string | number | Date).getTime()
+          : 0;
+        valueB = valueB
+          ? new Date(valueB as string | number | Date).getTime()
+          : 0;
       }
 
+      // Handle undefined values
       if (valueA === undefined) valueA = '';
       if (valueB === undefined) valueB = '';
 
+      // Perform comparison
       if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
       if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -440,22 +443,24 @@ const DeviceManagement: React.FC = () => {
         />
         <div className='flex space-x-2'>
           {canAddDevices && (
-            <button
+            <Button
+              variant="default"
               onClick={() => setIsNewDeviceModalOpen(true)}
-              className='flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+              className='flex items-center gap-2'
             >
               <Plus size={16} />
               Add New Device
-            </button>
+            </Button>
           )}
           {filteredDevices.length > 0 && (
-            <button
+            <Button
+              variant="outline"
               onClick={handleExportDevices}
-              className='flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200'
+              className='flex items-center gap-2'
             >
               <Download size={16} />
               Export
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -762,25 +767,23 @@ const DeviceManagement: React.FC = () => {
               groupFilter ||
               selectedTags.length > 0
             ) && (
-              <button
+              <Button
+                variant="default"
                 onClick={() => setIsNewDeviceModalOpen(true)}
-                className='inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+                className='inline-flex items-center'
               >
                 <Plus size={16} className='mr-2' />
                 Add your first device
-              </button>
+              </Button>
             )}
         </div>
       ) : viewMode === 'list' ? (
         <div className='bg-white rounded-lg shadow overflow-hidden'>
           <div className='overflow-x-auto'>
-            <table className='min-w-full divide-y divide-gray-200'>
-              <thead className='bg-gray-50'>
-                <tr>
-                  <th
-                    scope='col'
-                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                  >
+            <Table>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Head>
                     <div className='flex items-center'>
                       <input
                         type='checkbox'
@@ -803,11 +806,8 @@ const DeviceManagement: React.FC = () => {
                         )}
                       </button>
                     </div>
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                  >
+                  </Table.Head>
+                  <Table.Head>
                     <button
                       className='flex items-center'
                       onClick={() => handleSortChange('enabled')}
@@ -819,11 +819,8 @@ const DeviceManagement: React.FC = () => {
                         </span>
                       )}
                     </button>
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                  >
+                  </Table.Head>
+                  <Table.Head>
                     <button
                       className='flex items-center'
                       onClick={() => handleSortChange('ip')}
@@ -835,11 +832,8 @@ const DeviceManagement: React.FC = () => {
                         </span>
                       )}
                     </button>
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                  >
+                  </Table.Head>
+                  <Table.Head>
                     <button
                       className='flex items-center'
                       onClick={() => handleSortChange('make')}
@@ -851,11 +845,8 @@ const DeviceManagement: React.FC = () => {
                         </span>
                       )}
                     </button>
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                  >
+                  </Table.Head>
+                  <Table.Head>
                     <button
                       className='flex items-center'
                       onClick={() => handleSortChange('lastSeen')}
@@ -867,19 +858,14 @@ const DeviceManagement: React.FC = () => {
                         </span>
                       )}
                     </button>
-                  </th>
-                  <th
-                    scope='col'
-                    className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
+                  </Table.Head>
+                  <Table.Head className="text-right">Actions</Table.Head>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
                 {filteredDevices.map((device) => (
-                  <tr key={device._id} className='hover:bg-gray-50'>
-                    <td className='px-6 py-4 whitespace-nowrap'>
+                  <Table.Row key={device._id} className='hover:bg-gray-50'>
+                    <Table.Cell>
                       <div className='flex items-center'>
                         <input
                           type='checkbox'
@@ -915,8 +901,8 @@ const DeviceManagement: React.FC = () => {
                           ))}
                         </div>
                       )}
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
+                    </Table.Cell>
+                    <Table.Cell>
                       <span
                         className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           device.enabled
@@ -926,21 +912,21 @@ const DeviceManagement: React.FC = () => {
                       >
                         {device.enabled ? 'Online' : 'Offline'}
                       </span>
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                    </Table.Cell>
+                    <Table.Cell>
                       {device.ip
                         ? `${device.ip}:${device.port} (ID: ${device.slaveId})`
                         : 'N/A'}
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                    </Table.Cell>
+                    <Table.Cell>
                       {device.make && device.model
                         ? `${device.make} ${device.model}`
                         : device.make || device.model || 'N/A'}
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                    </Table.Cell>
+                    <Table.Cell>
                       {formatDate(device.lastSeen)}
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+                    </Table.Cell>
+                    <Table.Cell className="text-right">
                       <div className='flex justify-end space-x-3'>
                         <button
                           onClick={() => handleViewDevice(device._id)}
@@ -985,11 +971,11 @@ const DeviceManagement: React.FC = () => {
                           </button>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
-              </tbody>
-            </table>
+              </Table.Body>
+            </Table>
           </div>
         </div>
       ) : viewMode === 'grid' ? (
@@ -1069,18 +1055,22 @@ const DeviceManagement: React.FC = () => {
                 </div>
 
                 <div className='mt-3 flex justify-between space-x-2'>
-                  <button
+                  <Button
+                    variant="default"
+                    size="sm"
                     onClick={() => handleViewDevice(device._id)}
-                    className='flex-1 px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded hover:bg-gray-200'
+                    className="flex-1"
                   >
                     View Details
-                  </button>
+                  </Button>
 
                   {canTestDevices && (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleTestConnection(device._id)}
-                      className='flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200'
                       disabled={testingDevice === device._id}
+                      className="flex-1"
                     >
                       {testingDevice === device._id ? (
                         <span className='flex items-center justify-center'>
@@ -1090,7 +1080,7 @@ const DeviceManagement: React.FC = () => {
                       ) : (
                         'Test Connection'
                       )}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -1128,21 +1118,21 @@ const DeviceManagement: React.FC = () => {
                 : 'Are you sure you want to delete this device? This action cannot be undone.'}
             </p>
             <div className='flex justify-end gap-2'>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeviceToDelete(null);
                 }}
-                className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-50'
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={confirmDeleteDevice}
-                className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600'
               >
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </div>

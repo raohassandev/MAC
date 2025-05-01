@@ -134,23 +134,17 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
 
 TableHead.displayName = 'TableHead';
 
+// Create a namespace-like object to hold all the table components
+const TableNamespace = Object.assign(Table, {
+  Header: TableHeader,
+  Body: TableBody,
+  Row: TableRow,
+  Cell: TableCell,
+  Head: TableHead,
+});
+
+// Export the compound Table component
+export default TableNamespace;
+
+// Also export individual components for destructured imports
 export { Table, TableHeader, TableBody, TableRow, TableCell, TableHead };
-
-// Define a type for the composite table component
-export type TableType = typeof Table & {
-  Header: typeof TableHeader;
-  Body: typeof TableBody;
-  Row: typeof TableRow;
-  Cell: typeof TableCell;
-  Head: typeof TableHead;
-};
-
-// Assign the sub-components to the main component
-(Table as TableType).Header = TableHeader;
-(Table as TableType).Body = TableBody;
-(Table as TableType).Row = TableRow;
-(Table as TableType).Cell = TableCell;
-(Table as TableType).Head = TableHead;
-
-// Export the properly typed Table component
-export default Table as TableType;
