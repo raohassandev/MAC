@@ -12,23 +12,23 @@ import {
   X,
   ChevronDown,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Select from '@radix-ui/react-select';
 import { Button, Table } from '@radix-ui/themes';
-import { 
-  validateBasicInfo, 
-  validateConnection, 
-  validateRegisterRange, 
-  validateParameterConfig, 
+import {
+  validateBasicInfo,
+  validateConnection,
+  validateRegisterRange,
+  validateParameterConfig,
   validateDeviceForm,
   DeviceFormValidation,
   getFieldError,
   hasFieldError,
   createValidationResult,
-  getAllErrors 
+  getAllErrors,
 } from '../../utils/formValidation';
 import { ParameterConfig, RegisterRange } from '../../types/form.types';
 
@@ -66,9 +66,6 @@ const NewDeviceForm: React.FC<NewDeviceFormProps> = ({
   const [parameterConfigs, setParameterConfigs] = useState<ParameterConfig[]>(
     []
   );
-};
-
-export default NewDeviceForm;
   const [newParameterConfig, setNewParameterConfig] = useState<ParameterConfig>(
     {
       name: '',
@@ -99,7 +96,9 @@ export default NewDeviceForm;
   const [error, setError] = useState<string | null>(null);
 
   // Validation states
-  const [validation, setValidation] = useState<DeviceFormValidation>(createValidationResult());
+  const [validation, setValidation] = useState<DeviceFormValidation>(
+    createValidationResult()
+  );
   const [showValidationSummary, setShowValidationSummary] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
 
@@ -142,7 +141,7 @@ export default NewDeviceForm;
       case 'make':
       case 'model':
       case 'description':
-        validateBasicInfo({...deviceData, [field]: value}, tempValidation);
+        validateBasicInfo({ ...deviceData, [field]: value }, tempValidation);
         break;
       case 'ip':
       case 'port':
@@ -152,29 +151,43 @@ export default NewDeviceForm;
       case 'dataBits':
       case 'stopBits':
       case 'parity':
-        validateConnection({...deviceData, [field]: value}, connectionType, tempValidation);
+        validateConnection(
+          { ...deviceData, [field]: value },
+          connectionType,
+          tempValidation
+        );
         break;
     }
 
     // Update the validation state with just this field
-    setValidation(prev => {
+    setValidation((prev) => {
       // Remove any existing errors for this field
-      const sections = ['basicInfo', 'connection', 'registers', 'parameters', 'general'] as const;
-      const updated = {...prev};
-      
-      sections.forEach(section => {
-        updated[section] = updated[section].filter(error => error.field !== field);
+      const sections = [
+        'basicInfo',
+        'connection',
+        'registers',
+        'parameters',
+        'general',
+      ] as const;
+      const updated = { ...prev };
+
+      sections.forEach((section) => {
+        updated[section] = updated[section].filter(
+          (error) => error.field !== field
+        );
       });
-      
+
       // Add new errors if any
-      sections.forEach(section => {
-        const newErrors = tempValidation[section].filter(error => error.field === field);
+      sections.forEach((section) => {
+        const newErrors = tempValidation[section].filter(
+          (error) => error.field === field
+        );
         updated[section] = [...updated[section], ...newErrors];
       });
-      
+
       // Update isValid
       updated.isValid = getAllErrors(updated).length === 0;
-      
+
       return updated;
     });
   };
@@ -191,19 +204,26 @@ export default NewDeviceForm;
 
     // Validate that parameters don't overlap
     const rangeParams = parameterConfigs.filter(
-      config => config.registerRange === registerRanges[currentRangeForDataParser].rangeName
+      (config) =>
+        config.registerRange ===
+        registerRanges[currentRangeForDataParser].rangeName
     );
-    
+
     const tempValidation = createValidationResult();
     let isValid = true;
-    
-    rangeParams.forEach(param => {
-      validateParameterConfig(param, rangeParams.filter(p => p !== param), registerRanges, tempValidation);
+
+    rangeParams.forEach((param) => {
+      validateParameterConfig(
+        param,
+        rangeParams.filter((p) => p !== param),
+        registerRanges,
+        tempValidation
+      );
       if (getAllErrors(tempValidation).length > 0) {
         isValid = false;
       }
     });
-    
+
     if (!isValid) {
       setValidation(tempValidation);
       setShowValidationSummary(true);
@@ -237,7 +257,7 @@ export default NewDeviceForm;
       ...deviceData,
       [name]: newValue,
     });
-    
+
     // Validate the field as user types
     validateField(name, newValue);
     setFormTouched(true);
@@ -253,23 +273,25 @@ export default NewDeviceForm;
       ...newRegisterRange,
       [name]: newValue,
     });
-    
+
     // Validate the register range field
     const tempValidation = createValidationResult();
     validateRegisterRange(
-      {...newRegisterRange, [name]: newValue}, 
-      registerRanges, 
+      { ...newRegisterRange, [name]: newValue },
+      registerRanges,
       tempValidation,
       isEditMode,
       editingRegisterIndex
     );
-    
+
     // Update validation with just the register range validation
-    setValidation(prev => ({
+    setValidation((prev) => ({
       ...prev,
-      registers: [...prev.registers.filter(err => err.field !== name), 
-                  ...tempValidation.registers.filter(err => err.field === name)],
-      isValid: prev.isValid && tempValidation.isValid
+      registers: [
+        ...prev.registers.filter((err) => err.field !== name),
+        ...tempValidation.registers.filter((err) => err.field === name),
+      ],
+      isValid: prev.isValid && tempValidation.isValid,
     }));
   };
 
@@ -281,20 +303,27 @@ export default NewDeviceForm;
       ...newParameterConfig,
       [field]: value,
     };
-    
+
     setNewParameterConfig(updatedConfig);
-    
+
     // Validate parameter config as user changes values
     if (updatedConfig.registerRange) {
       const tempValidation = createValidationResult();
-      validateParameterConfig(updatedConfig, parameterConfigs, registerRanges, tempValidation);
-      
+      validateParameterConfig(
+        updatedConfig,
+        parameterConfigs,
+        registerRanges,
+        tempValidation
+      );
+
       // Update validation with just the parameter validation
-      setValidation(prev => ({
+      setValidation((prev) => ({
         ...prev,
-        parameters: [...prev.parameters.filter(err => err.field !== field), 
-                    ...tempValidation.parameters.filter(err => err.field === field)],
-        isValid: prev.isValid && tempValidation.isValid
+        parameters: [
+          ...prev.parameters.filter((err) => err.field !== field),
+          ...tempValidation.parameters.filter((err) => err.field === field),
+        ],
+        isValid: prev.isValid && tempValidation.isValid,
       }));
     }
   };
@@ -302,13 +331,18 @@ export default NewDeviceForm;
   const handleAddParameterConfig = () => {
     // Validate the parameter configuration
     const tempValidation = createValidationResult();
-    validateParameterConfig(newParameterConfig, parameterConfigs, registerRanges, tempValidation);
-    
+    validateParameterConfig(
+      newParameterConfig,
+      parameterConfigs,
+      registerRanges,
+      tempValidation
+    );
+
     if (!tempValidation.isValid) {
-      setValidation(prev => ({
+      setValidation((prev) => ({
         ...prev,
         parameters: tempValidation.parameters,
-        isValid: false
+        isValid: false,
       }));
       setShowValidationSummary(true);
       return;
@@ -336,18 +370,18 @@ export default NewDeviceForm;
     // Validate the register range
     const tempValidation = createValidationResult();
     validateRegisterRange(
-      newRegisterRange, 
-      registerRanges, 
+      newRegisterRange,
+      registerRanges,
       tempValidation,
       isEditMode,
       editingRegisterIndex
     );
-    
+
     if (!tempValidation.isValid) {
-      setValidation(prev => ({
+      setValidation((prev) => ({
         ...prev,
         registers: tempValidation.registers,
-        isValid: false
+        isValid: false,
       }));
       setShowValidationSummary(true);
       return;
@@ -381,22 +415,22 @@ export default NewDeviceForm;
     // Check if any parameters are using this range
     const rangeName = registerRanges[index].rangeName;
     const hasRelatedParams = parameterConfigs.some(
-      param => param.registerRange === rangeName
+      (param) => param.registerRange === rangeName
     );
-    
+
     if (hasRelatedParams) {
       const confirmDelete = window.confirm(
         `This register range has parameter configurations associated with it. Deleting it will also remove these parameters. Continue?`
       );
-      
+
       if (!confirmDelete) return;
-      
+
       // Remove all parameters associated with this range
-      setParameterConfigs(prev => 
-        prev.filter(param => param.registerRange !== rangeName)
+      setParameterConfigs((prev) =>
+        prev.filter((param) => param.registerRange !== rangeName)
       );
     }
-    
+
     setRegisterRanges(registerRanges.filter((_, i) => i !== index));
     toast.info('Register range removed');
   };
@@ -430,20 +464,20 @@ export default NewDeviceForm;
     const tabOrder = ['connection', 'registers', 'data'];
     const currentTabIndex = tabOrder.indexOf(activeTab);
     const newTabIndex = tabOrder.indexOf(value);
-    
+
     if (newTabIndex <= currentTabIndex) {
       setActiveTab(value);
       return;
     }
-    
+
     // Validate current tab content
     const tempValidation = createValidationResult();
-    
+
     if (activeTab === 'connection') {
       // Validate basic info and connection
       validateBasicInfo(deviceData, tempValidation);
       validateConnection(deviceData, connectionType, tempValidation);
-      
+
       if (!tempValidation.isValid) {
         setValidation(tempValidation);
         setShowValidationSummary(true);
@@ -452,40 +486,45 @@ export default NewDeviceForm;
     } else if (activeTab === 'registers') {
       // Validate that at least one register range is defined
       if (registerRanges.length === 0) {
-        setError('You must define at least one register range before proceeding');
+        setError(
+          'You must define at least one register range before proceeding'
+        );
         return;
       }
     }
-    
+
     setActiveTab(value);
   };
 
   const validateForm = (): boolean => {
     // Perform comprehensive validation
     const formValidation = validateDeviceForm(
-      deviceData, 
-      connectionType, 
-      registerRanges, 
+      deviceData,
+      connectionType,
+      registerRanges,
       parameterConfigs
     );
-    
+
     setValidation(formValidation);
-    
+
     if (!formValidation.isValid) {
       setShowValidationSummary(true);
-      
+
       // Focus the tab with errors
-      if (formValidation.basicInfo.length > 0 || formValidation.connection.length > 0) {
+      if (
+        formValidation.basicInfo.length > 0 ||
+        formValidation.connection.length > 0
+      ) {
         setActiveTab('connection');
       } else if (formValidation.registers.length > 0) {
         setActiveTab('registers');
       } else if (formValidation.parameters.length > 0) {
         setActiveTab('data');
       }
-      
+
       return false;
     }
-    
+
     return true;
   };
 
@@ -520,410 +559,7 @@ export default NewDeviceForm;
         <Dialog.Overlay className='fixed inset-0 bg-gray-600 bg-opacity-50' />
         <Dialog.Content className='fixed inset-0 flex items-center justify-center z-50'>
           <div className='bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto'>
-            <div className='flex justify-between p-4 border-t gap-2'>
-              <div>
-                {formTouched && !validation.isValid && (
-                  <button
-                    onClick={() => setShowValidationSummary(!showValidationSummary)}
-                    className='px-4 py-2 border border-amber-300 bg-amber-50 text-amber-800 rounded hover:bg-amber-100 flex items-center gap-2'
-                  >
-                    <AlertCircle size={16} />
-                    {showValidationSummary ? 'Hide Validation Issues' : 'Show Validation Issues'}
-                  </button>
-                )}
-              </div>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-
-      {/* Data Parser Modal */}
-      {showDataParserModal && currentRangeForDataParser !== null && (
-        <Dialog.Root
-          open={showDataParserModal}
-          onOpenChange={() => setShowDataParserModal(false)}
-        >
-          <Dialog.Portal>
-            <Dialog.Overlay className='fixed inset-0 bg-gray-600 bg-opacity-50' />
-            <Dialog.Content className='fixed inset-0 flex items-center justify-center z-[60]'>
-              <div className='bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto'>
-                <div className='flex justify-between items-center p-4 border-b'>
-                  <Dialog.Title className='text-xl font-semibold'>
-                    Configure Buffer Data Parser
-                  </Dialog.Title>
-                  <Dialog.Close className='text-gray-500 hover:text-gray-700'>
-                    <X size={20} />
-                  </Dialog.Close>
-                </div>
-
-                <div className='p-4'>
-                  <div className='bg-blue-50 p-3 rounded-md mb-4 text-sm text-blue-800'>
-                    <p className='font-medium'>
-                      Configure how to parse data for{' '}
-                      {registerRanges[currentRangeForDataParser]?.rangeName}
-                    </p>
-                    <p>
-                      Define parameter names, data types, and scaling factors
-                      for each register in this range.
-                    </p>
-                  </div>
-
-                  {/* Parameter Configuration Form */}
-                  <div className='mb-6 border rounded-lg p-4 bg-gray-50'>
-                    <h4 className='font-medium text-gray-800 mb-3'>
-                      Add New Parameter
-                    </h4>
-
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
-                      <div>
-                        <label className='block text-xs font-medium text-gray-600 mb-1'>
-                          Parameter Name *
-                        </label>
-                        <input
-                          type='text'
-                          value={newParameterConfig.name}
-                          onChange={(e) =>
-                            handleParameterConfigChange('name', e.target.value)
-                          }
-                          className={`p-1.5 border rounded w-full text-sm ${
-                            hasError('name') ? 'border-red-500' : ''
-                          }`}
-                          placeholder='Parameter name'
-                          required
-                        />
-                        {hasError('name') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('name')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-xs font-medium text-gray-600 mb-1'>
-                          Data Type *
-                        </label>
-                        <select
-                          value={newParameterConfig.dataType}
-                          onChange={(e) =>
-                            handleParameterConfigChange('dataType', e.target.value)
-                          }
-                          className={`w-full flex items-center justify-between p-1.5 border rounded bg-white text-sm ${
-                            hasError('dataType') ? 'border-red-500' : ''
-                          }`}
-                        >
-                          <option value='INT-16'>Int16 (1 register)</option>
-                          <option value='UINT-16'>UInt16 (1 register)</option>
-                          <option value='INT-32'>Int32 (2 registers)</option>
-                          <option value='UINT-32'>UInt32 (2 registers)</option>
-                          <option value='FLOAT'>Float (2 registers)</option>
-                          <option value='DOUBLE'>Double (4 registers)</option>
-                        </select>
-                        {hasError('dataType') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('dataType')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-xs font-medium text-gray-600 mb-1'>
-                          Scaling Factor
-                        </label>
-                        <input
-                          type='number'
-                          value={newParameterConfig.scalingFactor}
-                          onChange={(e) =>
-                            handleParameterConfigChange(
-                              'scalingFactor',
-                              parseFloat(e.target.value) || 1
-                            )
-                          }
-                          className={`p-1.5 border rounded w-full text-sm ${
-                            hasError('scalingFactor') ? 'border-red-500' : ''
-                          }`}
-                          step='0.001'
-                          min='0.001'
-                        />
-                        {hasError('scalingFactor') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('scalingFactor')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-xs font-medium text-gray-600 mb-1'>
-                          Decimal Points
-                        </label>
-                        <input
-                          type='number'
-                          value={newParameterConfig.decimalPoint}
-                          onChange={(e) =>
-                            handleParameterConfigChange(
-                              'decimalPoint',
-                              parseInt(e.target.value) || 0
-                            )
-                          }
-                          className={`p-1.5 border rounded w-full text-sm ${
-                            hasError('decimalPoint') ? 'border-red-500' : ''
-                          }`}
-                          min='0'
-                          max='10'
-                        />
-                        {hasError('decimalPoint') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('decimalPoint')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-xs font-medium text-gray-600 mb-1'>
-                          Byte Order
-                        </label>
-                        <select
-                          value={newParameterConfig.byteOrder}
-                          onChange={(e) =>
-                            handleParameterConfigChange('byteOrder', e.target.value)
-                          }
-                          className={`w-full flex items-center justify-between p-1.5 border rounded bg-white text-sm ${
-                            hasError('byteOrder') ? 'border-red-500' : ''
-                          }`}
-                        >
-                          {['INT-16', 'UINT-16'].includes(newParameterConfig.dataType) ? (
-                            <>
-                              <option value='AB'>AB (Big Endian)</option>
-                              <option value='BA'>BA (Little Endian)</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value='ABCD'>ABCD (Big Endian)</option>
-                              <option value='DCBA'>DCBA (Little Endian)</option>
-                              <option value='BADC'>BADC (Mixed Endian)</option>
-                              <option value='CDAB'>CDAB (Mixed Endian)</option>
-                            </>
-                          )}
-                        </select>
-                        {hasError('byteOrder') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('byteOrder')}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-xs font-medium text-gray-600 mb-1'>
-                          Register Index
-                        </label>
-                        <input
-                          type='number'
-                          value={newParameterConfig.registerIndex}
-                          onChange={(e) =>
-                            handleParameterConfigChange(
-                              'registerIndex',
-                              parseInt(e.target.value) || 0
-                            )
-                          }
-                          className={`p-1.5 border rounded w-full text-sm ${
-                            hasError('registerIndex') ? 'border-red-500' : ''
-                          }`}
-                          min='0'
-                          max={
-                            registerRanges[currentRangeForDataParser]?.length -
-                              1 || 0
-                          }
-                        />
-                        {hasError('registerIndex') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('registerIndex')}</p>
-                        )}
-                        <span className='text-xs text-gray-500 mt-1 block'>
-                          Index within range (0-
-                          {registerRanges[currentRangeForDataParser]?.length -
-                            1 || 0}
-                          )
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Auto-set register range to current range */}
-                    <input
-                      type='hidden'
-                      value={
-                        registerRanges[currentRangeForDataParser]?.rangeName ||
-                        ''
-                      }
-                      onChange={() =>
-                        handleParameterConfigChange(
-                          'registerRange',
-                          registerRanges[currentRangeForDataParser]
-                            ?.rangeName || ''
-                        )
-                      }
-                    />
-
-                    <button
-                      onClick={() => {
-                        // Set register range to current range
-                        handleParameterConfigChange(
-                          'registerRange',
-                          registerRanges[currentRangeForDataParser]
-                            ?.rangeName || ''
-                        );
-                        handleAddParameterConfig();
-                      }}
-                      className='flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600'
-                    >
-                      <Plus size={16} /> Add Parameter
-                    </button>
-                  </div>
-
-                  {/* Validation warnings */}
-                  {validation.parameters.length > 0 && (
-                    <div className='mb-4 p-3 bg-red-50 border border-red-200 rounded-md'>
-                      <h4 className='text-sm font-medium text-red-800'>Parameter Configuration Issues:</h4>
-                      <ul className='mt-1 text-sm text-red-700 list-disc list-inside'>
-                        {validation.parameters.map((error, index) => (
-                          <li key={index}>{error.message}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Parameter Configuration Table */}
-                  {parameterConfigs.filter(
-                    (config) =>
-                      config.registerRange ===
-                      registerRanges[currentRangeForDataParser]?.rangeName
-                  ).length > 0 ? (
-                    <div className='mt-4'>
-                      <Table.Root variant='surface' size='2'>
-                        <Table.Header>
-                          <Table.Row>
-                            <Table.ColumnHeaderCell>
-                              Parameter Name
-                            </Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>
-                              Data Type
-                            </Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>
-                              Scaling Factor
-                            </Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>
-                              Decimal Point
-                            </Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>
-                              Byte Order
-                            </Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>
-                              Register Index
-                            </Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>
-                              Actions
-                            </Table.ColumnHeaderCell>
-                          </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                          {parameterConfigs
-                            .filter(
-                              (config) =>
-                                config.registerRange ===
-                                registerRanges[currentRangeForDataParser]
-                                  ?.rangeName
-                            )
-                            .map((config, index) => (
-                              <Table.Row key={index}>
-                                <Table.Cell>{config.name}</Table.Cell>
-                                <Table.Cell>{config.dataType}</Table.Cell>
-                                <Table.Cell>{config.scalingFactor}</Table.Cell>
-                                <Table.Cell>{config.decimalPoint}</Table.Cell>
-                                <Table.Cell>{config.byteOrder}</Table.Cell>
-                                <Table.Cell>{config.registerIndex}</Table.Cell>
-                                <Table.Cell>
-                                  <Button
-                                    color='red'
-                                    variant='soft'
-                                    size='1'
-                                    onClick={() => {
-                                      // Find index in the full parameterConfigs array
-                                      const fullIndex =
-                                        parameterConfigs.findIndex(
-                                          (p) =>
-                                            p.name === config.name &&
-                                            p.registerRange ===
-                                              config.registerRange &&
-                                            p.registerIndex ===
-                                              config.registerIndex
-                                        );
-                                      if (fullIndex !== -1) {
-                                        handleDeleteParameterConfig(fullIndex);
-                                      }
-                                    }}
-                                  >
-                                    <Trash size={16} />
-                                  </Button>
-                                </Table.Cell>
-                              </Table.Row>
-                            ))}
-                        </Table.Body>
-                      </Table.Root>
-                    </div>
-                  ) : (
-                    <div className='bg-gray-50 p-6 rounded text-center'>
-                      <FileText
-                        size={24}
-                        className='mx-auto text-gray-400 mb-2'
-                      />
-                      <p className='text-gray-500'>
-                        No parameter configurations added for this register
-                        range yet.
-                      </p>
-                      <p className='text-gray-400 text-sm mt-1'>
-                        Add parameters using the form above.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className='mt-6 flex justify-end space-x-3'>
-                    <button
-                      onClick={() => setShowDataParserModal(false)}
-                      className='px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50'
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveDataParserToRange}
-                      className='px-4 py-2 bg-green-600 rounded text-white hover:bg-green-700 flex items-center'
-                    >
-                      <Save size={16} className='mr-2' /> Save Parser
-                      Configuration
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-      )}
-    </Dialog.Root>
-  );
-              <div className='flex gap-2'>
-                <button
-                  onClick={onClose}
-                  className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-50'
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2'
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={16} />
-                      Add Device
-                    </>
-                  )}
-                </button>
-              </div>
-            </div> className='flex justify-between items-center p-4 border-b'>
+            <div className='flex justify-between items-center p-4 border-b'>
               <Dialog.Title className='text-xl font-semibold'>
                 Add New Modbus Device
               </Dialog.Title>
@@ -947,13 +583,15 @@ export default NewDeviceForm;
                 <div className='flex items-start'>
                   <AlertCircle size={20} className='text-red-500 mr-2 mt-1' />
                   <div>
-                    <h3 className='font-medium text-red-800'>Please fix the following issues:</h3>
+                    <h3 className='font-medium text-red-800'>
+                      Please fix the following issues:
+                    </h3>
                     <ul className='mt-2 list-disc list-inside text-red-700'>
                       {getAllErrors(validation).map((error, index) => (
                         <li key={index}>{error.message}</li>
                       ))}
                     </ul>
-                    <button 
+                    <button
                       onClick={() => setShowValidationSummary(false)}
                       className='mt-2 text-red-700 underline hover:text-red-800'
                     >
@@ -982,7 +620,9 @@ export default NewDeviceForm;
                       required
                     />
                     {hasError('name') && (
-                      <p className='mt-1 text-sm text-red-600'>{getError('name')}</p>
+                      <p className='mt-1 text-sm text-red-600'>
+                        {getError('name')}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -999,7 +639,9 @@ export default NewDeviceForm;
                       }`}
                     />
                     {hasError('make') && (
-                      <p className='mt-1 text-sm text-red-600'>{getError('make')}</p>
+                      <p className='mt-1 text-sm text-red-600'>
+                        {getError('make')}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -1016,7 +658,9 @@ export default NewDeviceForm;
                       }`}
                     />
                     {hasError('model') && (
-                      <p className='mt-1 text-sm text-red-600'>{getError('model')}</p>
+                      <p className='mt-1 text-sm text-red-600'>
+                        {getError('model')}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -1034,7 +678,9 @@ export default NewDeviceForm;
                       maxLength={500}
                     />
                     {hasError('description') && (
-                      <p className='mt-1 text-sm text-red-600'>{getError('description')}</p>
+                      <p className='mt-1 text-sm text-red-600'>
+                        {getError('description')}
+                      </p>
                     )}
                     <p className='text-xs text-gray-500 mt-1'>
                       {deviceData.description.length}/500 characters
@@ -1137,7 +783,9 @@ export default NewDeviceForm;
                           required
                         />
                         {hasError('ip') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('ip')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('ip')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1158,7 +806,9 @@ export default NewDeviceForm;
                           required
                         />
                         {hasError('port') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('port')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('port')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1179,7 +829,9 @@ export default NewDeviceForm;
                           required
                         />
                         {hasError('slaveId') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('slaveId')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('slaveId')}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1201,7 +853,9 @@ export default NewDeviceForm;
                           required
                         />
                         {hasError('serialPort') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('serialPort')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('serialPort')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1226,7 +880,9 @@ export default NewDeviceForm;
                           <option value='115200'>115200</option>
                         </select>
                         {hasError('baudRate') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('baudRate')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('baudRate')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1245,7 +901,9 @@ export default NewDeviceForm;
                           <option value='8'>8</option>
                         </select>
                         {hasError('dataBits') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('dataBits')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('dataBits')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1265,7 +923,9 @@ export default NewDeviceForm;
                           <option value='2'>2</option>
                         </select>
                         {hasError('stopBits') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('stopBits')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('stopBits')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1285,7 +945,9 @@ export default NewDeviceForm;
                           <option value='odd'>Odd</option>
                         </select>
                         {hasError('parity') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('parity')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('parity')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1306,7 +968,9 @@ export default NewDeviceForm;
                           required
                         />
                         {hasError('slaveId') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('slaveId')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('slaveId')}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1346,7 +1010,9 @@ export default NewDeviceForm;
                           }`}
                         />
                         {hasError('rangeName') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('rangeName')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('rangeName')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1365,7 +1031,9 @@ export default NewDeviceForm;
                           min='0'
                         />
                         {hasError('startRegister') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('startRegister')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('startRegister')}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1385,10 +1053,13 @@ export default NewDeviceForm;
                           max='125'
                         />
                         {hasError('length') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('length')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('length')}
+                          </p>
                         )}
                         <p className='text-xs text-gray-500 mt-1'>
-                          Maximum 125 registers per range (Modbus protocol limit)
+                          Maximum 125 registers per range (Modbus protocol
+                          limit)
                         </p>
                       </div>
                       <div>
@@ -1405,9 +1076,11 @@ export default NewDeviceForm;
                             })
                           }
                         >
-                          <Select.Trigger className={`w-full flex items-center justify-between p-2 border rounded bg-white ${
-                            hasError('functionCode') ? 'border-red-500' : ''
-                          }`}>
+                          <Select.Trigger
+                            className={`w-full flex items-center justify-between p-2 border rounded bg-white ${
+                              hasError('functionCode') ? 'border-red-500' : ''
+                            }`}
+                          >
                             <Select.Value placeholder='Select a function code' />
                             <Select.Icon>
                               <ChevronDown size={16} />
@@ -1504,7 +1177,9 @@ export default NewDeviceForm;
                           </Select.Portal>
                         </Select.Root>
                         {hasError('functionCode') && (
-                          <p className='mt-1 text-sm text-red-600'>{getError('functionCode')}</p>
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('functionCode')}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1533,11 +1208,13 @@ export default NewDeviceForm;
                         )}
                       </button>
                     </div>
-                    
+
                     {/* Register range validation warning */}
                     {validation.registers.length > 0 && (
                       <div className='mb-6 p-3 bg-red-50 border border-red-200 rounded-md'>
-                        <h4 className='text-sm font-medium text-red-800'>Register Range Issues:</h4>
+                        <h4 className='text-sm font-medium text-red-800'>
+                          Register Range Issues:
+                        </h4>
                         <ul className='mt-1 text-sm text-red-700 list-disc list-inside'>
                           {validation.registers.map((error, index) => (
                             <li key={index}>{error.message}</li>
@@ -1549,9 +1226,14 @@ export default NewDeviceForm;
                     {registerRanges.length > 0 ? (
                       <div className='overflow-x-auto'>
                         <div className='mb-3 flex justify-between items-center'>
-                          <h3 className='text-md font-medium text-gray-700'>Configured Register Ranges</h3>
+                          <h3 className='text-md font-medium text-gray-700'>
+                            Configured Register Ranges
+                          </h3>
                           <span className='text-sm text-gray-500'>
-                            Total Registers: <span className='font-medium'>{totalRegistersCount}</span>
+                            Total Registers:{' '}
+                            <span className='font-medium'>
+                              {totalRegistersCount}
+                            </span>
                             {totalRegistersCount > 100 && (
                               <span className='ml-2 text-amber-600'>
                                 (High register count may impact performance)
@@ -1677,22 +1359,28 @@ export default NewDeviceForm;
                   <div>
                     {registerRanges.length === 0 ? (
                       <div className='bg-yellow-50 text-yellow-800 p-4 rounded-lg mb-4'>
-                        <h3 className='font-medium'>Define Register Ranges First</h3>
+                        <h3 className='font-medium'>
+                          Define Register Ranges First
+                        </h3>
                         <p className='text-sm mt-1'>
-                          You need to define at least one register range before configuring
-                          data parameters. Please go to the Registers tab and add your register ranges.
+                          You need to define at least one register range before
+                          configuring data parameters. Please go to the
+                          Registers tab and add your register ranges.
                         </p>
                       </div>
                     ) : (
                       <>
                         <div className='bg-blue-50 p-4 rounded-lg mb-4'>
-                          <h3 className='font-medium text-blue-800'>Data Parameter Configuration</h3>
+                          <h3 className='font-medium text-blue-800'>
+                            Data Parameter Configuration
+                          </h3>
                           <p className='text-sm mt-1 text-blue-700'>
-                            Define how to interpret the data for each register range.
-                            Parameters define how to extract values from register data.
+                            Define how to interpret the data for each register
+                            range. Parameters define how to extract values from
+                            register data.
                           </p>
                         </div>
-                        
+
                         {/* Parameter configuration form */}
                         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border mb-6'>
                           <div>
@@ -1702,26 +1390,42 @@ export default NewDeviceForm;
                             <input
                               type='text'
                               value={newParameterConfig.name}
-                              onChange={(e) => handleParameterConfigChange('name', e.target.value)}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'name',
+                                  e.target.value
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
-                                hasError('name') && newParameterConfig.name ? 'border-red-500' : ''
+                                hasError('name') && newParameterConfig.name
+                                  ? 'border-red-500'
+                                  : ''
                               }`}
                               placeholder='Parameter name'
                             />
                             {hasError('name') && newParameterConfig.name && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('name')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('name')}
+                              </p>
                             )}
                           </div>
-                          
+
                           <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>
                               Register Range *
                             </label>
                             <select
                               value={newParameterConfig.registerRange || ''}
-                              onChange={(e) => handleParameterConfigChange('registerRange', e.target.value)}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'registerRange',
+                                  e.target.value
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
-                                hasError('registerRange') ? 'border-red-500' : ''
+                                hasError('registerRange')
+                                  ? 'border-red-500'
+                                  : ''
                               }`}
                             >
                               <option value=''>Select a register range</option>
@@ -1732,10 +1436,12 @@ export default NewDeviceForm;
                               ))}
                             </select>
                             {hasError('registerRange') && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('registerRange')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('registerRange')}
+                              </p>
                             )}
                           </div>
-                          
+
                           <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>
                               Register Index *
@@ -1743,74 +1449,116 @@ export default NewDeviceForm;
                             <input
                               type='number'
                               value={newParameterConfig.registerIndex}
-                              onChange={(e) => handleParameterConfigChange('registerIndex', parseInt(e.target.value))}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'registerIndex',
+                                  parseInt(e.target.value)
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
-                                hasError('registerIndex') ? 'border-red-500' : ''
+                                hasError('registerIndex')
+                                  ? 'border-red-500'
+                                  : ''
                               }`}
                               min='0'
                               placeholder='0'
                             />
                             {hasError('registerIndex') && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('registerIndex')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('registerIndex')}
+                              </p>
                             )}
                             <p className='text-xs text-gray-500 mt-1'>
-                              Index within the selected register range (starting from 0)
+                              Index within the selected register range (starting
+                              from 0)
                             </p>
                           </div>
-                          
+
                           <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>
                               Data Type *
                             </label>
                             <select
                               value={newParameterConfig.dataType}
-                              onChange={(e) => handleParameterConfigChange('dataType', e.target.value)}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'dataType',
+                                  e.target.value
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
                                 hasError('dataType') ? 'border-red-500' : ''
                               }`}
                             >
                               <option value='INT-16'>Int16 (1 register)</option>
-                              <option value='UINT-16'>UInt16 (1 register)</option>
-                              <option value='INT-32'>Int32 (2 registers)</option>
-                              <option value='UINT-32'>UInt32 (2 registers)</option>
+                              <option value='UINT-16'>
+                                UInt16 (1 register)
+                              </option>
+                              <option value='INT-32'>
+                                Int32 (2 registers)
+                              </option>
+                              <option value='UINT-32'>
+                                UInt32 (2 registers)
+                              </option>
                               <option value='FLOAT'>Float (2 registers)</option>
-                              <option value='DOUBLE'>Double (4 registers)</option>
+                              <option value='DOUBLE'>
+                                Double (4 registers)
+                              </option>
                             </select>
                             {hasError('dataType') && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('dataType')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('dataType')}
+                              </p>
                             )}
                           </div>
-                          
+
                           <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>
                               Byte Order
                             </label>
                             <select
                               value={newParameterConfig.byteOrder}
-                              onChange={(e) => handleParameterConfigChange('byteOrder', e.target.value)}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'byteOrder',
+                                  e.target.value
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
                                 hasError('byteOrder') ? 'border-red-500' : ''
                               }`}
                             >
-                              {['INT-16', 'UINT-16'].includes(newParameterConfig.dataType) ? (
+                              {['INT-16', 'UINT-16'].includes(
+                                newParameterConfig.dataType
+                              ) ? (
                                 <>
                                   <option value='AB'>AB (Big Endian)</option>
                                   <option value='BA'>BA (Little Endian)</option>
                                 </>
                               ) : (
                                 <>
-                                  <option value='ABCD'>ABCD (Big Endian)</option>
-                                  <option value='DCBA'>DCBA (Little Endian)</option>
-                                  <option value='BADC'>BADC (Mixed Endian)</option>
-                                  <option value='CDAB'>CDAB (Mixed Endian)</option>
+                                  <option value='ABCD'>
+                                    ABCD (Big Endian)
+                                  </option>
+                                  <option value='DCBA'>
+                                    DCBA (Little Endian)
+                                  </option>
+                                  <option value='BADC'>
+                                    BADC (Mixed Endian)
+                                  </option>
+                                  <option value='CDAB'>
+                                    CDAB (Mixed Endian)
+                                  </option>
                                 </>
                               )}
                             </select>
                             {hasError('byteOrder') && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('byteOrder')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('byteOrder')}
+                              </p>
                             )}
                           </div>
-                          
+
                           <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>
                               Scaling Factor
@@ -1818,22 +1566,31 @@ export default NewDeviceForm;
                             <input
                               type='number'
                               value={newParameterConfig.scalingFactor}
-                              onChange={(e) => handleParameterConfigChange('scalingFactor', parseFloat(e.target.value) || 1)}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'scalingFactor',
+                                  parseFloat(e.target.value) || 1
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
-                                hasError('scalingFactor') ? 'border-red-500' : ''
+                                hasError('scalingFactor')
+                                  ? 'border-red-500'
+                                  : ''
                               }`}
                               step='0.001'
                               min='0.001'
                               placeholder='1'
                             />
                             {hasError('scalingFactor') && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('scalingFactor')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('scalingFactor')}
+                              </p>
                             )}
                             <p className='text-xs text-gray-500 mt-1'>
                               The raw value will be multiplied by this factor
                             </p>
                           </div>
-                          
+
                           <div>
                             <label className='block text-sm font-medium text-gray-700 mb-1'>
                               Decimal Points
@@ -1841,7 +1598,12 @@ export default NewDeviceForm;
                             <input
                               type='number'
                               value={newParameterConfig.decimalPoint}
-                              onChange={(e) => handleParameterConfigChange('decimalPoint', parseInt(e.target.value) || 0)}
+                              onChange={(e) =>
+                                handleParameterConfigChange(
+                                  'decimalPoint',
+                                  parseInt(e.target.value) || 0
+                                )
+                              }
                               className={`p-2 border rounded w-full ${
                                 hasError('decimalPoint') ? 'border-red-500' : ''
                               }`}
@@ -1850,10 +1612,12 @@ export default NewDeviceForm;
                               placeholder='0'
                             />
                             {hasError('decimalPoint') && (
-                              <p className='mt-1 text-sm text-red-600'>{getError('decimalPoint')}</p>
+                              <p className='mt-1 text-sm text-red-600'>
+                                {getError('decimalPoint')}
+                              </p>
                             )}
                           </div>
-                          
+
                           <div className='md:col-span-3 flex justify-end mt-4'>
                             <button
                               onClick={handleAddParameterConfig}
@@ -1863,11 +1627,13 @@ export default NewDeviceForm;
                             </button>
                           </div>
                         </div>
-                        
+
                         {/* Parameter list */}
                         {parameterConfigs.length > 0 ? (
                           <div className='overflow-x-auto'>
-                            <h3 className='text-md font-medium text-gray-700 mb-3'>Configured Parameters</h3>
+                            <h3 className='text-md font-medium text-gray-700 mb-3'>
+                              Configured Parameters
+                            </h3>
                             <table className='min-w-full divide-y divide-gray-200'>
                               <thead className='bg-gray-50'>
                                 <tr>
@@ -1896,7 +1662,14 @@ export default NewDeviceForm;
                               </thead>
                               <tbody className='bg-white divide-y divide-gray-200'>
                                 {parameterConfigs.map((param, index) => (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                  <tr
+                                    key={index}
+                                    className={
+                                      index % 2 === 0
+                                        ? 'bg-white'
+                                        : 'bg-gray-50'
+                                    }
+                                  >
                                     <td className='px-4 py-2 whitespace-nowrap text-sm text-gray-700'>
                                       {param.name}
                                     </td>
@@ -1913,11 +1686,14 @@ export default NewDeviceForm;
                                       {param.byteOrder}
                                     </td>
                                     <td className='px-4 py-2 whitespace-nowrap text-sm text-gray-700'>
-                                      ×{param.scalingFactor} ({param.decimalPoint} dp)
+                                      ×{param.scalingFactor} (
+                                      {param.decimalPoint} dp)
                                     </td>
                                     <td className='px-4 py-2 whitespace-nowrap text-sm text-right'>
                                       <button
-                                        onClick={() => handleDeleteParameterConfig(index)}
+                                        onClick={() =>
+                                          handleDeleteParameterConfig(index)
+                                        }
                                         className='text-red-600 hover:text-red-900'
                                         title='Delete parameter'
                                       >
@@ -1931,10 +1707,16 @@ export default NewDeviceForm;
                           </div>
                         ) : (
                           <div className='text-center p-8 bg-gray-50 rounded-lg border border-gray-200'>
-                            <FileText size={36} className='mx-auto text-gray-400 mb-2' />
-                            <p className='text-gray-600'>No parameters configured yet</p>
+                            <FileText
+                              size={36}
+                              className='mx-auto text-gray-400 mb-2'
+                            />
+                            <p className='text-gray-600'>
+                              No parameters configured yet
+                            </p>
                             <p className='text-sm text-gray-500 mt-1'>
-                              Use the form above to add parameter configurations for your register ranges
+                              Use the form above to add parameter configurations
+                              for your register ranges
                             </p>
                           </div>
                         )}
@@ -1945,4 +1727,452 @@ export default NewDeviceForm;
               </Tabs.Root>
             </div>
 
-            <div
+            <div className='flex justify-between p-4 border-t gap-2'>
+              <div>
+                {formTouched && !validation.isValid && (
+                  <button
+                    onClick={() =>
+                      setShowValidationSummary(!showValidationSummary)
+                    }
+                    className='px-4 py-2 border border-amber-300 bg-amber-50 text-amber-800 rounded hover:bg-amber-100 flex items-center gap-2'
+                  >
+                    <AlertCircle size={16} />
+                    {showValidationSummary
+                      ? 'Hide Validation Issues'
+                      : 'Show Validation Issues'}
+                  </button>
+                )}
+              </div>
+              <div className='flex gap-2'>
+                <button
+                  onClick={onClose}
+                  className='px-4 py-2 border border-gray-300 rounded hover:bg-gray-50'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2'
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <svg
+                        className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
+                        xmlns='http://www.w3.org/2000/svg'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                      >
+                        <circle
+                          className='opacity-25'
+                          cx='12'
+                          cy='12'
+                          r='10'
+                          stroke='currentColor'
+                          strokeWidth='4'
+                        ></circle>
+                        <path
+                          className='opacity-75'
+                          fill='currentColor'
+                          d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                        ></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Add Device
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+
+      {/* Data Parser Modal */}
+      {showDataParserModal && currentRangeForDataParser !== null && (
+        <Dialog.Root
+          open={showDataParserModal}
+          onOpenChange={() => setShowDataParserModal(false)}
+        >
+          <Dialog.Portal>
+            <Dialog.Overlay className='fixed inset-0 bg-gray-600 bg-opacity-50' />
+            <Dialog.Content className='fixed inset-0 flex items-center justify-center z-[60]'>
+              <div className='bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto'>
+                <div className='flex justify-between items-center p-4 border-b'>
+                  <Dialog.Title className='text-xl font-semibold'>
+                    Configure Buffer Data Parser
+                  </Dialog.Title>
+                  <Dialog.Close className='text-gray-500 hover:text-gray-700'>
+                    <X size={20} />
+                  </Dialog.Close>
+                </div>
+
+                <div className='p-4'>
+                  <div className='bg-blue-50 p-3 rounded-md mb-4 text-sm text-blue-800'>
+                    <p className='font-medium'>
+                      Configure how to parse data for{' '}
+                      {registerRanges[currentRangeForDataParser]?.rangeName}
+                    </p>
+                    <p>
+                      Define parameter names, data types, and scaling factors
+                      for each register in this range.
+                    </p>
+                  </div>
+
+                  {/* Parameter Configuration Form */}
+                  <div className='mb-6 border rounded-lg p-4 bg-gray-50'>
+                    <h4 className='font-medium text-gray-800 mb-3'>
+                      Add New Parameter
+                    </h4>
+
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Parameter Name *
+                        </label>
+                        <input
+                          type='text'
+                          value={newParameterConfig.name}
+                          onChange={(e) =>
+                            handleParameterConfigChange('name', e.target.value)
+                          }
+                          className={`p-1.5 border rounded w-full text-sm ${
+                            hasError('name') ? 'border-red-500' : ''
+                          }`}
+                          placeholder='Parameter name'
+                          required
+                        />
+                        {hasError('name') && (
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('name')}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Data Type *
+                        </label>
+                        <select
+                          value={newParameterConfig.dataType}
+                          onChange={(e) =>
+                            handleParameterConfigChange(
+                              'dataType',
+                              e.target.value
+                            )
+                          }
+                          className={`w-full flex items-center justify-between p-1.5 border rounded bg-white text-sm ${
+                            hasError('dataType') ? 'border-red-500' : ''
+                          }`}
+                        >
+                          <option value='INT-16'>Int16 (1 register)</option>
+                          <option value='UINT-16'>UInt16 (1 register)</option>
+                          <option value='INT-32'>Int32 (2 registers)</option>
+                          <option value='UINT-32'>UInt32 (2 registers)</option>
+                          <option value='FLOAT'>Float (2 registers)</option>
+                          <option value='DOUBLE'>Double (4 registers)</option>
+                        </select>
+                        {hasError('dataType') && (
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('dataType')}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Scaling Factor
+                        </label>
+                        <input
+                          type='number'
+                          value={newParameterConfig.scalingFactor}
+                          onChange={(e) =>
+                            handleParameterConfigChange(
+                              'scalingFactor',
+                              parseFloat(e.target.value) || 1
+                            )
+                          }
+                          className={`p-1.5 border rounded w-full text-sm ${
+                            hasError('scalingFactor') ? 'border-red-500' : ''
+                          }`}
+                          step='0.001'
+                          min='0.001'
+                        />
+                        {hasError('scalingFactor') && (
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('scalingFactor')}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Decimal Points
+                        </label>
+                        <input
+                          type='number'
+                          value={newParameterConfig.decimalPoint}
+                          onChange={(e) =>
+                            handleParameterConfigChange(
+                              'decimalPoint',
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className={`p-1.5 border rounded w-full text-sm ${
+                            hasError('decimalPoint') ? 'border-red-500' : ''
+                          }`}
+                          min='0'
+                          max='10'
+                        />
+                        {hasError('decimalPoint') && (
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('decimalPoint')}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Byte Order
+                        </label>
+                        <select
+                          value={newParameterConfig.byteOrder}
+                          onChange={(e) =>
+                            handleParameterConfigChange(
+                              'byteOrder',
+                              e.target.value
+                            )
+                          }
+                          className={`w-full flex items-center justify-between p-1.5 border rounded bg-white text-sm ${
+                            hasError('byteOrder') ? 'border-red-500' : ''
+                          }`}
+                        >
+                          {['INT-16', 'UINT-16'].includes(
+                            newParameterConfig.dataType
+                          ) ? (
+                            <>
+                              <option value='AB'>AB (Big Endian)</option>
+                              <option value='BA'>BA (Little Endian)</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value='ABCD'>ABCD (Big Endian)</option>
+                              <option value='DCBA'>DCBA (Little Endian)</option>
+                              <option value='BADC'>BADC (Mixed Endian)</option>
+                              <option value='CDAB'>CDAB (Mixed Endian)</option>
+                            </>
+                          )}
+                        </select>
+                        {hasError('byteOrder') && (
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('byteOrder')}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Register Index
+                        </label>
+                        <input
+                          type='number'
+                          value={newParameterConfig.registerIndex}
+                          onChange={(e) =>
+                            handleParameterConfigChange(
+                              'registerIndex',
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className={`p-1.5 border rounded w-full text-sm ${
+                            hasError('registerIndex') ? 'border-red-500' : ''
+                          }`}
+                          min='0'
+                          max={
+                            registerRanges[currentRangeForDataParser]?.length -
+                              1 || 0
+                          }
+                        />
+                        {hasError('registerIndex') && (
+                          <p className='mt-1 text-sm text-red-600'>
+                            {getError('registerIndex')}
+                          </p>
+                        )}
+                        <span className='text-xs text-gray-500 mt-1 block'>
+                          Index within range (0-
+                          {registerRanges[currentRangeForDataParser]?.length -
+                            1 || 0}
+                          )
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Auto-set register range to current range */}
+                    <input
+                      type='hidden'
+                      value={
+                        registerRanges[currentRangeForDataParser]?.rangeName ||
+                        ''
+                      }
+                      onChange={() =>
+                        handleParameterConfigChange(
+                          'registerRange',
+                          registerRanges[currentRangeForDataParser]
+                            ?.rangeName || ''
+                        )
+                      }
+                    />
+
+                    <button
+                      onClick={() => {
+                        // Set register range to current range
+                        handleParameterConfigChange(
+                          'registerRange',
+                          registerRanges[currentRangeForDataParser]
+                            ?.rangeName || ''
+                        );
+                        handleAddParameterConfig();
+                      }}
+                      className='flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600'
+                    >
+                      <Plus size={16} /> Add Parameter
+                    </button>
+                  </div>
+
+                  {/* Validation warnings */}
+                  {validation.parameters.length > 0 && (
+                    <div className='mb-4 p-3 bg-red-50 border border-red-200 rounded-md'>
+                      <h4 className='text-sm font-medium text-red-800'>
+                        Parameter Configuration Issues:
+                      </h4>
+                      <ul className='mt-1 text-sm text-red-700 list-disc list-inside'>
+                        {validation.parameters.map((error, index) => (
+                          <li key={index}>{error.message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Parameter Configuration Table */}
+                  {parameterConfigs.filter(
+                    (config) =>
+                      config.registerRange ===
+                      registerRanges[currentRangeForDataParser]?.rangeName
+                  ).length > 0 ? (
+                    <div className='mt-4'>
+                      <Table.Root variant='surface' size='2'>
+                        <Table.Header>
+                          <Table.Row>
+                            <Table.ColumnHeaderCell>
+                              Parameter Name
+                            </Table.ColumnHeaderCell>
+                            <Table.ColumnHeaderCell>
+                              Data Type
+                            </Table.ColumnHeaderCell>
+                            <Table.ColumnHeaderCell>
+                              Scaling Factor
+                            </Table.ColumnHeaderCell>
+                            <Table.ColumnHeaderCell>
+                              Decimal Point
+                            </Table.ColumnHeaderCell>
+                            <Table.ColumnHeaderCell>
+                              Byte Order
+                            </Table.ColumnHeaderCell>
+                            <Table.ColumnHeaderCell>
+                              Register Index
+                            </Table.ColumnHeaderCell>
+                            <Table.ColumnHeaderCell>
+                              Actions
+                            </Table.ColumnHeaderCell>
+                          </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                          {parameterConfigs
+                            .filter(
+                              (config) =>
+                                config.registerRange ===
+                                registerRanges[currentRangeForDataParser]
+                                  ?.rangeName
+                            )
+                            .map((config, index) => (
+                              <Table.Row key={index}>
+                                <Table.Cell>{config.name}</Table.Cell>
+                                <Table.Cell>{config.dataType}</Table.Cell>
+                                <Table.Cell>{config.scalingFactor}</Table.Cell>
+                                <Table.Cell>{config.decimalPoint}</Table.Cell>
+                                <Table.Cell>{config.byteOrder}</Table.Cell>
+                                <Table.Cell>{config.registerIndex}</Table.Cell>
+                                <Table.Cell>
+                                  <Button
+                                    color='red'
+                                    variant='soft'
+                                    size='1'
+                                    onClick={() => {
+                                      // Find index in the full parameterConfigs array
+                                      const fullIndex =
+                                        parameterConfigs.findIndex(
+                                          (p) =>
+                                            p.name === config.name &&
+                                            p.registerRange ===
+                                              config.registerRange &&
+                                            p.registerIndex ===
+                                              config.registerIndex
+                                        );
+                                      if (fullIndex !== -1) {
+                                        handleDeleteParameterConfig(fullIndex);
+                                      }
+                                    }}
+                                  >
+                                    <Trash size={16} />
+                                  </Button>
+                                </Table.Cell>
+                              </Table.Row>
+                            ))}
+                        </Table.Body>
+                      </Table.Root>
+                    </div>
+                  ) : (
+                    <div className='bg-gray-50 p-6 rounded text-center'>
+                      <FileText
+                        size={24}
+                        className='mx-auto text-gray-400 mb-2'
+                      />
+                      <p className='text-gray-500'>
+                        No parameter configurations added for this register
+                        range yet.
+                      </p>
+                      <p className='text-gray-400 text-sm mt-1'>
+                        Add parameters using the form above.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className='mt-6 flex justify-end space-x-3'>
+                    <button
+                      onClick={() => setShowDataParserModal(false)}
+                      className='px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50'
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveDataParserToRange}
+                      className='px-4 py-2 bg-green-600 rounded text-white hover:bg-green-700 flex items-center'
+                    >
+                      <Save size={16} className='mr-2' /> Save Parser
+                      Configuration
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      )}
+    </Dialog.Root>
+  );
+};
+
+export default NewDeviceForm;
