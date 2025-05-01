@@ -2,11 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Save, X } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useDeviceForm } from './DeviceFormContext';
-import { FormField } from './shared/FormField';
-import FunctionCodeSelector from './shared/FunctionCodeSelector';
-import { RegisterRange } from '../../../types/form.types';
-import { validateRegisterRange } from '../../../utils/formValidation';
+import { useDeviceForm } from '../DeviceFormContext';
+import { RegisterRange } from '@/types/form.types';
+import { validateRegisterRange } from '@/utils/formValidation';
+import { FormField } from '../shared/FormField';
+import FunctionCodeSelector from '../shared/FunctionCodeSelector';
+// import { useDeviceForm } from './DeviceFormContext';
+// import { FormField } from './shared/FormField';
+// import FunctionCodeSelector from './shared/FunctionCodeSelector';
+// import { RegisterRange } from '../../../types/form.types';
+// import { validateRegisterRange } from '../../../utils/formValidation';
 
 const RegisterRangeForm: React.FC = () => {
   const { state, dispatch } = useDeviceForm();

@@ -4,9 +4,8 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'react-toastify';
 
 import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
-import FormTabs from './FormTabs';
-import FormFooter from './FormFooter';
 import ErrorDisplay from './shared/ErrorDisplay';
+
 
 interface NewDeviceFormProps {
   isOpen: boolean;
@@ -284,7 +283,7 @@ const NewDeviceFormContainer: React.FC<NewDeviceFormProps> = ({
       <Dialog.Portal>
         <Dialog.Overlay className='fixed inset-0 bg-gray-600 bg-opacity-50' />
         <DeviceFormProvider>
-          <NewDeviceFormContent onClose={onClose} onSubmit={onSubmit} />
+          <NewDeviceFormContent onClose={onClose} onSubmit={onSubmit}  />
         </DeviceFormProvider>
       </Dialog.Portal>
     </Dialog.Root>

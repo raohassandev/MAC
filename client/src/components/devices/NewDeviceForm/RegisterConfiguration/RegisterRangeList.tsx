@@ -2,8 +2,9 @@
 import React from 'react';
 import { Server, Settings, Trash, FileCode } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useDeviceForm } from '../../context/DeviceFormContext';
-import ConfirmationDialog from './shared/ConfirmationDialog';
+
+import ConfirmationDialog from '../shared/ConfirmationDialog';
+import { useDeviceForm } from '../DeviceFormContext';
 
 const RegisterRangeList: React.FC = () => {
   const { state, dispatch } = useDeviceForm();

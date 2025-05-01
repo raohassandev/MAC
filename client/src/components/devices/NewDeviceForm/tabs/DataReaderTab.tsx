@@ -1,9 +1,8 @@
 import React from 'react';
-import { FileText } from 'lucide-react';
-import { useDeviceForm } from '../context/DeviceFormContext';
-import ParameterForm from './DataReaderTab/ParameterForm';
-import ParameterTable from './DataReaderTab/ParameterTable';
-import DataParserModal from './DataReaderTab/DataParserModal';
+import ParameterForm from '../DataReaderTab/ParameterForm';
+import ParameterTable from '../DataReaderTab/ParameterTable';
+import DataParserModal from '../DataReaderTab/DataParserModal';
+import { useDeviceForm } from '../DeviceFormContext';
 
 const DataReaderTab: React.FC = () => {
   const { state } = useDeviceForm();
