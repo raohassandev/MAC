@@ -1,4 +1,3 @@
-
 // src/components/dashboard/TemperatureChart.tsx
 import React from 'react';
 import { Card } from '@/components/ui/Card';
@@ -30,7 +29,7 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({
 }) => {
   if (!data || data.length === 0) {
     return (
-      <Card.Root className="p-6 text-center bg-gray-50 rounded-lg">
+      <Card.Root className='p-6 text-center bg-gray-50 rounded-lg'>
         <Card.Content>
           <div>No temperature data available</div>
         </Card.Content>
@@ -39,13 +38,13 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({
   }
 
   return (
-    <Card.Root className="chart-container">
-      <Card.Header className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium">{title}</h3>
+    <Card.Root className='chart-container'>
+      <Card.Header className='p-4 border-b border-gray-200'>
+        <h3 className='text-lg font-medium'>{title}</h3>
       </Card.Header>
-      <Card.Content className="p-4">
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+      <Card.Content className='p-4'>
+        <div className='h-64'>
+          <ResponsiveContainer width='100%' height='100%'>
             <LineChart
               data={data}
               margin={{
@@ -55,15 +54,15 @@ const TemperatureChart: React.FC<TemperatureChartProps> = ({
                 bottom: 5,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis unit="°C" />
+              <CartesianGrid strokeDasharray='3 3' />
+              <XAxis dataKey='time' />
+              <YAxis unit='°C' />
               <Tooltip />
               <Legend />
               <Line
-                type="monotone"
-                dataKey="temperature"
-                stroke="#8884d8"
+                type='monotone'
+                dataKey='temperature'
+                stroke='#8884d8'
                 activeDot={{ r: 8 }}
               />
             </LineChart>

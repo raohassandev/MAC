@@ -1,67 +1,120 @@
+// client/src/components/core/Card.tsx
+import React from 'react';
+import { cn } from '../../utils/cn';
 
-import { FC, ReactNode } from 'react';
-
-interface CardProps {
-  className?: string;
-  children?: ReactNode;
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
-// Main Card component
-const Card: FC<CardProps> & {
-  Root: FC<CardProps>;
-  Content: FC<CardProps>;
-  Header: FC<CardProps>;
-  Title: FC<CardProps>;
-  Footer: FC<CardProps>;
-} = ({ className = '', children }) => {
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn('bg-white rounded-lg shadow-sm', className)}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+Card.displayName = 'Card';
+
+interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn('p-4 border-b border-gray-200', className)}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+CardHeader.displayName = 'CardHeader';
+
+interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children: React.ReactNode;
+}
+
+const CardTitle = React.forwardRef<HTMLParagraphElement, CardTitleProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <h3
+        ref={ref}
+        className={cn('text-lg font-medium text-gray-900', className)}
+        {...props}
+      >
+        {children}
+      </h3>
+    );
+  }
+);
+CardTitle.displayName = 'CardTitle';
+
+interface CardDescriptionProps
+  extends React.HTMLAttributes<HTMLParagraphElement> {
+  children: React.ReactNode;
+}
+
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  CardDescriptionProps
+>(({ className, children, ...props }, ref) => {
   return (
-    <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
+    <p ref={ref} className={cn('text-sm text-gray-500', className)} {...props}>
       {children}
-    </div>
+    </p>
   );
-};
+});
+CardDescription.displayName = 'CardDescription';
 
-// Root component
-const Root: FC<CardProps> = ({ className = '', children }) => {
-  return (
-    <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
-      {children}
-    </div>
-  );
-};
+interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
 
-// Content component
-const Content: FC<CardProps> = ({ className = '', children }) => {
-  return <div className={className}>{children}</div>;
-};
+const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <div ref={ref} className={cn('p-4', className)} {...props}>
+        {children}
+      </div>
+    );
+  }
+);
+CardContent.displayName = 'CardContent';
 
-// Header component
-const Header: FC<CardProps> = ({ className = '', children }) => {
-  return <div className={`pb-2 mb-4 border-b ${className}`}>{children}</div>;
-};
+interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
 
-// Title component
-const Title: FC<CardProps> = ({ className = '', children }) => {
-  return <h3 className={`text-lg font-medium ${className}`}>{children}</h3>;
-};
-
-// Footer component
-const Footer: FC<CardProps> = ({ className = '', children }) => {
-  return <div className={`pt-2 mt-4 border-t ${className}`}>{children}</div>;
-};
-
-// Assign subcomponents to Card
-Card.Root = Root;
-Card.Content = Content;
-Card.Header = Header;
-Card.Title = Title;
-Card.Footer = Footer;
+const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn('p-4 border-t border-gray-200', className)}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+CardFooter.displayName = 'CardFooter';
 
 export {
   Card,
-  Root,
-  Content,
-  Header as CardHeader,
-  Title as CardTitle,
-  Footer as CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
 };

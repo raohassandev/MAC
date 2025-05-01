@@ -1,6 +1,6 @@
 // client/src/components/devices/DeviceStatusCard.tsx
 import React from 'react';
-import { Card, CardContent } from '../core/Card';
+import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../core/Badge';
 import { cn } from '../../utils/cn';
 import { CheckCircle, AlertCircle, Clock } from 'lucide-react';

@@ -1,4 +1,4 @@
-// client/src/components/core/Tabs.tsx
+// src/components/ui/Tabs.tsx
 import React from 'react';
 import { cn } from '../../utils/cn';
 
@@ -10,7 +10,8 @@ export interface TabItem {
   disabled?: boolean;
 }
 
-export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
+// Fix the interface by removing the HTMLAttributes extension and defining props explicitly
+export interface TabsProps {
   tabs: TabItem[];
   activeTab: string;
   onChange: (tabId: string) => void;
@@ -20,9 +21,10 @@ export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
   activeTabClassName?: string;
   disabledTabClassName?: string;
   contentClassName?: string;
+  className?: string;
 }
 
-const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
+export const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
   (
     {
       className,
@@ -138,5 +140,3 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
 );
 
 Tabs.displayName = 'Tabs';
-
-export { Tabs };
