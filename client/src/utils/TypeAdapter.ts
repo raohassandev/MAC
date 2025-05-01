@@ -1,12 +1,12 @@
 // TypeAdapter.ts
-import { RegisterRange as FormRegisterRange, ParameterConfig as FormParameterConfig } from '@/types/form.types';
+import { RegisterRange as FormRegisterRange, ParameterConfig as FormParameterConfig } from '../types/form.types';
 // import { RegisterRange as DeviceRegisterRange, ParameterConfig as DeviceParameterConfig, DataType } from '../../types/device.types';
 
 import {
   RegisterRange as DeviceRegisterRange,
   ParameterConfig as DeviceParameterConfig,
   DataType,
-} from '@/types/device.types';
+} from '../types/device.types';
 
 /**
  * Adapter to convert string dataType to enum DataType

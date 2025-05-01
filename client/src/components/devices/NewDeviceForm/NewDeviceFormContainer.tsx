@@ -7,6 +7,7 @@ import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
 import ErrorDisplay from './shared/ErrorDisplay';
 import FormTabs from './FormTabs';
 import FormFooter from './FormFooter';
+import { convertFormToDeviceData } from '../../../utils/TypeAdapter';
 
 
 interface NewDeviceFormProps {
@@ -23,6 +24,10 @@ const NewDeviceFormContent: React.FC<NewDeviceFormProps> = ({
   const { state, dispatch } = useDeviceForm();
 
   const handleSubmit = () => {
+
+  
+
+
     // Validate the entire form
     dispatch({ type: 'VALIDATE_FORM' });
 
@@ -42,20 +47,12 @@ const NewDeviceFormContent: React.FC<NewDeviceFormProps> = ({
     }
 
     // Prepare the device data for submission
-    const deviceForSubmission = {
-      ...state.deviceBasics,
-      port: parseInt(state.connectionSettings.port),
-      slaveId: parseInt(state.connectionSettings.slaveId),
-      baudRate: parseInt(state.connectionSettings.baudRate),
-      dataBits: parseInt(state.connectionSettings.dataBits),
-      stopBits: parseInt(state.connectionSettings.stopBits),
-      connectionType: state.connectionSettings.type,
-      ip: state.connectionSettings.ip,
-      serialPort: state.connectionSettings.serialPort,
-      parity: state.connectionSettings.parity,
-      registerRanges: state.registerRanges,
-      parameterConfigs: state.parameters,
-    };
+      const deviceForSubmission = convertFormToDeviceData(
+        state.deviceBasics,
+        state.connectionSettings,
+        state.registerRanges,
+        state.parameters
+      );
 
     onSubmit(deviceForSubmission);
     toast.success('Device added successfully');

@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import * as Dialog from '@radix-ui/react-dialog';
-import * as Table from '@radix-ui/react-table';
-import { Button } from '@radix-ui/themes';
+// import * as Table from '@radix-ui/theme/react-table';
+import { Button, Table } from '@radix-ui/themes';
 import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';
-import { validateParameterConfig } from '../../../../utils/formValidation';
+import { createValidationResult, validateParameterConfig } from '../../../../utils/formValidation';
 
 // Data types and byte order options from ParameterForm
 const dataTypeOptions = [
@@ -93,10 +93,12 @@ const DataParserModal: React.FC = () => {
     });
 
     // Validate as user types
-    const tempValidation = validateParameterConfig(
+    const tempValidation = createValidationResult(); // Create an empty validation object
+    validateParameterConfig(
       { ...newParameter, [field]: value },
       parameters,
-      registerRanges
+      registerRanges,
+      tempValidation
     );
 
     if (!tempValidation.isValid) {
@@ -134,10 +136,12 @@ const DataParserModal: React.FC = () => {
 
   const handleAddParameter = () => {
     // Validate parameter configuration
-    const tempValidation = validateParameterConfig(
-      newParameter,
+    const tempValidation = createValidationResult(); // Create an empty validation object
+    validateParameterConfig(
+      { ...newParameter, [field]: value },
       parameters,
-      registerRanges
+      registerRanges,
+      tempValidation
     );
 
     if (!tempValidation.isValid) {
