@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Plus,
   Server,
   Grid as GridIcon,
   List as ListIcon,
-  Filter,
-  Settings,
   AlertCircle,
   ArrowDown,
   ArrowUp,
   RefreshCw,
 } from 'lucide-react';
 
+import { Device as DeviceFromTypes } from '../../types/device.types';
+
+import { Device as DeviceType } from '../../types/device.types';
 // Import UI components
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Toggle } from '@/components/ui/Toggle';
@@ -199,24 +199,33 @@ const DeviceList: React.FC<DeviceListProps> = ({
     }
   };
 
-  // Handle selecting a device
-  const handleSelectDevice = (deviceId: string) => {
-    setSelectedDevices((prev) =>
-      prev.includes(deviceId)
-        ? prev.filter((id) => id !== deviceId)
-        : [...prev, deviceId]
-    );
+  //   // Handle selecting a device
+  //   const handleSelectDevice = (deviceId: string) => {
+  //     setSelectedDevices((prev) =>
+  //       prev.includes(deviceId)
+  //         ? prev.filter((id) => id !== deviceId)
+  //         : [...prev, deviceId]
+  //     );
+  //   };
+
+  //   // Handle select all devices
+  //   const handleSelectAll = () => {
+  //     if (selectedDevices.length === filteredDevices.length) {
+  //       setSelectedDevices([]);
+  //     } else {
+  //       setSelectedDevices(filteredDevices.map((device) => device._id));
+  //     }
+  //   };
+  // Add a type assertion for the handler functions
+  const handleEditDeviceWithCorrectType = (device: any) => {
+    // Cast device to the expected type if needed
+    handleEditDevice(device as DeviceFromTypes);
   };
 
-  // Handle select all devices
-  const handleSelectAll = () => {
-    if (selectedDevices.length === filteredDevices.length) {
-      setSelectedDevices([]);
-    } else {
-      setSelectedDevices(filteredDevices.map((device) => device._id));
-    }
+  const handleDeleteDeviceWithCorrectType = (device: any) => {
+    // Cast device to the expected type if needed
+    handleDeleteDevice(device as DeviceFromTypes);
   };
-
   // Handle bulk actions
   const handleBulkAction = (action: string) => {
     if (action === 'delete' && selectedDevices.length > 0) {
@@ -445,14 +454,27 @@ const DeviceList: React.FC<DeviceListProps> = ({
         <div className='relative'>
           {viewMode === 'grid' ? (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {filteredDevices.map((device) => (
-                <DeviceCard
-                  key={device._id}
-                  device={device}
-                  onEdit={handleEditDevice}
-                  onDelete={handleDeleteDevice}
-                />
-              ))}
+              {filteredDevices.map((device: DeviceType) => {
+                // Convert the device to ensure proper types
+                const convertedDevice = {
+                  ...device,
+                  // Ensure lastSeen is a Date object if it exists
+                  lastSeen: device.lastSeen
+                    ? typeof device.lastSeen === 'string'
+                      ? new Date(device.lastSeen)
+                      : device.lastSeen
+                    : undefined,
+                };
+
+                return (
+                  <DeviceCard
+                    key={device._id}
+                    device={convertedDevice}
+                    onEdit={handleEditDeviceWithCorrectType}
+                    onDelete={handleDeleteDeviceWithCorrectType}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className='bg-white rounded-lg shadow overflow-hidden'>
