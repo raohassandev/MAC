@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, Trash, FileText, Plus } from 'lucide-react';
+import { X, Trash, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Table from '@radix-ui/react-table';
 import { Button } from '@radix-ui/themes';
-import { useDeviceForm } from '../../context/DeviceFormContext';
-import { FormField } from '../../shared/FormField';
+import { useDeviceForm } from '../DeviceFormContext';
+import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';
 import { validateParameterConfig } from '../../../../utils/formValidation';
 

@@ -7,11 +7,6 @@ import { RegisterRange } from '@/types/form.types';
 import { validateRegisterRange } from '@/utils/formValidation';
 import { FormField } from '../shared/FormField';
 import FunctionCodeSelector from '../shared/FunctionCodeSelector';
-// import { useDeviceForm } from './DeviceFormContext';
-// import { FormField } from './shared/FormField';
-// import FunctionCodeSelector from './shared/FunctionCodeSelector';
-// import { RegisterRange } from '../../../types/form.types';
-// import { validateRegisterRange } from '../../../utils/formValidation';
 
 const RegisterRangeForm: React.FC = () => {
   const { state, dispatch } = useDeviceForm();

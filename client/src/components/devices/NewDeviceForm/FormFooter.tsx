@@ -1,6 +1,6 @@
 import React from 'react';
 import { Save, AlertCircle } from 'lucide-react';
-import { useDeviceForm } from './context/DeviceFormContext';
+import { useDeviceForm } from './DeviceFormContext';
 
 interface FormFooterProps {
   onCancel: () => void;

@@ -1,12 +1,13 @@
 import React from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Settings, List, Activity } from 'lucide-react';
-import { useDeviceForm } from './context/DeviceFormContext';
-
-// Tab Components
+import { useDeviceForm } from './DeviceFormContext';
 import ConnectionSettings from './tabs/ConnectionSettings';
 import RegisterConfiguration from './tabs/RegisterConfiguration';
 import DataReaderTab from './tabs/DataReaderTab';
+// import ConnectionSettings from './tabs/ConnectionSettings';
+// import RegisterConfiguration from './tabs/RegisterConfiguration';
+// import DataReaderTab from './tabs/DataReaderTab';
 
 const FormTabs: React.FC = () => {
   const { state, dispatch } = useDeviceForm();

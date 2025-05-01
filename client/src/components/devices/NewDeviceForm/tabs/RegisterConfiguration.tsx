@@ -1,7 +1,7 @@
 import React from 'react';
-import { useDeviceForm } from '../context/DeviceFormContext';
-import RegisterRangeForm from './RegisterConfiguration/RegisterRangeForm';
-import RegisterRangeList from './RegisterConfiguration/RegisterRangeList';
+import { useDeviceForm } from '../DeviceFormContext';
+import RegisterRangeForm from '../RegisterConfiguration/RegisterRangeForm';
+import RegisterRangeList from '../RegisterConfiguration/RegisterRangeList';
 
 const RegisterConfiguration: React.FC = () => {
   const { state } = useDeviceForm();

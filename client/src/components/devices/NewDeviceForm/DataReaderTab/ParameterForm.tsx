@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useDeviceForm } from '../../context/DeviceFormContext';
-import { FormField } from '../../shared/FormField';
-import SelectControl from '../../shared/SelectControl';
+import { useDeviceForm } from '../DeviceFormContext';
+import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';
 import { validateParameterConfig } from '../../../../utils/formValidation';
 

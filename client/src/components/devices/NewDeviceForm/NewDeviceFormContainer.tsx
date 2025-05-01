@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 
 import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
 import ErrorDisplay from './shared/ErrorDisplay';
+import FormTabs from './FormTabs';
+import FormFooter from './FormFooter';
 
 
 interface NewDeviceFormProps {
@@ -283,7 +285,11 @@ const NewDeviceFormContainer: React.FC<NewDeviceFormProps> = ({
       <Dialog.Portal>
         <Dialog.Overlay className='fixed inset-0 bg-gray-600 bg-opacity-50' />
         <DeviceFormProvider>
-          <NewDeviceFormContent onClose={onClose} onSubmit={onSubmit}  />
+          <NewDeviceFormContent
+            onClose={onClose}
+            onSubmit={onSubmit}
+            isOpen={isOpen}
+          />
         </DeviceFormProvider>
       </Dialog.Portal>
     </Dialog.Root>

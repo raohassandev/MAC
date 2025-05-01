@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useDeviceForm } from '../context/DeviceFormContext';
+import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import SelectControl from '../shared/SelectControl';
 

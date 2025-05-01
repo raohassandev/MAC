@@ -1,8 +1,8 @@
 import React from 'react';
 import { Trash, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useDeviceForm } from '../../context/DeviceFormContext';
-import ConfirmationDialog from '../../shared/ConfirmationDialog';
+import { useDeviceForm } from '../DeviceFormContext';
+import ConfirmationDialog from '../shared/ConfirmationDialog';
 
 const ParameterTable: React.FC = () => {
   const { state, dispatch } = useDeviceForm();
