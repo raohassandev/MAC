@@ -158,8 +158,20 @@ const DeviceManagement: React.FC = () => {
 
       // Handle special cases
       if (sortField === 'lastSeen') {
-        valueA = valueA ? new Date(valueA).getTime() : 0;
-        valueB = valueB ? new Date(valueB).getTime() : 0;
+        valueA =
+          valueA &&
+          (typeof valueA === 'string' ||
+            typeof valueA === 'number' ||
+            valueA instanceof Date)
+            ? new Date(valueA).getTime()
+            : 0;
+        valueB =
+          valueB &&
+          (typeof valueB === 'string' ||
+            typeof valueB === 'number' ||
+            valueB instanceof Date)
+            ? new Date(valueB).getTime()
+            : 0;
       }
 
       if (valueA === undefined) valueA = '';
