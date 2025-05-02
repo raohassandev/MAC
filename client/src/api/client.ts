@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ensureDemoAuth } from '../utils/demoAuth';
 
 // Define API base URL based on environment
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
@@ -13,12 +12,6 @@ const api = axios.create({
   },
   timeout: 10000, // 10 seconds
 });
-
-// Initialize demo auth and get token
-const token = ensureDemoAuth();
-if (token) {
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
 
 // Request interceptor to add auth token to every request
 api.interceptors.request.use(

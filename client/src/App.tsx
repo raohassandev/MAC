@@ -3,8 +3,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
 import { DeviceProvider } from './context/DeviceContext';
-import { useEffect } from 'react';
-import { initDemoAuth } from './utils/demoAuth';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import DeviceDetails from './pages/DeviceDetails';
@@ -21,11 +19,6 @@ import TemplatesPage from './pages/Template';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
-  // Initialize demo authentication on component mount
-  useEffect(() => {
-    initDemoAuth();
-  }, []);
-
   return (
     <AuthProvider>
       <DeviceProvider>

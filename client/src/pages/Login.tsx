@@ -39,7 +39,8 @@ const Login = () => {
     try {
       await login(values.email, values.password);
       // After successful login, navigate to the dashboard
-      navigate(from, { replace: true });
+      // Add a query param to indicate we came from login (to avoid loops)
+      navigate(from + '?from=login', { replace: true });
     } catch (error) {
       // Error handling is done in the AuthContext
       console.error('Login failed', error);
