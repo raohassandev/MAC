@@ -3,8 +3,8 @@ import { X, Trash, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import * as Dialog from '@radix-ui/react-dialog';
 // Import our custom Table component instead of from Radix UI
-import Table from '../../../../components/ui/Table';
-import { Button } from '../../../../components/ui/Button';
+import Table from '../../../ui/Table';
+import { Button } from '../../../ui/Button';
 import { useDeviceForm } from '../DeviceFormContext';
 import { FormField } from '../shared/FormField';
 import { ParameterConfig } from '../../../../types/form.types';

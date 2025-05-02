@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
-import Table from '../../../components/ui/Table';
-import { Button } from '../../../components/ui/Button';
+import Table from '../../ui/Table';
+import { Button } from '../../ui/Button';
 import { useDeviceForm } from './DeviceFormContext';
 import { FormField } from './shared/FormField';
 import { ParameterConfig } from '@/types/form.types';

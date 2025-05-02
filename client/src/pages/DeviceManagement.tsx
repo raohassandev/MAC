@@ -162,7 +162,7 @@ const DeviceManagement: React.FC = () => {
         return 0; // Skip comparison if property doesn't exist
       }
 
-      let valueA = a[sortField as keyof Device];
+      let valueA: = a[sortField as keyof Device];
       let valueB = b[sortField as keyof Device];
 
       // Handle special cases
@@ -185,7 +185,7 @@ const DeviceManagement: React.FC = () => {
       return 0;
     });
 
-    setFilteredDevices(filtered);
+    setFilteredDevices(filtered as [Device]);
   }, [
     devices,
     searchQuery,
@@ -437,7 +437,7 @@ const DeviceManagement: React.FC = () => {
           Add Device
         </button>
         <NewDeviceForm
-          isOpen={isNewDeviceFormOpen}
+          // isOpen={isNewDeviceFormOpen}
           onClose={onNewDeviceFormClose}
           onSubmit={onNewDeviceFormSubmit}
         />

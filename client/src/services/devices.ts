@@ -86,6 +86,7 @@ export interface Device extends BaseDevice {
     startRegister: number;
     length: number;
     functionCode: number;
+  sortField?: string;
   }>;
   // Ensure tags is always required for the service layer
   tags: string[];

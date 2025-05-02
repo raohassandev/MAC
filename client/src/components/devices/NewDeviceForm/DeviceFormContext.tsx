@@ -1,12 +1,8 @@
-import React, { createContext, useReducer, useContext } from 'react';
-import { ParameterConfig, RegisterRange } from '../../../types/form.types';
-import {
-  DeviceFormValidation,
-  createValidationResult,
-  validateDeviceForm,
-} from '../../../utils/formValidation';
+// client/src/components/devices/NewDeviceForm/DeviceFormContext.tsx
+import React, { createContext, useContext, useReducer, Dispatch } from 'react';
+import { RegisterRange, ParameterConfig } from '../../../types/form.types';
 
-// Define the shape of our context state
+// Define the state structure
 export interface DeviceFormState {
   deviceBasics: {
     name: string;
@@ -33,18 +29,36 @@ export interface DeviceFormState {
     currentTab: string;
     isEditingRange: boolean;
     editingRangeIndex: number | null;
-    currentRangeForDataParser: number | null;
-    showDataParserModal: boolean;
-    loading: boolean;
-    error: string | null;
-    showValidationSummary: boolean;
-    formTouched: boolean;
+    isEditingParameter: boolean;
+    editingParameterIndex: number | null;
   };
-  validationState: DeviceFormValidation;
+  validationState: {
+    isValid: boolean;
+    basicInfo: Array<{ field: string; message: string }>;
+    connection: Array<{ field: string; message: string }>;
+    registers: Array<{ field: string; message: string }>;
+    parameters: Array<{ field: string; message: string }>;
+    general: Array<{ field: string; message: string }>;
+  };
 }
 
-// Define the initial state
-export const initialState: DeviceFormState = {
+// Action types
+type DeviceFormAction =
+  | { type: 'SET_DEVICE_BASICS'; payload: Partial<DeviceFormState['deviceBasics']> }
+  | { type: 'SET_CONNECTION_SETTINGS'; payload: Partial<DeviceFormState['connectionSettings']> }
+  | { type: 'ADD_REGISTER_RANGE'; payload: RegisterRange }
+  | { type: 'UPDATE_REGISTER_RANGE'; payload: { index: number; range: RegisterRange } }
+  | { type: 'DELETE_REGISTER_RANGE'; payload: number }
+  | { type: 'ADD_PARAMETER'; payload: ParameterConfig }
+  | { type: 'UPDATE_PARAMETER'; payload: { index: number; parameter: ParameterConfig } }
+  | { type: 'DELETE_PARAMETER'; payload: number }
+  | { type: 'SET_UI_STATE'; payload: Partial<DeviceFormState['uiState']> }
+  | { type: 'SET_VALIDATION_STATE'; payload: Partial<DeviceFormState['validationState']> }
+  | { type: 'RESET_FORM' }
+  | { type: 'LOAD_FORM_DATA'; payload: Partial<DeviceFormState> };
+
+// Initial state
+const initialDeviceFormState: DeviceFormState = {
   deviceBasics: {
     name: '',
     make: '',
@@ -70,443 +84,170 @@ export const initialState: DeviceFormState = {
     currentTab: 'connection',
     isEditingRange: false,
     editingRangeIndex: null,
-    currentRangeForDataParser: null,
-    showDataParserModal: false,
-    loading: false,
-    error: null,
-    showValidationSummary: false,
-    formTouched: false,
+    isEditingParameter: false,
+    editingParameterIndex: null,
   },
-  validationState: createValidationResult(),
+  validationState: {
+    isValid: true,
+    basicInfo: [],
+    connection: [],
+    registers: [],
+    parameters: [],
+    general: [],
+  },
 };
 
-// Define action types for strong typing
-export type DeviceFormAction =
-  | { type: 'UPDATE_DEVICE_BASIC'; field: string; value: string | boolean }
-  | { type: 'UPDATE_CONNECTION_TYPE'; value: 'tcp' | 'rtu' }
-  | { type: 'UPDATE_CONNECTION_SETTING'; field: string; value: string }
-  | { type: 'ADD_REGISTER_RANGE'; range: RegisterRange }
-  | { type: 'UPDATE_REGISTER_RANGE'; index: number; range: RegisterRange }
-  | { type: 'DELETE_REGISTER_RANGE'; index: number }
-  | { type: 'SET_EDITING_RANGE'; isEditing: boolean; index: number | null }
-  | { type: 'ADD_PARAMETER'; parameter: ParameterConfig }
-  | { type: 'DELETE_PARAMETER'; index: number }
-  | { type: 'SET_CURRENT_TAB'; tab: string }
-  | { type: 'SET_CURRENT_RANGE_FOR_DATA_PARSER'; index: number | null }
-  | { type: 'TOGGLE_DATA_PARSER_MODAL'; show: boolean }
-  | { type: 'SET_LOADING'; loading: boolean }
-  | { type: 'SET_ERROR'; error: string | null }
-  | { type: 'SET_VALIDATION_ERRORS'; validation: DeviceFormValidation }
-  | { type: 'CLEAR_VALIDATION_ERRORS' }
-  | { type: 'TOGGLE_VALIDATION_SUMMARY'; show: boolean }
-  | { type: 'SET_FORM_TOUCHED'; touched: boolean }
-  | { type: 'VALIDATE_FORM' }
-  | { type: 'RESET_FORM' };
-
-// Helper to check if a field has a value
-const hasValue = (value: any): boolean => {
-  if (value === undefined || value === null) return false;
-  if (typeof value === 'string') return value.trim() !== '';
-  return true;
-};
-
-// Helper to validate field value and clear errors
-const validateAndClearFieldError = (
-  state: DeviceFormState,
-  section: keyof Omit<DeviceFormValidation, 'isValid'>,
-  field: string,
-  value: any
-): DeviceFormValidation => {
-  const validationState = { ...state.validationState };
-
-  // If field has a value, remove any existing error for this field
-  if (hasValue(value)) {
-    validationState[section] = validationState[section].filter(
-      (err) => err.field !== field
-    );
-  }
-
-  // Recalculate overall validation state
-  validationState.isValid =
-    validationState.basicInfo.length === 0 &&
-    validationState.connection.length === 0 &&
-    validationState.registers.length === 0 &&
-    validationState.parameters.length === 0 &&
-    validationState.general.length === 0;
-
-  return validationState;
-};
-
-// Create the reducer function
-export const deviceFormReducer = (
-  state: DeviceFormState,
-  action: DeviceFormAction
-): DeviceFormState => {
+// Reducer function
+const deviceFormReducer = (state: DeviceFormState, action: DeviceFormAction): DeviceFormState => {
   switch (action.type) {
-    case 'UPDATE_DEVICE_BASIC': {
-      // Clear validation errors for this field if it has a value
-      const validationState = validateAndClearFieldError(
-        state,
-        'basicInfo',
-        action.field,
-        action.value
-      );
-
+    case 'SET_DEVICE_BASICS':
       return {
         ...state,
         deviceBasics: {
           ...state.deviceBasics,
-          [action.field]: action.value,
-        },
-        validationState,
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
+          ...action.payload,
         },
       };
-    }
-
-    case 'UPDATE_CONNECTION_TYPE':
+    case 'SET_CONNECTION_SETTINGS':
       return {
         ...state,
         connectionSettings: {
           ...state.connectionSettings,
-          type: action.value,
-        },
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
+          ...action.payload,
         },
       };
-
-    case 'UPDATE_CONNECTION_SETTING': {
-      // Clear validation errors for this field if it has a value
-      const validationState = validateAndClearFieldError(
-        state,
-        'connection',
-        action.field,
-        action.value
-      );
-
-      // Special case for register range validation - if we validate on field change
-      // If we have at least one register range, clear that general error
-      if (
-        action.field === 'registerRanges' &&
-        state.registerRanges.length > 0
-      ) {
-        validationState.general = validationState.general.filter(
-          (err) => !err.message.includes('register range must be defined')
-        );
-      }
-
+    case 'ADD_REGISTER_RANGE':
       return {
         ...state,
-        connectionSettings: {
-          ...state.connectionSettings,
-          [action.field]: action.value,
-        },
-        validationState,
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
-        },
+        registerRanges: [...state.registerRanges, action.payload],
       };
-    }
-
-    case 'ADD_REGISTER_RANGE': {
-      // When adding a register range, clear any "must define at least one register range" errors
-      const updatedGeneral = state.validationState.general.filter(
-        (err) => !err.message.includes('register range must be defined')
-      );
-
+    case 'UPDATE_REGISTER_RANGE':
       return {
         ...state,
-        registerRanges: [...state.registerRanges, action.range],
-        validationState: {
-          ...state.validationState,
-          general: updatedGeneral,
-          isValid:
-            state.validationState.isValid ||
-            (state.validationState.general.length === 1 &&
-              updatedGeneral.length === 0),
-        },
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
-        },
-      };
-    }
-
-    case 'UPDATE_REGISTER_RANGE': {
-      const updatedRanges = [...state.registerRanges];
-      updatedRanges[action.index] = action.range;
-
-      // Update any parameters that reference the old range name
-      const oldRangeName = state.registerRanges[action.index].rangeName;
-      const newRangeName = action.range.rangeName;
-
-      let updatedParameters = [...state.parameters];
-      if (oldRangeName !== newRangeName) {
-        updatedParameters = state.parameters.map((param) =>
-          param.registerRange === oldRangeName
-            ? { ...param, registerRange: newRangeName }
-            : param
-        );
-      }
-
-      // Clear any register range validation errors for this specific range
-      const validationState = { ...state.validationState };
-      validationState.registers = validationState.registers.filter(
-        (err) => !err.field.includes(oldRangeName)
-      );
-
-      return {
-        ...state,
-        registerRanges: updatedRanges,
-        parameters: updatedParameters,
-        validationState,
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
-        },
-      };
-    }
-
-    case 'DELETE_REGISTER_RANGE': {
-      const rangeName = state.registerRanges[action.index].rangeName;
-
-      // Remove any parameters associated with this range
-      const filteredParameters = state.parameters.filter(
-        (param) => param.registerRange !== rangeName
-      );
-
-      return {
-        ...state,
-        registerRanges: state.registerRanges.filter(
-          (_, i) => i !== action.index
+        registerRanges: state.registerRanges.map((range, index) =>
+          index === action.payload.index ? action.payload.range : range
         ),
-        parameters: filteredParameters,
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
-        },
       };
-    }
-
-    case 'SET_EDITING_RANGE':
+    case 'DELETE_REGISTER_RANGE':
       return {
         ...state,
-        uiState: {
-          ...state.uiState,
-          isEditingRange: action.isEditing,
-          editingRangeIndex: action.index,
-        },
+        registerRanges: state.registerRanges.filter((_, index) => index !== action.payload),
       };
-
-    case 'ADD_PARAMETER': {
-      // Clear validation errors for this parameter
-      const validationState = { ...state.validationState };
-      validationState.parameters = validationState.parameters.filter(
-        (err) => err.field !== action.parameter.name
-      );
-
+    case 'ADD_PARAMETER':
       return {
         ...state,
-        parameters: [...state.parameters, action.parameter],
-        validationState,
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
-        },
+        parameters: [...state.parameters, action.payload],
       };
-    }
-
+    case 'UPDATE_PARAMETER':
+      return {
+        ...state,
+        parameters: state.parameters.map((param, index) =>
+          index === action.payload.index ? action.payload.parameter : param
+        ),
+      };
     case 'DELETE_PARAMETER':
       return {
         ...state,
-        parameters: state.parameters.filter((_, i) => i !== action.index),
-        uiState: {
-          ...state.uiState,
-          formTouched: true,
-        },
+        parameters: state.parameters.filter((_, index) => index !== action.payload),
       };
-
-    case 'SET_CURRENT_TAB': {
-      // Clear any tab-specific errors when changing tabs
-      let validationState = { ...state.validationState };
-      if (action.tab === 'registers') {
-        // Clear register-related errors
-        validationState.general = validationState.general.filter(
-          (err) => !err.message.includes('register range must be defined')
-        );
-      }
-
-      return {
-        ...state,
-        validationState,
-        uiState: {
-          ...state.uiState,
-          currentTab: action.tab,
-          // Hide validation summary when switching tabs unless there are real errors
-          showValidationSummary:
-            state.uiState.showValidationSummary && !validationState.isValid,
-        },
-      };
-    }
-
-    case 'SET_CURRENT_RANGE_FOR_DATA_PARSER':
+    case 'SET_UI_STATE':
       return {
         ...state,
         uiState: {
           ...state.uiState,
-          currentRangeForDataParser: action.index,
+          ...action.payload,
         },
       };
-
-    case 'TOGGLE_DATA_PARSER_MODAL': {
-      // Store previous modal state to detect transitions
-      const wasOpen = state.uiState.showDataParserModal;
-      const willBeOpen = action.show;
-
+    case 'SET_VALIDATION_STATE':
       return {
         ...state,
-        // When closing the modal, clear parameter validation errors
-        validationState:
-          willBeOpen === false
-            ? {
-                ...state.validationState,
-                parameters: [],
-              }
-            : state.validationState,
-        uiState: {
-          ...state.uiState,
-          showDataParserModal: willBeOpen,
-          // If we're closing the modal, also reset the currentRangeForDataParser
-          currentRangeForDataParser: willBeOpen
-            ? state.uiState.currentRangeForDataParser
-            : null,
+        validationState: {
+          ...state.validationState,
+          ...action.payload,
         },
       };
-    }
-
-    case 'SET_LOADING':
-      return {
-        ...state,
-        uiState: {
-          ...state.uiState,
-          loading: action.loading,
-        },
-      };
-
-    case 'SET_ERROR':
-      return {
-        ...state,
-        uiState: {
-          ...state.uiState,
-          error: action.error,
-        },
-      };
-
-    case 'SET_VALIDATION_ERRORS':
-      return {
-        ...state,
-        validationState: action.validation,
-      };
-
-    case 'CLEAR_VALIDATION_ERRORS':
-      return {
-        ...state,
-        validationState: createValidationResult(),
-        uiState: {
-          ...state.uiState,
-          showValidationSummary: false,
-        },
-      };
-
-    case 'TOGGLE_VALIDATION_SUMMARY':
-      return {
-        ...state,
-        uiState: {
-          ...state.uiState,
-          showValidationSummary: action.show,
-        },
-      };
-
-    case 'SET_FORM_TOUCHED':
-      return {
-        ...state,
-        uiState: {
-          ...state.uiState,
-          formTouched: action.touched,
-        },
-      };
-
-    case 'VALIDATE_FORM': {
-      let validation = validateDeviceForm(
-        state.deviceBasics,
-        state.connectionSettings.type,
-        state.registerRanges,
-        state.parameters
-      );
-
-      // Special case: If we're on the registers tab and just added a register range,
-      // don't show the "must define register range" error
-      if (
-        state.uiState.currentTab === 'registers' &&
-        state.registerRanges.length > 0
-      ) {
-        validation.general = validation.general.filter(
-          (err) => !err.message.includes('register range must be defined')
-        );
-
-        // Recalculate isValid
-        validation.isValid =
-          validation.basicInfo.length === 0 &&
-          validation.connection.length === 0 &&
-          validation.registers.length === 0 &&
-          validation.parameters.length === 0 &&
-          validation.general.length === 0;
-      }
-
-      return {
-        ...state,
-        validationState: validation,
-        uiState: {
-          ...state.uiState,
-          showValidationSummary: !validation.isValid,
-        },
-      };
-    }
-
     case 'RESET_FORM':
-      return initialState;
-
+      return initialDeviceFormState;
+    case 'LOAD_FORM_DATA':
+      return {
+        ...state,
+        ...action.payload,
+      };
     default:
       return state;
   }
 };
 
 // Create the context
-export const DeviceFormContext = createContext<{
+interface DeviceFormContextType {
   state: DeviceFormState;
-  dispatch: React.Dispatch<DeviceFormAction>;
-}>({
-  state: initialState,
-  dispatch: () => null,
-});
+  dispatch: Dispatch<DeviceFormAction>;
+  actions: {
+    setDeviceBasics: (basics: Partial<DeviceFormState['deviceBasics']>) => void;
+    setConnectionSettings: (settings: Partial<DeviceFormState['connectionSettings']>) => void;
+    addRegisterRange: (range: RegisterRange) => void;
+    updateRegisterRange: (index: number, range: RegisterRange) => void;
+    deleteRegisterRange: (index: number) => void;
+    addParameter: (parameter: ParameterConfig) => void;
+    updateParameter: (index: number, parameter: ParameterConfig) => void;
+    deleteParameter: (index: number) => void;
+    setUIState: (uiState: Partial<DeviceFormState['uiState']>) => void;
+    resetForm: () => void;
+    loadFormData: (data: Partial<DeviceFormState>) => void;
+  };
+}
 
-// Create a provider component
-export const DeviceFormProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [state, dispatch] = useReducer(deviceFormReducer, initialState);
+const DeviceFormContext = createContext<DeviceFormContextType | undefined>(undefined);
+
+interface DeviceFormProviderProps {
+  children: React.ReactNode;
+  initialData?: Partial<DeviceFormState>;
+}
+
+// Provider component
+export const DeviceFormProvider: React.FC<DeviceFormProviderProps> = ({ children, initialData }) => {
+  const [state, dispatch] = useReducer(deviceFormReducer, initialData ? {
+    ...initialDeviceFormState,
+    ...initialData
+  } : initialDeviceFormState);
+
+  // Create actions object for easier access
+  const actions = {
+    setDeviceBasics: (basics: Partial<DeviceFormState['deviceBasics']>) =>
+      dispatch({ type: 'SET_DEVICE_BASICS', payload: basics }),
+    setConnectionSettings: (settings: Partial<DeviceFormState['connectionSettings']>) =>
+      dispatch({ type: 'SET_CONNECTION_SETTINGS', payload: settings }),
+    addRegisterRange: (range: RegisterRange) =>
+      dispatch({ type: 'ADD_REGISTER_RANGE', payload: range }),
+    updateRegisterRange: (index: number, range: RegisterRange) =>
+      dispatch({ type: 'UPDATE_REGISTER_RANGE', payload: { index, range } }),
+    deleteRegisterRange: (index: number) =>
+      dispatch({ type: 'DELETE_REGISTER_RANGE', payload: index }),
+    addParameter: (parameter: ParameterConfig) =>
+      dispatch({ type: 'ADD_PARAMETER', payload: parameter }),
+    updateParameter: (index: number, parameter: ParameterConfig) =>
+      dispatch({ type: 'UPDATE_PARAMETER', payload: { index, parameter } }),
+    deleteParameter: (index: number) =>
+      dispatch({ type: 'DELETE_PARAMETER', payload: index }),
+    setUIState: (uiState: Partial<DeviceFormState['uiState']>) =>
+      dispatch({ type: 'SET_UI_STATE', payload: uiState }),
+    resetForm: () => dispatch({ type: 'RESET_FORM' }),
+    loadFormData: (data: Partial<DeviceFormState>) =>
+      dispatch({ type: 'LOAD_FORM_DATA', payload: data }),
+  };
 
   return (
-    <DeviceFormContext.Provider value={{ state, dispatch }}>
+    <DeviceFormContext.Provider value={{ state, dispatch, actions }}>
       {children}
     </DeviceFormContext.Provider>
   );
 };
 
-// Custom hook for using the context
-export const useDeviceForm = () => useContext(DeviceFormContext);
+// Hook for accessing the context
+export const useDeviceForm = (): DeviceFormContextType => {
+  const context = useContext(DeviceFormContext);
+  if (!context) {
+    throw new Error('useDeviceForm must be used within a DeviceFormProvider');
+  }
+  return context;
+};
