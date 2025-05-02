@@ -50,6 +50,16 @@ const InfoPanel: React.FC = () => {
               </li>
             </ul>
           </div>
+          
+          <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded-md">
+            <h5 className="font-medium text-amber-800">Important Rules:</h5>
+            <ul className="mt-1 list-disc list-inside space-y-1 text-amber-700">
+              <li><span className="font-semibold">Unique Names:</span> Each parameter must have a unique name</li>
+              <li><span className="font-semibold">Register Usage:</span> Parameters (except bit types) cannot share the same register index</li>
+              <li><span className="font-semibold">No Overlaps:</span> Multi-register parameters (FLOAT32, INT32, etc.) cannot overlap register ranges</li>
+              <li><span className="font-semibold">Bit Parameters:</span> Bit/Boolean types can share registers but must use different bit positions</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

@@ -330,6 +330,18 @@ const checkParameterOverlaps = (
   // Group parameters by register range
   const paramsByRange: Record<string, Array<{ index: number, param: DeviceFormState['parameters'][0], end: number }>> = {};
   
+  // Check for duplicate parameter names
+  const nameMap = new Map<string, number>();
+  parameters.forEach((param, index) => {
+    const name = param.name.trim();
+    if (name && nameMap.has(name)) {
+      const existingIndex = nameMap.get(name)!;
+      errors[`param_${index}_name`] = `Parameter name "${name}" is already used by parameter #${existingIndex + 1}`;
+    } else {
+      nameMap.set(name, index);
+    }
+  });
+  
   // First pass: organize by range and calculate end indices
   parameters.forEach((param, index) => {
     if (!param.registerRange) return;
@@ -353,24 +365,56 @@ const checkParameterOverlaps = (
     for (let i = 0; i < rangeParams.length; i++) {
       const paramA = rangeParams[i];
       
-      // Skip bit-level parameters, as they can share the same register
-      if (['BOOLEAN', 'BIT'].includes(paramA.param.dataType)) continue;
-      
-      for (let j = i + 1; j < rangeParams.length; j++) {
-        const paramB = rangeParams[j];
-        
-        // Skip bit-level parameters
-        if (['BOOLEAN', 'BIT'].includes(paramB.param.dataType)) continue;
-        
-        // Check for register overlap
-        if (
-          (paramA.param.registerIndex <= paramB.end && paramA.end >= paramB.param.registerIndex) ||
-          (paramB.param.registerIndex <= paramA.end && paramB.end >= paramA.param.registerIndex)
-        ) {
-          const errorKey = `param_${paramA.index}_overlap`;
-          // Only add the error if it doesn't already exist
-          if (!errors[errorKey]) {
-            errors[errorKey] = `Parameter "${paramA.param.name}" overlaps with "${paramB.param.name}" in range "${rangeName}"`;
+      // For bit-level parameters, we need to check if they share the same register AND bit position
+      if (['BOOLEAN', 'BIT'].includes(paramA.param.dataType)) {
+        for (let j = i + 1; j < rangeParams.length; j++) {
+          const paramB = rangeParams[j];
+          
+          // Only check bit-level parameters against each other
+          if (['BOOLEAN', 'BIT'].includes(paramB.param.dataType)) {
+            // For bit parameters, check if they use same register and same bit position
+            if (paramA.param.registerIndex === paramB.param.registerIndex && 
+                paramA.param.bitPosition === paramB.param.bitPosition) {
+              const errorKey = `param_${paramA.index}_bit_overlap`;
+              if (!errors[errorKey]) {
+                errors[errorKey] = `Parameter "${paramA.param.name}" uses the same register and bit position as "${paramB.param.name}"`;
+              }
+            }
+          }
+        }
+      } else {
+        // For non-bit parameters, check for register overlap with all other parameters
+        for (let j = i + 1; j < rangeParams.length; j++) {
+          const paramB = rangeParams[j];
+          
+          // For non-bit parameters vs bit parameters
+          if (['BOOLEAN', 'BIT'].includes(paramB.param.dataType)) {
+            // Non-bit parameter overlaps with register used by bit parameter
+            if (paramA.param.registerIndex <= paramB.param.registerIndex && 
+                paramA.end >= paramB.param.registerIndex) {
+              // This is fine - bit parameters can share registers with other data types
+              // as they only read a single bit
+              continue;
+            }
+          } else {
+            // Check for register overlap between non-bit parameters
+            if (
+              (paramA.param.registerIndex <= paramB.end && paramA.end >= paramB.param.registerIndex) ||
+              (paramB.param.registerIndex <= paramA.end && paramB.end >= paramA.param.registerIndex)
+            ) {
+              // Special case: exact same register index conflict
+              if (paramA.param.registerIndex === paramB.param.registerIndex) {
+                const errorKey = `param_${paramA.index}_duplicate_index`;
+                if (!errors[errorKey]) {
+                  errors[errorKey] = `Parameter "${paramA.param.name}" uses the same register index as "${paramB.param.name}"`;
+                }
+              } else {
+                const errorKey = `param_${paramA.index}_overlap`;
+                if (!errors[errorKey]) {
+                  errors[errorKey] = `Parameter "${paramA.param.name}" (registers ${paramA.param.registerIndex}-${paramA.end}) overlaps with "${paramB.param.name}" (registers ${paramB.param.registerIndex}-${paramB.end})`;
+                }
+              }
+            }
           }
         }
       }
@@ -416,21 +460,32 @@ export const validateParameters = (
           // Calculate required word count based on data type
           const requiredWordCount = param.wordCount || getRequiredWordCount(param.dataType);
           
+          // Verify register index is valid
+          if (param.registerIndex < 0) {
+            errors[`param_${index}_registerIndex`] = 'Register index cannot be negative';
+          }
+          
+          // Check if the register index is beyond range start
+          if (selectedRange.length <= 0) {
+            errors[`param_${index}_registerRange`] = 'Selected register range has no valid length';
+          } 
           // Check if the register index plus required words exceeds the range
-          if (param.registerIndex + requiredWordCount > selectedRange.length) {
-            errors[`param_${index}_registerRange`] = `Parameter uses ${requiredWordCount} registers, but exceeds range bounds (max index: ${selectedRange.length - requiredWordCount})`;
+          else if (param.registerIndex + requiredWordCount > selectedRange.length) {
+            const maxValidIndex = Math.max(0, selectedRange.length - requiredWordCount);
+            errors[`param_${index}_registerIndex`] = `Parameter uses ${requiredWordCount} registers and exceeds range bounds. Max valid index: ${maxValidIndex}`;
+            errors[`param_${index}_registerRange`] = `Parameter at index ${param.registerIndex} exceeds range length: ${selectedRange.length}`;
+          }
+          
+          // Check if this parameter would read beyond modbus specification limits
+          // Modbus has a practical limit of typically 125 registers per read
+          const maxRegistersPerRead = 125;
+          if (requiredWordCount > maxRegistersPerRead) {
+            errors[`param_${index}_wordCount`] = `Word count exceeds Modbus practical limit of ${maxRegistersPerRead} registers per read`;
           }
         }
       }
       
-      // Check for duplicate parameter names
-      const duplicate = parameters.findIndex(
-        (p, i) => i !== index && p.name?.trim() === param.name?.trim()
-      );
-      
-      if (duplicate !== -1) {
-        errors[`param_${index}_duplicate`] = 'Parameter name must be unique';
-      }
+      // Duplicate parameter name check is now handled in checkParameterOverlaps
       
       // Validate byte order based on data type
       const byteOrderError = validateByteOrder(param.dataType, param.byteOrder);

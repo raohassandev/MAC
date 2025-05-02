@@ -259,31 +259,61 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
     const startIndex = parameter.registerIndex;
     const endIndex = parameter.registerIndex + wordCount - 1;
     
-    // If this is a bit-level parameter, it doesn't really "overlap" in the same way
-    if (['BOOLEAN', 'BIT'].includes(parameter.dataType)) return null;
-    
-    // Get parameters from the same range
+    // Get all existing parameters from the current form context
+    // We filter out the current parameter if we're editing an existing one
     const existingParameters = initialData 
       ? [] // If editing, we don't need to check against others
       : availableRanges
         .find(range => range.rangeName === parameter.registerRange)
-        ?.dataParser
-        ?.filter(p => !['BOOLEAN', 'BIT'].includes(p.dataType));
+        ?.dataParser || [];
     
-    if (!existingParameters || existingParameters.length === 0) return null;
+    if (existingParameters.length === 0) return null;
     
-    // Check for overlaps
+    // Check for duplicate parameter names
+    const hasDuplicateName = existingParameters.some(p => 
+      p.name && p.name.trim() === parameter.name.trim()
+    );
+    
+    if (hasDuplicateName) {
+      return `Parameter name "${parameter.name}" is already in use`;
+    }
+    
+    // If this is a bit-level parameter, we need special handling
+    if (['BOOLEAN', 'BIT'].includes(parameter.dataType)) {
+      // For bit parameters, check if another bit parameter uses the same register and bit position
+      const conflictingBitParam = existingParameters.find(p => 
+        ['BOOLEAN', 'BIT'].includes(p.dataType) && 
+        p.registerIndex === parameter.registerIndex && 
+        p.bitPosition === parameter.bitPosition
+      );
+      
+      if (conflictingBitParam) {
+        return `Bit position ${parameter.bitPosition} at register index ${parameter.registerIndex} is already used by parameter "${conflictingBitParam.name}"`;
+      }
+      
+      return null; // Bit parameters can share register with other types
+    }
+    
+    // Check for register overlaps with non-bit parameters
     for (const existing of existingParameters) {
+      // Skip bit-level parameters as they can share registers with other types
+      if (['BOOLEAN', 'BIT'].includes(existing.dataType)) continue;
+      
       const existingWordCount = existing.wordCount || getRequiredWordCount(existing.dataType);
       const existingStartIndex = existing.registerIndex;
       const existingEndIndex = existingStartIndex + existingWordCount - 1;
+      
+      // Special case: exact same register index
+      if (startIndex === existingStartIndex) {
+        return `Register index ${startIndex} is already used by parameter "${existing.name}"`;
+      }
       
       // Check if ranges overlap
       if (
         (startIndex <= existingEndIndex && endIndex >= existingStartIndex) ||
         (existingStartIndex <= endIndex && existingEndIndex >= startIndex)
       ) {
-        return `Overlaps with parameter "${existing.name}" (registers ${existingStartIndex}-${existingEndIndex})`;
+        return `Register range ${startIndex}-${endIndex} overlaps with parameter "${existing.name}" (registers ${existingStartIndex}-${existingEndIndex})`;
       }
     }
     
