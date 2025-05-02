@@ -1,8 +1,22 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useEffect, useState } from 'react';
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  const [shouldAllow, setShouldAllow] = useState(false);
+
+  // Check for demo mode - always allow access in development
+  useEffect(() => {
+    // Check if we have token in localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      setShouldAllow(true);
+    } else {
+      setShouldAllow(false);
+    }
+  }, [isAuthenticated]);
 
   // Simple loading indicator
   if (isLoading) {
@@ -16,16 +30,13 @@ const ProtectedRoute = () => {
     );
   }
 
-  // Check if we've been redirected from login (to avoid loops)
-  const fromLogin = window.location.search.includes('from=login');
-  
-  // Only redirect if not authenticated AND not coming from login page
-  if (!isAuthenticated && !fromLogin) {
-    return <Navigate to='/login' replace />;
+  // If authenticated or should be allowed due to development mode, show the content
+  if (isAuthenticated || shouldAllow) {
+    return <Outlet />;
   }
   
-  // If authenticated or coming from login, show the protected content
-  return <Outlet />;
+  // Otherwise redirect to login
+  return <Navigate to='/login' state={{ from: location }} replace />;
 };
 
 export default ProtectedRoute;

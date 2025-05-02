@@ -105,10 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // For development purposes, consider authenticated if we have a token
+  const isAuthenticated = !!token || !!user;
+
   const value = {
     user,
     token,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isLoading,
     login,
     logout,
