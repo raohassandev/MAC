@@ -176,9 +176,19 @@ export function convertToBaseDevice(serviceDevice: Device): BaseDevice {
 
 // Export functions that would typically be part of the service
 export async function getDevices(): Promise<Device[]> {
-  // Implementation would go here
-  // This is just a placeholder
-  return [];
+  try {
+    // In a real implementation, this would be an API call
+    // For now, we'll retrieve from localStorage
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+        resolve(storedDevices);
+      }, 300); // Simulate network delay
+    });
+  } catch (error) {
+    console.error('Error fetching devices:', error);
+    return [];
+  }
 }
 
 export async function getDevice(_id: string): Promise<Device | null> {
@@ -187,8 +197,34 @@ export async function getDevice(_id: string): Promise<Device | null> {
 }
 
 export async function addDevice(device: BaseDevice): Promise<Device> {
-  // Implementation would go here
-  return ensureDeviceProperties(device);
+  try {
+    // Ensure all required properties are present
+    const preparedDevice = ensureDeviceProperties(device);
+    
+    // In a real implementation, this would be an API call
+    // For now, we'll simulate a server response with a timeout
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Generate a random ID (in a real app, this would come from the backend)
+        const newDevice: Device = {
+          ...preparedDevice,
+          _id: `device_${Math.floor(Math.random() * 10000)}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        // Store in localStorage for persistence between page reloads
+        const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+        storedDevices.push(newDevice);
+        localStorage.setItem('devices', JSON.stringify(storedDevices));
+        
+        resolve(newDevice);
+      }, 500); // Simulate network delay
+    });
+  } catch (error) {
+    console.error('Error adding device:', error);
+    throw new Error('Failed to add device');
+  }
 }
 
 export async function updateDevice(device: Partial<Device> & { _id: string }): Promise<Device> {

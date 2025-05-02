@@ -14,18 +14,27 @@ const groupErrorsBySection = (errors: Array<{ field: string; message: string }>)
     other: []
   };
 
+  // Map error field names to friendly messages
+  const friendlyMessages: Record<string, string> = {
+    'range_0_name': 'Range name is required',
+    'param_0_registerIndex': 'Register index is required',
+  };
+  
   errors.forEach(error => {
+    // Use friendly message if available
+    const message = friendlyMessages[error.field] || error.message;
+    
     if (error.field.includes('name') || error.field.includes('make') || error.field.includes('model')) {
-      grouped.device.push(error.message);
+      grouped.device.push(message);
     } else if (error.field.includes('ip') || error.field.includes('port') || error.field.includes('slave') || 
                error.field.includes('serial') || error.field.includes('baud')) {
-      grouped.connection.push(error.message);
+      grouped.connection.push(message);
     } else if (error.field.includes('range')) {
-      grouped.registers.push(error.message);
+      grouped.registers.push(message);
     } else if (error.field.includes('param')) {
-      grouped.parameters.push(error.message);
+      grouped.parameters.push(message);
     } else {
-      grouped.other.push(error.message);
+      grouped.other.push(message);
     }
   });
 

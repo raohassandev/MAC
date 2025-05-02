@@ -140,7 +140,7 @@ export const validateRegisterRanges = (
   for (let i = 0; i < ranges.length; i++) {
     const range = ranges[i];
     
-    if (!range.name?.trim()) {
+    if (!range.rangeName?.trim()) {
       errors[`range_${i}_name`] = 'Range name is required';
     }
     
@@ -200,10 +200,10 @@ export const validateParameters = (
         errors[`param_${index}_name`] = 'Parameter name is required';
       }
       
-      if (!param.registerAddress && param.registerAddress !== 0) {
-        errors[`param_${index}_registerAddress`] = 'Register address is required';
-      } else if (param.registerAddress < 0) {
-        errors[`param_${index}_registerAddress`] = 'Register address must be a positive number';
+      if (!param.registerIndex && param.registerIndex !== 0) {
+        errors[`param_${index}_registerIndex`] = 'Register index is required';
+      } else if (param.registerIndex < 0) {
+        errors[`param_${index}_registerIndex`] = 'Register index must be a positive number';
       }
       
       if (!param.dataType) {
