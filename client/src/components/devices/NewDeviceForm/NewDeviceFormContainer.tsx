@@ -52,15 +52,8 @@ const DeviceFormContent: React.FC<{
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg max-w-4xl mx-auto">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-800">
-          {isEditing ? 'Edit Device' : 'Add New Device'}
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Configure the device settings, registers, and data reading parameters.
-        </p>
-      </div>
+    <div className="w-full">
+      {/* Header removed as it's now in the parent modal */}
 
       <FormTabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
 
