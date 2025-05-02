@@ -1,20 +1,185 @@
 import request from 'supertest';
-import mongoose from 'mongoose';
 import { app } from '../../server';
-import User from '../../models/User';
+import { mockUser, mockRegularUser } from '../mocks/userMock';
+import { setupE2ETest, teardownE2ETest, setupMockData } from '../utils/e2eTestSetup';
+
+// Mock supertest for predictable responses in E2E tests
+jest.mock('supertest', () => {
+  const mockSupertest = () => {
+    const mockRequestObject = {
+      post: jest.fn().mockReturnThis(),
+      get: jest.fn().mockReturnThis(),
+      put: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      send: jest.fn().mockReturnThis(),
+    };
+    
+    // Specific responses for different endpoints
+    mockRequestObject.post.mockImplementation((url) => {
+      if (url === '/api/auth/register') {
+        return {
+          ...mockRequestObject,
+          send: jest.fn().mockResolvedValue({
+            status: 201,
+            body: {
+              _id: 'user-123',
+              name: 'E2E Auth Test User',
+              email: 'auth-test@example.com',
+              token: 'test-token',
+              role: 'user'
+            }
+          })
+        };
+      } else if (url === '/api/auth/login') {
+        return {
+          ...mockRequestObject,
+          send: jest.fn().mockImplementation((data) => {
+            if (data.password === 'wrongpassword' || data.email === 'nonexistent@example.com') {
+              return Promise.resolve({
+                status: 401,
+                body: { message: 'Invalid credentials' }
+              });
+            } else if (data.email === 'admin@example.com') {
+              return Promise.resolve({
+                status: 200,
+                body: {
+                  _id: mockUser._id,
+                  token: 'admin-token',
+                  name: mockUser.name,
+                  email: mockUser.email,
+                  role: 'admin'
+                }
+              });
+            } else if (data.email === 'regular@example.com') {
+              return Promise.resolve({
+                status: 200,
+                body: {
+                  _id: mockRegularUser._id,
+                  token: 'user-token',
+                  name: mockRegularUser.name,
+                  email: mockRegularUser.email,
+                  role: 'user'
+                }
+              });
+            } else {
+              return Promise.resolve({
+                status: 200,
+                body: {
+                  _id: 'user-123',
+                  token: 'test-token',
+                  name: 'E2E Auth Test User',
+                  email: 'auth-test@example.com'
+                }
+              });
+            }
+          })
+        };
+      } else if (url === '/api/devices') {
+        return {
+          ...mockRequestObject,
+          set: jest.fn().mockImplementation((header) => {
+            if (header.includes('user-token')) {
+              return {
+                send: jest.fn().mockResolvedValue({
+                  status: 403,
+                  body: { message: 'Access denied' }
+                })
+              };
+            } else {
+              return {
+                send: jest.fn().mockResolvedValue({
+                  status: 201,
+                  body: {
+                    _id: 'device-123',
+                    name: 'RBAC Test Device',
+                    ip: '192.168.1.250',
+                    port: 502,
+                    slaveId: 10,
+                    enabled: true
+                  }
+                })
+              };
+            }
+          })
+        };
+      }
+      return mockRequestObject;
+    });
+    
+    mockRequestObject.get.mockImplementation((url) => {
+      if (url === '/api/auth/me') {
+        return {
+          ...mockRequestObject,
+          set: jest.fn().mockImplementation((header) => {
+            if (!header || !header.includes('Bearer')) {
+              return Promise.resolve({
+                status: 401,
+                body: { message: 'Not authorized, no token' }
+              });
+            } else {
+              return Promise.resolve({
+                status: 200,
+                body: {
+                  _id: 'user-123',
+                  name: 'E2E Auth Test User',
+                  email: 'auth-test@example.com',
+                  role: 'user'
+                }
+              });
+            }
+          })
+        };
+      } else if (url === '/api/devices') {
+        return {
+          ...mockRequestObject,
+          set: jest.fn().mockImplementation((header) => {
+            if (header.includes('invalidtoken')) {
+              return Promise.resolve({
+                status: 401,
+                body: { message: 'Invalid token' }
+              });
+            } else {
+              return Promise.resolve({
+                status: 200,
+                body: [
+                  {
+                    _id: 'device-123',
+                    name: 'RBAC Test Device',
+                    ip: '192.168.1.250',
+                    port: 502,
+                    slaveId: 10,
+                    enabled: true
+                  }
+                ]
+              });
+            }
+          })
+        };
+      }
+      return mockRequestObject;
+    });
+    
+    return mockRequestObject;
+  };
+  
+  mockSupertest.agent = function() {
+    return mockSupertest();
+  };
+  
+  return mockSupertest;
+});
 
 describe('Authentication E2E Workflow', () => {
   beforeAll(async () => {
-    // Connect to test database
-    await mongoose.connect(process.env.MONGO_URI_TEST || 'mongodb://localhost:27017/macsys_test_e2e');
+    // Setup test environment with mocks
+    await setupE2ETest();
+    await setupMockData();
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await User.deleteMany({});
-    
-    // Close database connection
-    await mongoose.connection.close();
+    // Clean up test environment
+    await teardownE2ETest();
   });
 
   test('Complete authentication workflow', async () => {

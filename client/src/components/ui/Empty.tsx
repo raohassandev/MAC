@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileSearch, AlertCircle, File, Database } from 'lucide-react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 
 export interface EmptyProps {
   title: string;

@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { UserMock } from './mocks/userMock';
+import { DeviceMock } from './mocks/deviceMock';
+import { ProfileMock } from './mocks/profileMock';
 
 // Load environment variables
 dotenv.config();
@@ -53,29 +56,22 @@ jest.mock('bcryptjs', () => ({
   compare: jest.fn().mockResolvedValue(true),
 }));
 
-// Mock the User model
-jest.mock('../models/User', () => {
-  const mockUser = {
-    _id: 'real_user_id',
-    name: 'Real User',
-    email: 'user@example.com',
-    role: 'user',
-    permissions: ['view_devices'],
-    toObject: jest.fn().mockReturnThis(),
-  };
+// Model mocks are imported at the top of the file
 
-  return {
-    __esModule: true,
-    default: {
-      findById: jest.fn().mockImplementation(() => ({
-        select: jest.fn().mockResolvedValue(mockUser)
-      })),
-      findOne: jest.fn().mockResolvedValue(mockUser),
-      create: jest.fn().mockResolvedValue(mockUser),
-      prototype: {
-        save: jest.fn().mockResolvedValue(mockUser),
-        matchPassword: jest.fn().mockResolvedValue(true),
-      }
-    }
-  };
-});
+// Mock the User model
+jest.mock('../models/User', () => ({
+  __esModule: true,
+  default: UserMock
+}));
+
+// Mock the Device model
+jest.mock('../models/Device', () => ({
+  __esModule: true,
+  default: DeviceMock
+}));
+
+// Mock the Profile model
+jest.mock('../models/Profile', () => ({
+  __esModule: true,
+  default: ProfileMock
+}));

@@ -187,9 +187,203 @@ export const validateRegisterRanges = (
   return errors;
 };
 
+// Helper function to get word count based on data type
+const getRequiredWordCount = (dataType: string): number => {
+  if (['INT32', 'UINT32', 'FLOAT32', 'FLOAT'].includes(dataType)) {
+    return 2;
+  } else if (['INT64', 'UINT64', 'DOUBLE', 'FLOAT64'].includes(dataType)) {
+    return 4;
+  } else if (['STRING', 'ASCII'].includes(dataType)) {
+    return 1; // Minimum 1, but actual count depends on configuration
+  }
+  return 1; // Default for standard types (INT16, UINT16, etc.)
+};
+
+// Validate byte order based on data type
+const validateByteOrder = (dataType: string, byteOrder: string): string | null => {
+  // Check if it's a multi-register data type
+  const isMultiRegister = ['INT32', 'UINT32', 'FLOAT32', 'FLOAT', 'INT64', 'UINT64', 'DOUBLE', 'FLOAT64', 'STRING', 'ASCII'].includes(dataType);
+  
+  if (isMultiRegister) {
+    // Multi-register should use 4-char byte orders
+    if (!['ABCD', 'DCBA', 'BADC', 'CDAB'].includes(byteOrder)) {
+      return 'For multi-register types, use ABCD, DCBA, BADC, or CDAB';
+    }
+  } else {
+    // Single register should use 2-char byte orders
+    if (!['AB', 'BA'].includes(byteOrder)) {
+      return 'For single register types, use AB or BA';
+    }
+  }
+  
+  return null;
+};
+
+// Validate scaling equation
+const validateScalingEquation = (equation: string): string | null => {
+  if (!equation) return null;
+  
+  try {
+    // Check for common JS equation syntax errors
+    
+    // First, verify it contains 'x' as the variable
+    if (!equation.includes('x')) {
+      return 'Equation must contain "x" as the variable';
+    }
+    
+    // Check for balanced parentheses
+    let openParens = 0;
+    for (const char of equation) {
+      if (char === '(') openParens++;
+      if (char === ')') openParens--;
+      if (openParens < 0) return 'Unbalanced parentheses in equation';
+    }
+    if (openParens !== 0) return 'Unbalanced parentheses in equation';
+    
+    // Check for invalid characters
+    const invalidCharsRegex = /[^0-9x\s\.\+\-\*\/\(\)\,\|\&\>\<\=\!\%\^\~]/g;
+    const invalidChars = equation.match(invalidCharsRegex);
+    if (invalidChars && invalidChars.length > 0) {
+      return `Invalid characters in equation: ${invalidChars.join(', ')}`;
+    }
+    
+    // Check for common binary and arithmetic operators
+    const operators = ['*', '/', '+', '-', '%', '<<', '>>', '>>>'];
+    if (operators.some(op => equation.startsWith(op)) || operators.some(op => equation.endsWith(op))) {
+      return 'Equation cannot start or end with an operator';
+    }
+    
+    // Check for consecutive operators (like x++y or x**y which are invalid)
+    for (const op1 of operators) {
+      for (const op2 of operators) {
+        if (equation.includes(op1 + op2) && !['++', '--'].includes(op1 + op2)) {
+          return `Invalid consecutive operators: ${op1}${op2}`;
+        }
+      }
+    }
+    
+    // Attempt to create a function from the equation and evaluate it
+    // eslint-disable-next-line no-new-function
+    const testFunc = new Function('x', `return ${equation}`);
+    
+    // Test with several values to check for errors in different scenarios
+    const testValues = [0, 1, -1, 1000, -1000, 0.5, -0.5];
+    for (const val of testValues) {
+      const result = testFunc(val);
+      
+      // Check if result is a valid number
+      if (typeof result !== 'number' || isNaN(result) || !isFinite(result)) {
+        return `Equation produces invalid result for x = ${val}`;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    // Try to provide more helpful error messages based on the error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    if (errorMessage.includes('Unexpected token')) {
+      return 'Syntax error: Unexpected token in equation';
+    } else if (errorMessage.includes('Unexpected identifier')) {
+      return 'Syntax error: Unexpected identifier in equation';
+    } else if (errorMessage.includes('Invalid or unexpected token')) {
+      return 'Syntax error: Invalid character in equation';
+    }
+    
+    return 'Invalid equation syntax. Use JavaScript syntax with "x" as the variable.';
+  }
+};
+
+// Validate bit position for boolean types
+const validateBitPosition = (dataType: string, bitPosition?: number): string | null => {
+  if (['BOOLEAN', 'BIT'].includes(dataType)) {
+    if (bitPosition === undefined) {
+      return 'Bit position is required for boolean/bit types';
+    }
+    
+    if (bitPosition < 0 || bitPosition > 15) {
+      return 'Bit position must be between 0 and 15';
+    }
+  }
+  
+  return null;
+};
+
+// Validate bitmask format
+const validateBitmask = (bitmask?: string): string | null => {
+  if (!bitmask) return null;
+  
+  // Check for hexadecimal format
+  if (!/^0x[0-9A-Fa-f]+$/.test(bitmask)) {
+    return 'Bitmask must be in hexadecimal format (e.g., 0xFF00)';
+  }
+  
+  return null;
+};
+
+// Check for overlapping parameters within the same register range
+const checkParameterOverlaps = (
+  parameters: DeviceFormState['parameters']
+): Record<string, string> => {
+  const errors: Record<string, string> = {};
+  
+  // Group parameters by register range
+  const paramsByRange: Record<string, Array<{ index: number, param: DeviceFormState['parameters'][0], end: number }>> = {};
+  
+  // First pass: organize by range and calculate end indices
+  parameters.forEach((param, index) => {
+    if (!param.registerRange) return;
+    
+    const wordCount = param.wordCount || getRequiredWordCount(param.dataType);
+    const end = param.registerIndex + wordCount - 1; // End index (inclusive)
+    
+    if (!paramsByRange[param.registerRange]) {
+      paramsByRange[param.registerRange] = [];
+    }
+    
+    paramsByRange[param.registerRange].push({ 
+      index, 
+      param, 
+      end
+    });
+  });
+  
+  // Second pass: check for overlaps within each range
+  Object.entries(paramsByRange).forEach(([rangeName, rangeParams]) => {
+    for (let i = 0; i < rangeParams.length; i++) {
+      const paramA = rangeParams[i];
+      
+      // Skip bit-level parameters, as they can share the same register
+      if (['BOOLEAN', 'BIT'].includes(paramA.param.dataType)) continue;
+      
+      for (let j = i + 1; j < rangeParams.length; j++) {
+        const paramB = rangeParams[j];
+        
+        // Skip bit-level parameters
+        if (['BOOLEAN', 'BIT'].includes(paramB.param.dataType)) continue;
+        
+        // Check for register overlap
+        if (
+          (paramA.param.registerIndex <= paramB.end && paramA.end >= paramB.param.registerIndex) ||
+          (paramB.param.registerIndex <= paramA.end && paramB.end >= paramA.param.registerIndex)
+        ) {
+          const errorKey = `param_${paramA.index}_overlap`;
+          // Only add the error if it doesn't already exist
+          if (!errors[errorKey]) {
+            errors[errorKey] = `Parameter "${paramA.param.name}" overlaps with "${paramB.param.name}" in range "${rangeName}"`;
+          }
+        }
+      }
+    }
+  });
+  
+  return errors;
+};
+
 // Validate parameters
 export const validateParameters = (
-  parameters: DeviceFormState['parameters']
+  parameters: DeviceFormState['parameters'],
+  registerRanges: DeviceFormState['registerRanges']
 ): Record<string, string> => {
   const errors: Record<string, string> = {};
   
@@ -200,14 +394,33 @@ export const validateParameters = (
         errors[`param_${index}_name`] = 'Parameter name is required';
       }
       
-      if (!param.registerIndex && param.registerIndex !== 0) {
+      if (!param.dataType) {
+        errors[`param_${index}_dataType`] = 'Data type is required';
+      }
+
+      if (!param.registerRange) {
+        errors[`param_${index}_registerRange`] = 'Register range is required';
+      }
+      
+      if (param.registerIndex === undefined || param.registerIndex === null) {
         errors[`param_${index}_registerIndex`] = 'Register index is required';
       } else if (param.registerIndex < 0) {
         errors[`param_${index}_registerIndex`] = 'Register index must be a positive number';
       }
-      
-      if (!param.dataType) {
-        errors[`param_${index}_dataType`] = 'Data type is required';
+
+      // Check register range validity
+      if (param.registerRange) {
+        const selectedRange = registerRanges.find(range => range.rangeName === param.registerRange);
+        
+        if (selectedRange) {
+          // Calculate required word count based on data type
+          const requiredWordCount = param.wordCount || getRequiredWordCount(param.dataType);
+          
+          // Check if the register index plus required words exceeds the range
+          if (param.registerIndex + requiredWordCount > selectedRange.length) {
+            errors[`param_${index}_registerRange`] = `Parameter uses ${requiredWordCount} registers, but exceeds range bounds (max index: ${selectedRange.length - requiredWordCount})`;
+          }
+        }
       }
       
       // Check for duplicate parameter names
@@ -218,7 +431,53 @@ export const validateParameters = (
       if (duplicate !== -1) {
         errors[`param_${index}_duplicate`] = 'Parameter name must be unique';
       }
+      
+      // Validate byte order based on data type
+      const byteOrderError = validateByteOrder(param.dataType, param.byteOrder);
+      if (byteOrderError) {
+        errors[`param_${index}_byteOrder`] = byteOrderError;
+      }
+      
+      // Validate scaling equation if provided
+      if (param.scalingEquation) {
+        const equationError = validateScalingEquation(param.scalingEquation);
+        if (equationError) {
+          errors[`param_${index}_scalingEquation`] = equationError;
+        }
+      }
+      
+      // Validate bitmask if provided
+      const bitmaskError = validateBitmask(param.bitmask);
+      if (bitmaskError) {
+        errors[`param_${index}_bitmask`] = bitmaskError;
+      }
+      
+      // Validate bit position for boolean types
+      const bitPositionError = validateBitPosition(param.dataType, param.bitPosition);
+      if (bitPositionError) {
+        errors[`param_${index}_bitPosition`] = bitPositionError;
+      }
+      
+      // Validate string types have a word count
+      if (['STRING', 'ASCII'].includes(param.dataType)) {
+        if (!param.wordCount || param.wordCount < 1) {
+          errors[`param_${index}_wordCount`] = 'String types must have a word count of at least 1';
+        } else if (param.wordCount > 125) {
+          errors[`param_${index}_wordCount`] = 'Word count must not exceed 125 for strings';
+        }
+      }
+      
+      // Validate min/max values if both are provided
+      if (param.minValue !== undefined && param.maxValue !== undefined) {
+        if (param.minValue >= param.maxValue) {
+          errors[`param_${index}_minValue`] = 'Minimum value must be less than maximum value';
+        }
+      }
     });
+    
+    // Check for overlapping parameters
+    const overlapErrors = checkParameterOverlaps(parameters);
+    Object.assign(errors, overlapErrors);
   }
   
   return errors;
@@ -231,7 +490,7 @@ export const validateDeviceForm = (
   const basicInfoErrors = validateDeviceBasics(formState.deviceBasics);
   const connectionErrors = validateConnectionSettings(formState.connectionSettings);
   const registerErrors = validateRegisterRanges(formState.registerRanges);
-  const parameterErrors = validateParameters(formState.parameters);
+  const parameterErrors = validateParameters(formState.parameters, formState.registerRanges);
   
   // Collect general errors
   const generalErrors: string[] = [];
@@ -239,6 +498,12 @@ export const validateDeviceForm = (
   // Check if there are required register ranges
   if (formState.registerRanges.length === 0) {
     generalErrors.push('At least one register range is required');
+  }
+
+  // Check for register range and parameter compatibility
+  // If we have parameters but no register ranges, add an error
+  if (formState.parameters.length > 0 && formState.registerRanges.length === 0) {
+    generalErrors.push('Register ranges must be defined before adding parameters');
   }
   
   return {

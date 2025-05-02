@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 import { X } from 'lucide-react';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {

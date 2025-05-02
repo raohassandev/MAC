@@ -1,6 +1,6 @@
 import React from 'react';
 import * as TogglePrimitive from '@radix-ui/react-toggle';
-import { cn } from '@/utils/cn';
+import { cn } from '../../utils/cn';
 
 interface ToggleProps
   extends React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root> {
