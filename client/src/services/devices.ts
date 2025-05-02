@@ -177,16 +177,51 @@ export function convertToBaseDevice(serviceDevice: Device): BaseDevice {
 // Export functions that would typically be part of the service
 export async function getDevices(): Promise<Device[]> {
   try {
-    // Try to use the API first
-    try {
-      const response = await api.get('/devices');
-      return response.data;
-    } catch (error: any) {
-      // Fall back to localStorage if API fails
-      console.warn('API call failed, falling back to localStorage for devices');
-      const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
-      return storedDevices;
+    // Always use localStorage in development mode
+    console.log('Using localStorage for devices (dev mode)');
+    const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+    
+    // Return some sample devices if none in localStorage
+    if (storedDevices.length === 0) {
+      const sampleDevices = [
+        {
+          _id: 'sample_device_1',
+          name: 'Sample PLC Device',
+          connectionType: 'tcp',
+          ip: '192.168.1.100',
+          port: 502,
+          slaveId: 1,
+          enabled: true,
+          make: 'Siemens',
+          model: 'S7-1200',
+          tags: ['production', 'plc'],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastSeen: new Date()
+        },
+        {
+          _id: 'sample_device_2',
+          name: 'Temperature Sensor',
+          connectionType: 'tcp',
+          ip: '192.168.1.101',
+          port: 502,
+          slaveId: 2,
+          enabled: false,
+          make: 'ABB',
+          model: 'TempSense X5',
+          tags: ['temperature', 'monitoring'],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastSeen: new Date(Date.now() - 86400000) // 1 day ago
+        }
+      ];
+      
+      // Save sample devices to localStorage
+      localStorage.setItem('devices', JSON.stringify(sampleDevices));
+      return sampleDevices;
     }
+    
+    return storedDevices;
   } catch (error) {
     console.error('Error fetching devices:', error);
     return [];
@@ -203,28 +238,26 @@ export async function addDevice(device: BaseDevice): Promise<Device> {
     // Ensure all required properties are present
     const preparedDevice = ensureDeviceProperties(device);
     
-    try {
-      // Try to use the real API endpoint
-      const response = await api.post('/devices', preparedDevice);
-      return response.data;
-    } catch (error: any) {
-      console.warn('API call failed, using localStorage for device creation');
-      
-      // Generate a random ID (in a real app, this would come from the backend)
-      const newDevice: Device = {
-        ...preparedDevice,
-        _id: `device_${Math.floor(Math.random() * 10000)}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      // Store in localStorage for persistence between page reloads
-      const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
-      storedDevices.push(newDevice);
-      localStorage.setItem('devices', JSON.stringify(storedDevices));
-      
-      return newDevice;
-    }
+    // Always use localStorage in development mode
+    console.log('Using localStorage for adding device (dev mode)');
+    
+    // Generate a random ID 
+    const newDevice: Device = {
+      ...preparedDevice,
+      _id: `device_${Math.floor(Math.random() * 10000)}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Store in localStorage for persistence between page reloads
+    const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+    storedDevices.push(newDevice);
+    localStorage.setItem('devices', JSON.stringify(storedDevices));
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500)); 
+    
+    return newDevice;
   } catch (error) {
     console.error('Error adding device:', error);
     throw error;

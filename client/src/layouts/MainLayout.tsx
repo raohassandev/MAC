@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -129,9 +130,11 @@ const MainLayout: React.FC = () => {
                 </p>
               </div>
             </div>
+            {/* Logout button - disabled in dev mode */}
             <button
-              onClick={handleLogout}
-              className='text-indigo-300 hover:text-white'
+              onClick={() => toast.info("Logout disabled in development mode")}
+              title="Disabled in development mode"
+              className='text-indigo-300 hover:text-white opacity-50'
             >
               <svg
                 xmlns='http://www.w3.org/2000/svg'
