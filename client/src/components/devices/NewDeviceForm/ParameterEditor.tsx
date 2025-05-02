@@ -198,6 +198,24 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
         byteOrder: 'AB'
       }));
     }
+    
+    // Add detail about register usage for the selected data type
+    const registerDetail = document.getElementById('register-detail');
+    if (registerDetail) {
+      let message = '';
+      if (['INT32', 'UINT32', 'FLOAT32', 'FLOAT'].includes(parameter.dataType)) {
+        message = `This data type uses 2 consecutive registers (32 bits) starting at the specified index.`;
+      } else if (['INT64', 'UINT64', 'DOUBLE', 'FLOAT64'].includes(parameter.dataType)) {
+        message = `This data type uses 4 consecutive registers (64 bits) starting at the specified index.`;
+      } else if (['STRING', 'ASCII'].includes(parameter.dataType)) {
+        message = `String data uses multiple registers. Each register holds 2 ASCII characters.`;
+      } else if (['BOOLEAN', 'BIT'].includes(parameter.dataType)) {
+        message = `Bit data extracts a single bit from a register at the specified bit position.`;
+      } else {
+        message = `This data type uses 1 register (16 bits) at the specified index.`;
+      }
+      registerDetail.textContent = message;
+    }
   }, [parameter.dataType, isMultiRegister]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -223,6 +241,45 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
         return newErrors;
       });
     }
+    
+    // For critical fields like registerIndex, bitPosition, and wordCount,
+    // validate immediately to give quick feedback
+    if (['registerIndex', 'bitPosition', 'wordCount'].includes(name)) {
+      // Use setTimeout to ensure state is updated before validation
+      setTimeout(() => {
+        // Partial validation for just this field
+        const newErrors: Record<string, string> = {};
+        
+        if (name === 'registerIndex') {
+          // Check register range validity
+          if (parameter.registerRange) {
+            const selectedRange = availableRanges.find(range => range.rangeName === parameter.registerRange);
+            
+            if (selectedRange) {
+              const registersNeeded = getRequiredWordCount(parameter.dataType);
+              const lastValidIndex = selectedRange.length - registersNeeded;
+              const registerIndex = parseFloat(value) || 0;
+              
+              if (registerIndex < 0) {
+                newErrors.registerIndex = 'Register index must be a positive number';
+              } else if (registerIndex > lastValidIndex) {
+                newErrors.registerIndex = `Index too high. Max index: ${lastValidIndex} for this data type`;
+              }
+              
+              // Check for overlaps
+              const overlapError = checkForParameterOverlaps();
+              if (overlapError) {
+                newErrors.registerIndex = overlapError;
+              }
+            }
+          }
+        }
+        
+        if (Object.keys(newErrors).length > 0) {
+          setErrors(prev => ({...prev, ...newErrors}));
+        }
+      }, 0);
+    }
   };
 
   const handleSelectChange = (name: string) => (value: string) => {
@@ -230,6 +287,12 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
       ...prev,
       [name]: value
     }));
+    
+    // If data type or register range changes, we should revalidate immediately
+    if (name === 'dataType' || name === 'registerRange') {
+      // Use setTimeout to ensure state is updated before validation
+      setTimeout(() => validateForm(), 0);
+    }
   };
 
   // Helper function to get required word count based on data type
@@ -260,12 +323,15 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
     const endIndex = parameter.registerIndex + wordCount - 1;
     
     // Get all existing parameters from the current form context
-    // We filter out the current parameter if we're editing an existing one
+    // We need to consider all parameters that have the same range
+    const allParameters = availableRanges
+      .find(range => range.rangeName === parameter.registerRange)
+      ?.dataParser || [];
+      
+    // If we're editing an existing parameter, exclude it from the comparison
     const existingParameters = initialData 
-      ? [] // If editing, we don't need to check against others
-      : availableRanges
-        .find(range => range.rangeName === parameter.registerRange)
-        ?.dataParser || [];
+      ? allParameters.filter(p => p.name !== initialData.name) // Exclude the parameter being edited
+      : allParameters;
     
     if (existingParameters.length === 0) return null;
     
@@ -423,10 +489,39 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Display a summary of all validation errors at once
+  const displayValidationSummary = (errors: Record<string, string>) => {
+    if (Object.keys(errors).length === 0) return null;
+    
+    return (
+      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+        <h5 className="text-sm font-semibold text-red-700">Please fix the following errors:</h5>
+        <ul className="mt-1 list-disc list-inside text-sm text-red-600">
+          {Object.values(errors).map((error, index) => (
+            <li key={index}>{error}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
+    // Force validation and update error state
+    const isValid = validateForm();
+    
+    // Scroll to top if there are errors to ensure error summary is visible
+    if (!isValid && Object.keys(errors).length > 0) {
+      // Find the first error element to scroll to
+      const firstErrorId = Object.keys(errors)[0];
+      const errorElement = document.getElementById(firstErrorId);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        errorElement.focus();
+      }
+    } else if (isValid) {
+      // Only save if form is valid
       onSave(parameter);
     }
   };
@@ -476,6 +571,9 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
 
   return (
     <Form onSubmit={handleSubmit}>
+      {/* Display error summary at the top of the form if there are any errors */}
+      {Object.keys(errors).length > 0 && displayValidationSummary(errors)}
+      
       <Form.Group>
         <Form.Label htmlFor="name" required>Parameter Name</Form.Label>
         <Input
@@ -600,6 +698,7 @@ const ParameterEditor: React.FC<ParameterEditorProps> = ({
             onChange={handleInputChange}
             error={errors.registerIndex}
           />
+          <div id="register-detail" className="mt-1 text-xs text-blue-600 italic"></div>
         </FormFieldWithHelp>
       </Form.Row>
 
