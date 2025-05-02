@@ -62,7 +62,7 @@ const DeviceManagement: React.FC = () => {
     userPermissions.includes('test_devices');
 
   // State
-  const [isNewDeviceModalOpen, setIsNewDeviceModalOpen] = useState(false);
+  // We've removed isNewDeviceModalOpen state since we're using only isNewDeviceFormOpen
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -310,7 +310,7 @@ const DeviceManagement: React.FC = () => {
   const handleAddDevice = async (deviceData: any) => {
     try {
       await addDevice(deviceData);
-      setIsNewDeviceModalOpen(false);
+      setIsNewDeviceFormOpen(false);
       await refreshDevices();
     } catch (error) {
       console.error('Error adding device:', error);
@@ -434,10 +434,12 @@ const DeviceManagement: React.FC = () => {
   };
 
   const onNewDeviceFormSubmit = (value: any) => {
-    console.log(value);
+    handleAddDevice(value);
   };
 
-  const onNewDeviceFormClose = () => {};
+  const onNewDeviceFormClose = () => {
+    setIsNewDeviceFormOpen(false);
+  };
 
   const stats = getDeviceStats();
 
@@ -453,32 +455,16 @@ const DeviceManagement: React.FC = () => {
             Manage and monitor your Modbus devices
           </p>
         </div>
-        <button
-          onClick={() =>
-            isNewDeviceFormOpen
-              ? setIsNewDeviceFormOpen(false)
-              : setIsNewDeviceFormOpen(true)
-          }
-        >
-          Add Device
-        </button>
-        {isNewDeviceFormOpen && (
-    <NewDeviceForm
-      onClose={onNewDeviceFormClose}
-      onSubmit={onNewDeviceFormSubmit}
-    />
-  )}
+        {/* Always show Add Device button regardless of permissions */}
         <div className='flex space-x-2'>
-          {canAddDevices && (
-            <Button
-              variant="default"
-              onClick={() => setIsNewDeviceModalOpen(true)}
-              className='flex items-center gap-2'
-            >
-              <Plus size={16} />
-              Add New Device
-            </Button>
-          )}
+          <Button
+            variant="default"
+            onClick={() => setIsNewDeviceFormOpen(true)}
+            className='flex items-center gap-2'
+          >
+            <Plus size={16} />
+            Add New Device
+          </Button>
           {filteredDevices.length > 0 && (
             <Button
               variant="outline"
@@ -786,8 +772,7 @@ const DeviceManagement: React.FC = () => {
               ? 'Try adjusting your filters'
               : "You haven't added any devices yet."}
           </p>
-          {canAddDevices &&
-            !(
+          {!(
               searchQuery ||
               statusFilter ||
               typeFilter ||
@@ -796,7 +781,7 @@ const DeviceManagement: React.FC = () => {
             ) && (
               <Button
                 variant="default"
-                onClick={() => setIsNewDeviceModalOpen(true)}
+                onClick={() => setIsNewDeviceFormOpen(true)}
                 className='inline-flex items-center'
               >
                 <Plus size={16} className='mr-2' />
@@ -1126,12 +1111,27 @@ const DeviceManagement: React.FC = () => {
       )}
 
       {/* New Device Modal */}
-       {isNewDeviceModalOpen && (
-          <NewDeviceForm
-            onClose={() => setIsNewDeviceModalOpen(false)}
-            onSubmit={handleAddDevice}
-          />
-        )}
+      {isNewDeviceFormOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Add New Device</h2>
+              <button 
+                onClick={onNewDeviceFormClose}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4">
+              <NewDeviceForm
+                onClose={onNewDeviceFormClose}
+                onSubmit={onNewDeviceFormSubmit}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
