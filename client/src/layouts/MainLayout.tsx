@@ -26,7 +26,7 @@ const MainLayout: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    // No need to navigate manually, the ProtectedRoute will handle redirection
   };
 
   // Check if user has specific permissions
