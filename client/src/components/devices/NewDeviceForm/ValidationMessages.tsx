@@ -52,60 +52,35 @@ const ValidationMessages: React.FC = () => {
   // Group errors by section
   const groupedErrors = groupErrorsBySection(allErrors);
 
-  // If it's just one or two simple errors, display compact version
-  if (allErrors.length <= 2 && groupedErrors.length === 1) {
-    return (
-      <div className="bg-red-50 border-l-4 border-red-400 p-3 mb-4 rounded">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
-          <div className="text-sm text-red-700">
-            {allErrors.map((error, index) => (
-              <span key={`${error.field}-${index}`}>{error.message}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // For more complex validation cases, show detailed grouping
+  // Always use compact version to save space
   return (
-    <div className="bg-red-50 border border-red-200 p-4 mb-4 rounded">
+    <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded text-sm">
       <div className="flex items-start">
-        <div className="flex-shrink-0 mt-0.5">
-          <XCircle className="h-5 w-5 text-red-400" />
-        </div>
-        <div className="ml-3 w-full">
-          <h3 className="text-sm font-medium text-red-800 flex items-center justify-between">
-            <span>Please fix the following issues:</span>
-            <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full">
-              {allErrors.length} {allErrors.length === 1 ? 'error' : 'errors'}
+        <AlertCircle className="h-5 w-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" />
+        <div>
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-red-800">
+              Please fix before continuing:
+            </h3>
+            <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full ml-2">
+              {allErrors.length}
             </span>
-          </h3>
+          </div>
           
-          <div className="mt-2 space-y-3">
+          <ul className="mt-1 space-y-0.5 text-red-700">
             {groupedErrors.map(([section, messages]) => (
-              <div key={section} className="border-t border-red-200 pt-2 first:border-t-0 first:pt-0">
-                <h4 className="text-xs font-medium text-red-800 uppercase mb-1">
-                  {section} {messages.length > 1 && `(${messages.length})`}
-                </h4>
-                <ul className="text-sm text-red-700 space-y-1">
+              <li key={section}>
+                <span className="font-medium">{section}</span>
+                <ul className="pl-4 space-y-0.5">
                   {messages.map((message, idx) => (
                     <li key={idx} className="flex items-start">
                       <span className="mr-1">•</span> {message}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </li>
             ))}
-          </div>
-          
-          <div className="mt-3 pt-2 border-t border-red-200 flex items-start">
-            <Info size={14} className="text-red-700 mr-1 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-red-700">
-              All fields with errors must be corrected before you can save the device.
-            </p>
-          </div>
+          </ul>
         </div>
       </div>
     </div>

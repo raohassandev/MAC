@@ -37,47 +37,53 @@ const DeviceFormContent: React.FC<{
     { id: 'parameters', label: 'Data Reader' },
   ];
 
-  // Validate the form when tab changes or on submit
-  const validateForm = () => {
+  // Validate the form - but only show errors when explicitly requested
+  const validateForm = (showErrors = false) => {
     const validationErrors = validateDeviceForm(state);
     const newValidationState = convertValidationErrorsToState(validationErrors);
     
-    // Update validation state directly in the context
-    
-    if (activeTab === 'connection') {
-      // Only show connection errors when on connection tab
-      const connectionValidation = {
-        ...newValidationState,
-        basicInfo: [],
-        registers: [],
-        parameters: [],
-      };
-      actions.setValidationState(connectionValidation);
-    } else if (activeTab === 'registers') {
-      // Only show register errors when on registers tab
-      const registersValidation = {
-        ...newValidationState,
-        basicInfo: [],
-        connection: [],
-        parameters: [],
-      };
-      actions.setValidationState(registersValidation);
-    } else if (activeTab === 'parameters') {
-      // Show all errors when on parameters tab (last tab)
-      actions.setValidationState(newValidationState);
+    // Only update UI with error state if showErrors is true
+    if (showErrors) {
+      if (activeTab === 'connection') {
+        // Only show connection errors when on connection tab
+        const connectionValidation = {
+          ...newValidationState,
+          basicInfo: [],
+          registers: [],
+          parameters: [],
+        };
+        actions.setValidationState(connectionValidation);
+      } else if (activeTab === 'registers') {
+        // Only show register errors when on registers tab
+        const registersValidation = {
+          ...newValidationState,
+          basicInfo: [],
+          connection: [],
+          parameters: [],
+        };
+        actions.setValidationState(registersValidation);
+      } else if (activeTab === 'parameters') {
+        // Show all errors when on parameters tab (last tab)
+        actions.setValidationState(newValidationState);
+      }
     }
     
     return validationErrors.isValid;
   };
   
-  // Run validation when tab changes
+  // Initialize validation state but don't show errors on first render
   useEffect(() => {
-    validateForm();
+    // Don't show validation errors on initial load or tab change
+    validateForm(false);
   }, [activeTab]);
   
+  // Track if user has attempted to proceed, to show validation errors
+  const [hasAttemptedNextStep, setHasAttemptedNextStep] = useState(false);
+  
   const handleSubmitForm = () => {
-    // Run full validation before submitting
-    const isValid = validateForm();
+    // Run full validation before submitting and show errors
+    const isValid = validateForm(true);
+    setHasAttemptedNextStep(true);
     
     if (!isValid) {
       // Display error message or highlight the tab with errors
@@ -103,12 +109,17 @@ const DeviceFormContent: React.FC<{
 
       <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          {/* Display validation messages */}
-          <ValidationMessages />
-          
+          {/* Form content */}
           {activeTab === 'connection' && <ConnectionSettings />}
           {activeTab === 'registers' && <RegisterConfiguration />}
           {activeTab === 'parameters' && <DataReaderTab />}
+          
+          {/* Show validation messages only after user has attempted to proceed */}
+          {hasAttemptedNextStep && (
+            <div className="mt-6">
+              <ValidationMessages />
+            </div>
+          )}
         </div>
         
         {/* Right sidebar with guide */}
@@ -120,20 +131,27 @@ const DeviceFormContent: React.FC<{
       <FormFooter
         onCancel={onClose}
         onNext={() => {
-          // Validate current tab before proceeding
-          const isValid = validateForm();
+          // Validate current tab when trying to proceed and show errors
+          setHasAttemptedNextStep(true);
+          const isValid = validateForm(true);
           
-          // Only proceed if validation passed or we're not on the last tab
-          const nextTabIndex = tabs.findIndex(tab => tab.id === activeTab) + 1;
-          if (nextTabIndex < tabs.length) {
-            // We can go to next tab even with errors
-            setActiveTab(tabs[nextTabIndex].id);
+          // Only proceed to next tab if validation passed
+          if (isValid) {
+            const nextTabIndex = tabs.findIndex(tab => tab.id === activeTab) + 1;
+            if (nextTabIndex < tabs.length) {
+              setActiveTab(tabs[nextTabIndex].id);
+              // Reset the validation flag when successfully moving to next tab
+              setHasAttemptedNextStep(false);
+            }
           }
         }}
         onPrevious={() => {
           const prevTabIndex = tabs.findIndex(tab => tab.id === activeTab) - 1;
           if (prevTabIndex >= 0) {
             setActiveTab(tabs[prevTabIndex].id);
+            // Hide validation errors when going back
+            validateForm(false);
+            setHasAttemptedNextStep(false);
           }
         }}
         onSubmit={handleSubmitForm}

@@ -153,29 +153,36 @@ const FormGuide: React.FC<{ activeTab: string }> = ({ activeTab }) => {
   return (
     <div className="bg-gray-50 border rounded-md p-4">
       {/* Progress indicator */}
-      <div className="mb-4 flex items-center space-x-2">
-        {progressSteps.map((step, index) => (
-          <React.Fragment key={step.id}>
-            <div 
-              className={`flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium
-                ${step.id === activeTab 
-                  ? 'bg-blue-500 text-white' 
-                  : step.complete 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-200 text-gray-600'}`}
-            >
-              {index + 1}
+      <div className="mb-4">
+        <div className="flex items-center justify-between w-full">
+          {progressSteps.map((step, index) => (
+            <div key={step.id} className="flex flex-col items-center relative">
+              {/* Connecting lines */}
+              {index > 0 && (
+                <div className="absolute left-0 right-0 top-3 -translate-y-1/2 h-0.5 border-t-2 border-gray-200 -z-10" style={{ width: 'calc(200% - 2rem)', right: '50%', marginLeft: '-50%' }}></div>
+              )}
+              
+              {/* Circle with number */}
+              <div 
+                className={`flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium z-10
+                  ${step.id === activeTab 
+                    ? 'bg-blue-500 text-white' 
+                    : step.complete 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-gray-200 text-gray-600'}`}
+              >
+                {index + 1}
+              </div>
+              
+              {/* Step label */}
+              <span 
+                className={`text-xs mt-1 text-center ${step.id === activeTab ? 'font-medium text-blue-600' : 'text-gray-600'}`}
+              >
+                {step.label}
+              </span>
             </div>
-            <span 
-              className={`text-sm ${step.id === activeTab ? 'font-medium text-blue-600' : 'text-gray-600'}`}
-            >
-              {step.label}
-            </span>
-            {index < progressSteps.length - 1 && (
-              <div className="flex-grow border-t border-gray-300 h-0 mx-2" />
-            )}
-          </React.Fragment>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Current step guide */}
