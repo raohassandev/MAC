@@ -35,8 +35,9 @@ const DEMO_USER: User = {
   ]
 };
 
-// Set a permanent demo token in local storage
-const DEMO_TOKEN = 'demo-token-permanent';
+// Set a permanent demo token in local storage with format that matches the expected JWT format
+// This follows the format the server is looking for (with three parts and demo_signature)
+const DEMO_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImRlbW9fdXNlcl9pZCJ9.demo_signature';
 localStorage.setItem('token', DEMO_TOKEN);
 localStorage.setItem('user', JSON.stringify(DEMO_USER));
 

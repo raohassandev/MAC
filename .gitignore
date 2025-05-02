@@ -65,3 +65,4 @@ pids
 # Specific Project Directories
 macsys_web/dist/
 macsys_engine/dist/
+**/.claude/settings.local.json

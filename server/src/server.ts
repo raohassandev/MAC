@@ -1,11 +1,10 @@
 import express, { Express, Request, Response } from 'express';
-
-import User from './models/User';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import User from './models/User';
+import routes from './routes';
 import path from 'path';
-import routes from './routes/index';
 
 console.log('Starting MacSys backend server initialization...');
 
@@ -60,7 +59,7 @@ const initAdminUser = async () => {
 try {
   app.use('/api', routes);
   app.get('/', (req, res) => {
-    res.send('Backend is working');
+    res.send('MacSys Backend is working');
   });
   console.log('Routes configured');
 } catch (error) {
@@ -116,13 +115,11 @@ try {
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   try {
-    // Set static folder
-    app.use(express.static('client/build'));
+    // Set static folder - point to Vite build output
+    app.use(express.static(path.join(__dirname, '../../../client/dist')));
 
     app.get('*', (req: Request, res: Response) => {
-      res.sendFile(
-        path.resolve(__dirname, '..', 'client', 'build', 'index.html')
-      );
+      res.sendFile(path.resolve(__dirname, '../../../client/dist/index.html'));
     });
     console.log('Static assets configured for production');
   } catch (error) {
@@ -131,52 +128,28 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // MongoDB Connection and Server Start
-console.log('Attempting to connect to MongoDB...');
-mongoose
-  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/macsys')
-  .then(() => {
+const startServer = async () => {
+  console.log('Attempting to connect to MongoDB...');
+  try {
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/macsys');
     console.log('MongoDB connected successfully');
 
     // Initialize admin user when MongoDB connection is established
-    try {
-      initAdminUser();
-    } catch (error) {
-      console.error('Error during admin user initialization:', error);
-    }
+    await initAdminUser();
 
     // Start server after successful MongoDB connection
-    app
-      .listen(PORT, () => {
-        console.log(`MacSys Backend running on port ${PORT}`);
-      })
-      .on('error', (err) => {
-        console.error('Error starting server:', err);
-        if ((err as any).code === 'EADDRINUSE') {
-          console.error(
-            `Port ${PORT} is already in use. Try a different port.`
-          );
-        }
-      });
-  })
-  .catch((err) => {
+    app.listen(PORT, () => {
+      console.log(`MacSys Backend running on port ${PORT}`);
+    });
+  } catch (err) {
     console.error('MongoDB connection error:', err);
     console.log('Attempting to start server without MongoDB connection...');
 
     // Try to start server even if MongoDB connection fails
-    app
-      .listen(PORT, () => {
-        console.log(`MacSys Backend running on port ${PORT} (without MongoDB)`);
-      })
-      .on('error', (err) => {
-        console.error('Error starting server:', err);
-        if ((err as any).code === 'EADDRINUSE') {
-          console.error(
-            `Port ${PORT} is already in use. Try a different port.`
-          );
-        }
-      });
-  });
+    app.listen(PORT, () => {
+      console.log(`MacSys Backend running on port ${PORT} (without MongoDB)`);
+    });
+  }
+};
 
-console.log('Server initialization complete, waiting for connections...');
-
-export default app;
+export { app, startServer };

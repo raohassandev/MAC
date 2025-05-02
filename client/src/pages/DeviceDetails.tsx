@@ -71,7 +71,7 @@ const DeviceDetails: React.FC = () => {
     };
 
     fetchDeviceData();
-  }, [deviceId, getDevice]);
+  }, [deviceId]); // Removed getDevice from dependencies to prevent infinite loop
 
   const handleBack = () => {
     navigate('/devices');
