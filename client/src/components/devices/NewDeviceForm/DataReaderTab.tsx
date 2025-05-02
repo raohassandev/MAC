@@ -115,7 +115,91 @@ const DataReaderTab: React.FC = () => {
     }
   };
 
+  // Check if a parameter would conflict with existing parameters
+  const validateParameter = (parameter: ParameterConfig, excludeIndex?: number): string | null => {
+    // Get existing parameters, excluding the one being edited if applicable
+    const existingParams = state.parameters.filter((_, index) => 
+      excludeIndex === undefined || index !== excludeIndex
+    );
+    
+    // Check for duplicate name
+    const duplicateName = existingParams.find(p => 
+      p.name.trim().toLowerCase() === parameter.name.trim().toLowerCase()
+    );
+    if (duplicateName) {
+      return `Parameter name "${parameter.name}" is already in use`;
+    }
+    
+    // Check for register conflicts
+    const wordCount = parameter.wordCount || getWordCount(parameter);
+    const paramStart = parameter.registerIndex;
+    const paramEnd = paramStart + wordCount - 1;
+    
+    // For bit-level parameters, check bit position conflicts
+    if (['BOOLEAN', 'BIT'].includes(parameter.dataType)) {
+      const conflictingBitParam = existingParams.find(p => 
+        ['BOOLEAN', 'BIT'].includes(p.dataType) && 
+        p.registerRange === parameter.registerRange &&
+        p.registerIndex === parameter.registerIndex && 
+        p.bitPosition === parameter.bitPosition
+      );
+      
+      if (conflictingBitParam) {
+        return `Bit position ${parameter.bitPosition} at register index ${parameter.registerIndex} is already used by parameter "${conflictingBitParam.name}"`;
+      }
+      
+      // Bit parameters can share registers with other types, so no further checks needed
+      return null;
+    }
+    
+    // For non-bit parameters, check register overlaps
+    for (const existing of existingParams) {
+      // Skip bit-level parameters as they can share registers
+      if (['BOOLEAN', 'BIT'].includes(existing.dataType)) {
+        continue;
+      }
+      
+      // Only check conflicts within the same register range
+      if (existing.registerRange !== parameter.registerRange) {
+        continue;
+      }
+      
+      const existingWordCount = existing.wordCount || getWordCount(existing);
+      const existingStart = existing.registerIndex;
+      const existingEnd = existingStart + existingWordCount - 1;
+      
+      // Check for register overlap
+      if (
+        (paramStart <= existingEnd && paramEnd >= existingStart) ||
+        (existingStart <= paramEnd && existingEnd >= paramStart)
+      ) {
+        return `Register conflict: Parameter "${parameter.name}" (registers ${paramStart}-${paramEnd}) overlaps with existing parameter "${existing.name}" (registers ${existingStart}-${existingEnd})`;
+      }
+    }
+    
+    return null;
+  };
+
+  // State for validation error message
+  const [validationError, setValidationError] = useState<string | null>(null);
+  
   const handleSaveParameter = (parameter: ParameterConfig) => {
+    // Clear any previous validation error
+    setValidationError(null);
+    
+    // Validate parameter
+    const error = validateParameter(
+      parameter, 
+      expandedParamIndex !== null ? expandedParamIndex : undefined
+    );
+    
+    if (error) {
+      // Show error message to user
+      setValidationError(error);
+      return;
+    }
+    
+    // Proceed with save if no validation errors
     if (expandedParamIndex !== null) {
       actions.updateParameter(expandedParamIndex, parameter);
       setExpandedParamIndex(null);
@@ -193,6 +277,20 @@ const DataReaderTab: React.FC = () => {
       {isAddingNew && (
         <div className="bg-gray-50 p-4 rounded-md border border-gray-200 mb-4">
           <h4 className="text-md font-medium mb-3">Add New Parameter</h4>
+          
+          {/* Display validation error if present */}
+          {validationError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                <div>
+                  <h5 className="text-sm font-medium text-red-700">Parameter Validation Error</h5>
+                  <p className="mt-1 text-sm text-red-600">{validationError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <ParameterEditor 
             onSave={handleSaveParameter}
             onCancel={handleCancelEdit}
@@ -308,6 +406,19 @@ const DataReaderTab: React.FC = () => {
                 {/* Expanded Edit Section */}
                 {expandedParamIndex === index && (
                   <div className="p-4 bg-gray-50 border-t border-gray-200">
+                    {/* Display validation error if present */}
+                    {validationError && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                        <div className="flex items-start">
+                          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
+                          <div>
+                            <h5 className="text-sm font-medium text-red-700">Parameter Validation Error</h5>
+                            <p className="mt-1 text-sm text-red-600">{validationError}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <ParameterEditor 
                       initialData={param}
                       onSave={handleSaveParameter}
