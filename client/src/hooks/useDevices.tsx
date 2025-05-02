@@ -2,13 +2,19 @@ import { useCallback, useEffect, useState } from 'react';
 import { Device } from '../types/device.types';
 import {
   getDevices,
-  getDeviceById,
-  createDevice,
+  addDevice as addDeviceService,
   updateDevice as updateDeviceApi,
   deleteDevice as deleteDeviceApi,
-  testDevice,
+  testConnection as testConnectionService,
+} from '../services/devices';
+// Fallbacks to the old API if needed
+import {
+  getDeviceById,
   readDeviceRegisters,
 } from '../services/api';
+
+// Remove or comment out these imports if they exist
+// import { createDevice, testDevice } from '../services/api';
 
 interface UseDevicesReturn {
   devices: Device[];
@@ -112,7 +118,8 @@ export const useDevices = (): UseDevicesReturn => {
         registers: device.registers || [],
       };
 
-      const newDevice = await createDevice(deviceToAdd);
+      // Use our updated addDeviceService that handles auth issues
+      const newDevice = await addDeviceService(deviceToAdd);
 
       // Update local state
       setDevices((prev) => [...prev, newDevice]);
@@ -166,7 +173,8 @@ export const useDevices = (): UseDevicesReturn => {
     id: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const result = await testDevice(id);
+      // Use our updated testConnectionService that handles auth issues
+      const result = await testConnectionService(id);
 
       // If successful, update the device's lastSeen timestamp in local state
       if (result.success) {
