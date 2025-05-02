@@ -1,5 +1,4 @@
 // A utility file to handle demo authentication
-import api from '../api/client';
 
 // Define the demo user credentials
 const DEMO_USER = {
@@ -29,6 +28,7 @@ function generateFakeToken(): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const payload = btoa(
     JSON.stringify({
+      id: DEMO_USER._id, // Use 'id' to match what the server expects
       userId: DEMO_USER._id,
       email: DEMO_USER.email,
       name: DEMO_USER.name,
@@ -37,13 +37,14 @@ function generateFakeToken(): string {
       exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
     })
   );
-  const signature = btoa('demo_signature'); // Fake signature
+  // Include 'demo_signature' in the signature so the server can detect demo tokens
+  const signature = btoa('demo_signature'); 
 
   return `${header}.${payload}.${signature}`;
 }
 
 // Ensure the user is logged in for demo purposes
-export function ensureDemoAuth(): void {
+export function ensureDemoAuth(): string | null {
   // Check if we already have a token
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
@@ -61,16 +62,14 @@ export function ensureDemoAuth(): void {
       token: demoToken
     }));
     
-    // Set the token in the API client
-    if (api.defaults && api.defaults.headers) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${demoToken}`;
-    }
-    
     console.log('Demo authentication setup complete');
+    return demoToken;
   }
+  
+  return token;
 }
 
 // Call this function to set up authentication before API calls
-export function initDemoAuth(): void {
-  ensureDemoAuth();
+export function initDemoAuth(): string | null {
+  return ensureDemoAuth();
 }

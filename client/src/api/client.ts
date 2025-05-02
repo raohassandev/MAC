@@ -14,8 +14,11 @@ const api = axios.create({
   timeout: 10000, // 10 seconds
 });
 
-// Ensure demo authentication is initialized before any API requests
-ensureDemoAuth();
+// Initialize demo auth and get token
+const token = ensureDemoAuth();
+if (token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
 
 // Request interceptor to add auth token to every request
 api.interceptors.request.use(

@@ -177,17 +177,39 @@ export function convertToBaseDevice(serviceDevice: Device): BaseDevice {
 // Export functions that would typically be part of the service
 export async function getDevices(): Promise<Device[]> {
   try {
+    // Make sure token is properly set in headers for every request
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      // If no token, try to get a demo token
+      const { ensureDemoAuth } = await import('../utils/demoAuth');
+      const newToken = ensureDemoAuth();
+      if (newToken) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      }
+    }
+    
     // Try to use the API first
     try {
       const response = await api.get('/devices');
       return response.data;
     } catch (error: any) {
-      // If we get a 403 Forbidden error, it could be an auth issue
-      if (error.response && error.response.status === 403) {
-        console.warn('Authentication issue when getting devices: 403 Forbidden');
+      // Handle both 401 Unauthorized and 403 Forbidden errors
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.warn(`Authentication issue: ${error.response.status}`);
         
-        // In a real app, we'd handle authentication here
-        // For now, fall back to localStorage
+        // Try to refresh the token
+        const { ensureDemoAuth } = await import('../utils/demoAuth');
+        ensureDemoAuth();
+        
+        // Try one more time with the new token
+        try {
+          const retryResponse = await api.get('/devices');
+          return retryResponse.data;
+        } catch (retryError) {
+          console.warn('Still having authentication issues after token refresh, falling back to localStorage');
+        }
       }
       
       // Fall back to localStorage if API fails
@@ -212,22 +234,38 @@ export async function addDevice(device: BaseDevice): Promise<Device> {
     const preparedDevice = ensureDeviceProperties(device);
     
     try {
+      // Make sure token is properly set in headers for every request
+      const token = localStorage.getItem('token');
+      if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      } else {
+        // If no token, try to get a demo token
+        const { ensureDemoAuth } = await import('../utils/demoAuth');
+        const newToken = ensureDemoAuth();
+        if (newToken) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        }
+      }
+      
       // Try to use the real API endpoint
       const response = await api.post('/devices', preparedDevice);
       return response.data;
     } catch (error: any) {
-      // If we get a 403 Forbidden error, it's likely an authentication issue
-      if (error.response && error.response.status === 403) {
-        console.warn('Authentication issue: 403 Forbidden');
+      // Handle both 401 Unauthorized and 403 Forbidden errors
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.warn(`Authentication issue: ${error.response.status}`);
         
-        // Try to refresh the token or redirect to login if needed
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('Authentication required. Please log in.');
+        // Try to refresh the token
+        const { ensureDemoAuth } = await import('../utils/demoAuth');
+        ensureDemoAuth();
+        
+        // Try one more time with the new token
+        try {
+          const retryResponse = await api.post('/devices', preparedDevice);
+          return retryResponse.data;
+        } catch (retryError) {
+          console.warn('Still having authentication issues after token refresh, falling back to local storage');
         }
-        
-        // If we have a token but still get 403, it could be a permission issue
-        throw new Error('You do not have permission to add devices. Please contact your administrator.');
       }
       
       // If API endpoint doesn't exist (404) or other issue, fall back to local storage
@@ -276,24 +314,39 @@ export async function deleteDevice(_id: string): Promise<boolean> {
 
 export async function testConnection(_id: string): Promise<{ success: boolean; message: string }> {
   try {
+    // Make sure token is properly set in headers for every request
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      // If no token, try to get a demo token
+      const { ensureDemoAuth } = await import('../utils/demoAuth');
+      const newToken = ensureDemoAuth();
+      if (newToken) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      }
+    }
+    
     // Try to use the real API endpoint
     try {
       const response = await api.post(`/devices/${_id}/test`);
       return response.data;
     } catch (error: any) {
-      // If we get a 403 Forbidden error, it's likely an authentication issue
-      if (error.response && error.response.status === 403) {
-        console.warn('Authentication issue when testing connection: 403 Forbidden');
+      // Handle both 401 Unauthorized and 403 Forbidden errors
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.warn(`Authentication issue: ${error.response.status}`);
         
-        // Try to refresh the token or handle authentication issue
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('Authentication required. Please log in.');
+        // Try to refresh the token
+        const { ensureDemoAuth } = await import('../utils/demoAuth');
+        ensureDemoAuth();
+        
+        // Try one more time with the new token
+        try {
+          const retryResponse = await api.post(`/devices/${_id}/test`);
+          return retryResponse.data;
+        } catch (retryError) {
+          console.warn('Still having authentication issues after token refresh, using simulated response');
         }
-        
-        // For development purposes, simulate a successful connection
-        console.warn('Using simulated test connection response');
-        return { success: true, message: 'Connection successful (simulated)' };
       }
       
       // If API endpoint doesn't exist or other issue, return a simulated response
