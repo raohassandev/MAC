@@ -1,6 +1,6 @@
 // client/src/components/devices/NewDeviceForm/NewDeviceFormContainer.tsx
 import React, { useState} from 'react';
-import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
+// import { DeviceFormProvider, useDeviceForm } from '../../DeviceFormContext';
 // import FormTabs from './FormTabs';
 // import FormFooter from './FormFooter';
 // import ConnectionSettings from './ConnectionSettings';
@@ -12,6 +12,7 @@ import RegisterConfiguration from './RegisterConfiguration';
 import DataReaderTab from './DataReaderTab';
 import FormTabs from './FormTabs';
 import FormFooter from './FormFooter';
+import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
 
 interface NewDeviceFormContainerProps {
   onClose: () => void;

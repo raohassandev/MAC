@@ -156,34 +156,60 @@ const DeviceManagement: React.FC = () => {
     }
 
     // Apply sorting with type safety
-    filtered.sort((a, b) => {
-      // Check if the property exists on both devices
-      if (!(sortField in a) || !(sortField in b)) {
-        return 0; // Skip comparison if property doesn't exist
-      }
+    // filtered.sort((a, b) => {
+    //   // Check if the property exists on both devices
+    //   if (!(sortField in a) || !(sortField in b)) {
+    //     return 0; // Skip comparison if property doesn't exist
+    //   }
 
-      let valueA: = a[sortField as keyof Device];
-      let valueB = b[sortField as keyof Device];
+    //   let valueA = a[sortField as keyof Device];
+    //   let valueB = b[sortField as keyof Device];
 
-      // Handle special cases
-      if (sortField === 'lastSeen') {
-        valueA = valueA
-          ? new Date(valueA as string | number | Date).getTime()
-          : 0;
-        valueB = valueB
-          ? new Date(valueB as string | number | Date).getTime()
-          : 0;
-      }
+    //   // Handle special cases
+    //   if (sortField === 'lastSeen') {
+    //     valueA = valueA
+    //       ? new Date(valueA as string | number | Date).getTime()
+    //       : 0;
+    //     valueB = valueB
+    //       ? new Date(valueB as string | number | Date).getTime()
+    //       : 0;
+    //   }
 
-      // Handle undefined values
-      if (valueA === undefined) valueA = '';
-      if (valueB === undefined) valueB = '';
+    //   // Handle undefined values
+    //   if (valueA === undefined) valueA = '';
+    //   if (valueB === undefined) valueB = '';
 
-      // Perform comparison
-      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
-      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+    //   // Perform comparison
+    //   if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+    //   if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+    //   return 0;
+    // });
+      filtered.sort((a, b) => {
+    // Check if the property exists on both devices
+    if (!(sortField in a) || !(sortField in b)) {
+      return 0; // Skip comparison if property doesn't exist
+    }
+
+    // Use a type assertion to any for indexing
+    const aVal: any = (a as any)[sortField];
+    const bVal: any = (b as any)[sortField];
+
+    // Handle special cases
+    if (sortField === 'lastSeen') {
+      const valueA = aVal ? new Date(aVal).getTime() : 0;
+      const valueB = bVal ? new Date(bVal).getTime() : 0;
+      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+    }
+
+    // Handle undefined values
+    const valueA = aVal === undefined ? '' : aVal;
+    const valueB = bVal === undefined ? '' : bVal;
+
+    // Perform comparison
+    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
     setFilteredDevices(filtered as [Device]);
   }, [
@@ -436,11 +462,12 @@ const DeviceManagement: React.FC = () => {
         >
           Add Device
         </button>
-        <NewDeviceForm
-          // isOpen={isNewDeviceFormOpen}
-          onClose={onNewDeviceFormClose}
-          onSubmit={onNewDeviceFormSubmit}
-        />
+        {isNewDeviceFormOpen && (
+    <NewDeviceForm
+      onClose={onNewDeviceFormClose}
+      onSubmit={onNewDeviceFormSubmit}
+    />
+  )}
         <div className='flex space-x-2'>
           {canAddDevices && (
             <Button
@@ -1099,13 +1126,12 @@ const DeviceManagement: React.FC = () => {
       )}
 
       {/* New Device Modal */}
-      {isNewDeviceModalOpen && (
-        <NewDeviceForm
-          isOpen={isNewDeviceModalOpen}
-          onClose={() => setIsNewDeviceModalOpen(false)}
-          onSubmit={handleAddDevice}
-        />
-      )}
+       {isNewDeviceModalOpen && (
+          <NewDeviceForm
+            onClose={() => setIsNewDeviceModalOpen(false)}
+            onSubmit={handleAddDevice}
+          />
+        )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
