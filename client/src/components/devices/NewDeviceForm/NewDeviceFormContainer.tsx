@@ -10,6 +10,7 @@ import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
 import { validateDeviceForm, convertValidationErrorsToState } from './validation';
 import ValidationMessages from './ValidationMessages';
 import FormGuide from './FormGuide';
+import { FormFieldRefsProvider } from './FormFieldRefsContext';
 
 interface NewDeviceFormContainerProps {
   onClose: () => void;
@@ -196,11 +197,13 @@ const NewDeviceFormContainer: React.FC<NewDeviceFormContainerProps> = ({
 
   return (
     <DeviceFormProvider initialData={formattedInitialData}>
-      <DeviceFormContent
-        onClose={onClose}
-        onSubmit={onSubmit}
-        isEditing={isEditing}
-      />
+      <FormFieldRefsProvider>
+        <DeviceFormContent
+          onClose={onClose}
+          onSubmit={onSubmit}
+          isEditing={isEditing}
+        />
+      </FormFieldRefsProvider>
     </DeviceFormProvider>
   );
 };

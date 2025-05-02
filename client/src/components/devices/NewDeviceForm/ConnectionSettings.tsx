@@ -1,9 +1,10 @@
 // client/src/components/devices/NewDeviceForm/ConnectionSettings.tsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { useDeviceForm } from './DeviceFormContext';
 import { Input } from '../../ui/Input';
 import { Form } from '../../ui/Form';
 import { AlertCircle } from 'lucide-react';
+import { FormFieldRefsContext } from './FormFieldRefsContext';
 
 // We need to create a custom Select component for type compatibility
 interface SelectOption {
@@ -59,6 +60,7 @@ const FieldError: React.FC<{ message?: string }> = ({ message }) => {
 const ConnectionSettings: React.FC = () => {
   const { state, actions } = useDeviceForm();
   const { deviceBasics, connectionSettings, validationState } = state;
+  const { refs } = useContext(FormFieldRefsContext);
   
   // Helper to get connection error message for a specific field
   const getFieldError = (fieldName: string): string | undefined => {
@@ -105,6 +107,7 @@ const ConnectionSettings: React.FC = () => {
             onChange={handleDeviceBasicsChange}
             placeholder="Production Line PLC"
             className={getBasicFieldError('name') ? 'border-red-300' : ''}
+            ref={refs.name}
           />
           <FieldError message={getBasicFieldError('name')} />
         </Form.Group>
@@ -118,6 +121,7 @@ const ConnectionSettings: React.FC = () => {
             onChange={handleDeviceBasicsChange}
             placeholder="Siemens, Allen-Bradley, etc."
             className={getBasicFieldError('make') ? 'border-red-300' : ''}
+            ref={refs.make}
           />
           <FieldError message={getBasicFieldError('make')} />
         </Form.Group>
@@ -133,6 +137,7 @@ const ConnectionSettings: React.FC = () => {
             onChange={handleDeviceBasicsChange}
             placeholder="S7-1200, CompactLogix, etc."
             className={getBasicFieldError('model') ? 'border-red-300' : ''}
+            ref={refs.model}
           />
           <FieldError message={getBasicFieldError('model')} />
         </Form.Group>
@@ -145,6 +150,7 @@ const ConnectionSettings: React.FC = () => {
             value={deviceBasics.description}
             onChange={handleDeviceBasicsChange}
             placeholder="Optional device description"
+            ref={refs.description}
           />
         </Form.Group>
       </Form.Row>
@@ -161,6 +167,8 @@ const ConnectionSettings: React.FC = () => {
             { value: 'tcp', label: 'TCP/IP (Ethernet)' },
             { value: 'rtu', label: 'RTU (Serial)' },
           ]}
+          error={getFieldError('connectionType')}
+          ref={refs.connectionType}
         />
       </Form.Group>
 
@@ -176,6 +184,7 @@ const ConnectionSettings: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="192.168.1.100"
                 className={getFieldError('ip') ? 'border-red-300' : ''}
+                ref={refs.ip}
               />
               <FieldError message={getFieldError('ip')} />
             </Form.Group>
@@ -190,6 +199,7 @@ const ConnectionSettings: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder="502"
                 className={getFieldError('port') ? 'border-red-300' : ''}
+                ref={refs.port}
               />
               <FieldError message={getFieldError('port')} />
             </Form.Group>
@@ -288,6 +298,7 @@ const ConnectionSettings: React.FC = () => {
           onChange={handleInputChange}
           placeholder="1"
           className={getFieldError('slaveId') ? 'border-red-300' : ''}
+          ref={refs.slaveId}
         />
         <FieldError message={getFieldError('slaveId')} />
       </Form.Group>

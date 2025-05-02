@@ -1,7 +1,8 @@
 // client/src/components/devices/NewDeviceForm/ValidationMessages.tsx
-import React from 'react';
+import React, { useContext } from 'react';
 import { useDeviceForm } from './DeviceFormContext';
-import { AlertCircle, XCircle, Info } from 'lucide-react';
+import { AlertCircle, XCircle, Info, ArrowRight } from 'lucide-react';
+import { FormFieldRefsContext } from './FormFieldRefsContext';
 
 // Group errors by section for better organization
 const groupErrorsBySection = (errors: Array<{ field: string; message: string }>) => {
@@ -35,6 +36,7 @@ const groupErrorsBySection = (errors: Array<{ field: string; message: string }>)
 const ValidationMessages: React.FC = () => {
   const { state } = useDeviceForm();
   const { validationState } = state;
+  const fieldRefs = useContext(FormFieldRefsContext);
 
   // Combine all errors from all sections
   const allErrors = [
@@ -72,11 +74,25 @@ const ValidationMessages: React.FC = () => {
               <li key={section}>
                 <span className="font-medium">{section}</span>
                 <ul className="pl-4 space-y-0.5">
-                  {messages.map((message, idx) => (
-                    <li key={idx} className="flex items-start">
-                      <span className="mr-1">•</span> {message}
-                    </li>
-                  ))}
+                  {messages.map((message, idx) => {
+                    // Extract field name from the original errors array
+                    const errorEntry = allErrors.find(err => err.message === message);
+                    const fieldName = errorEntry?.field || '';
+                    
+                    return (
+                      <li key={idx} className="flex items-start">
+                        <button 
+                          type="button"
+                          onClick={() => fieldRefs.focusField(fieldName)}
+                          className="flex items-start text-left hover:text-red-800 group"
+                        >
+                          <span className="mr-1">•</span> 
+                          <span>{message}</span>
+                          <ArrowRight size={12} className="ml-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </li>
             ))}
