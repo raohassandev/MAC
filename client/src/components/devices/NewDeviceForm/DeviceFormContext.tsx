@@ -192,6 +192,7 @@ interface DeviceFormContextType {
     updateParameter: (index: number, parameter: ParameterConfig) => void;
     deleteParameter: (index: number) => void;
     setUIState: (uiState: Partial<DeviceFormState['uiState']>) => void;
+    setValidationState: (validationState: Partial<DeviceFormState['validationState']>) => void;
     resetForm: () => void;
     loadFormData: (data: Partial<DeviceFormState>) => void;
   };
@@ -231,6 +232,8 @@ export const DeviceFormProvider: React.FC<DeviceFormProviderProps> = ({ children
       dispatch({ type: 'DELETE_PARAMETER', payload: index }),
     setUIState: (uiState: Partial<DeviceFormState['uiState']>) =>
       dispatch({ type: 'SET_UI_STATE', payload: uiState }),
+    setValidationState: (validationState: Partial<DeviceFormState['validationState']>) =>
+      dispatch({ type: 'SET_VALIDATION_STATE', payload: validationState }),
     resetForm: () => dispatch({ type: 'RESET_FORM' }),
     loadFormData: (data: Partial<DeviceFormState>) =>
       dispatch({ type: 'LOAD_FORM_DATA', payload: data }),

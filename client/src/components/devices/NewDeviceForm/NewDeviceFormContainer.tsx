@@ -24,7 +24,7 @@ const DeviceFormContent: React.FC<{
   onSubmit: (data: any) => void;
   isEditing: boolean;
 }> = ({ onClose, onSubmit, isEditing }) => {
-  const { state } = useDeviceForm();
+  const { state, actions } = useDeviceForm();
   const [activeTab, setActiveTab] = useState('connection');
 
   const handleTabChange = (tabId: string) => {
@@ -40,30 +40,31 @@ const DeviceFormContent: React.FC<{
   // Validate the form when tab changes or on submit
   const validateForm = () => {
     const validationErrors = validateDeviceForm(state);
-    const validationState = convertValidationErrorsToState(validationErrors);
+    const newValidationState = convertValidationErrorsToState(validationErrors);
     
-    // Update validation state in context
+    // Update validation state directly in the context
+    
     if (activeTab === 'connection') {
       // Only show connection errors when on connection tab
       const connectionValidation = {
-        ...validationState,
+        ...newValidationState,
         basicInfo: [],
         registers: [],
         parameters: [],
       };
-      actions.setUIState({ validationErrors: connectionValidation });
+      actions.setValidationState(connectionValidation);
     } else if (activeTab === 'registers') {
       // Only show register errors when on registers tab
       const registersValidation = {
-        ...validationState,
+        ...newValidationState,
         basicInfo: [],
         connection: [],
         parameters: [],
       };
-      actions.setUIState({ validationErrors: registersValidation });
+      actions.setValidationState(registersValidation);
     } else if (activeTab === 'parameters') {
       // Show all errors when on parameters tab (last tab)
-      actions.setUIState({ validationErrors: validationState });
+      actions.setValidationState(newValidationState);
     }
     
     return validationErrors.isValid;
