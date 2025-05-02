@@ -9,6 +9,7 @@ import FormFooter from './FormFooter';
 import { DeviceFormProvider, useDeviceForm } from './DeviceFormContext';
 import { validateDeviceForm, convertValidationErrorsToState } from './validation';
 import ValidationMessages from './ValidationMessages';
+import FormGuide from './FormGuide';
 
 interface NewDeviceFormContainerProps {
   onClose: () => void;
@@ -99,13 +100,20 @@ const DeviceFormContent: React.FC<{
 
       <FormTabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
 
-      <div className="p-6">
-        {/* Display validation messages */}
-        <ValidationMessages />
+      <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          {/* Display validation messages */}
+          <ValidationMessages />
+          
+          {activeTab === 'connection' && <ConnectionSettings />}
+          {activeTab === 'registers' && <RegisterConfiguration />}
+          {activeTab === 'parameters' && <DataReaderTab />}
+        </div>
         
-        {activeTab === 'connection' && <ConnectionSettings />}
-        {activeTab === 'registers' && <RegisterConfiguration />}
-        {activeTab === 'parameters' && <DataReaderTab />}
+        {/* Right sidebar with guide */}
+        <div className="md:col-span-1">
+          <FormGuide activeTab={activeTab} />
+        </div>
       </div>
 
       <FormFooter
