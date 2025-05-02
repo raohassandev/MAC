@@ -3,6 +3,7 @@ import React from 'react';
 import { useDeviceForm } from './DeviceFormContext';
 import { Input } from '../../ui/Input';
 import { Form } from '../../ui/Form';
+import { AlertCircle } from 'lucide-react';
 
 // We need to create a custom Select component for type compatibility
 interface SelectOption {
@@ -43,9 +44,27 @@ const Select: React.FC<SelectProps> = ({ id, value, onChange, options, error }) 
   );
 };
 
+// Field Error component to display validation errors
+const FieldError: React.FC<{ message?: string }> = ({ message }) => {
+  if (!message) return null;
+  
+  return (
+    <div className="mt-1 text-sm text-red-600 flex items-center">
+      <AlertCircle className="h-4 w-4 mr-1" />
+      {message}
+    </div>
+  );
+};
+
 const ConnectionSettings: React.FC = () => {
   const { state, actions } = useDeviceForm();
-  const { connectionSettings } = state;
+  const { connectionSettings, validationState } = state;
+  
+  // Helper to get error message for a specific field
+  const getFieldError = (fieldName: string): string | undefined => {
+    const error = validationState.connection.find(err => err.field === fieldName);
+    return error?.message;
+  };
 
   const handleConnectionTypeChange = (value: string) => {
     actions.setConnectionSettings({ type: value as 'tcp' | 'rtu' });
@@ -88,7 +107,9 @@ const ConnectionSettings: React.FC = () => {
                 value={connectionSettings.ip}
                 onChange={handleInputChange}
                 placeholder="192.168.1.100"
+                className={getFieldError('ip') ? 'border-red-300' : ''}
               />
+              <FieldError message={getFieldError('ip')} />
             </Form.Group>
 
             <Form.Group>
@@ -100,7 +121,9 @@ const ConnectionSettings: React.FC = () => {
                 value={connectionSettings.port}
                 onChange={handleInputChange}
                 placeholder="502"
+                className={getFieldError('port') ? 'border-red-300' : ''}
               />
+              <FieldError message={getFieldError('port')} />
             </Form.Group>
           </Form.Row>
         </>
@@ -115,7 +138,9 @@ const ConnectionSettings: React.FC = () => {
                 value={connectionSettings.serialPort}
                 onChange={handleInputChange}
                 placeholder="COM1 or /dev/ttyS0"
+                className={getFieldError('serialPort') ? 'border-red-300' : ''}
               />
+              <FieldError message={getFieldError('serialPort')} />
             </Form.Group>
 
             <Form.Group>
@@ -194,7 +219,9 @@ const ConnectionSettings: React.FC = () => {
           value={connectionSettings.slaveId}
           onChange={handleInputChange}
           placeholder="1"
+          className={getFieldError('slaveId') ? 'border-red-300' : ''}
         />
+        <FieldError message={getFieldError('slaveId')} />
       </Form.Group>
     </div>
   );
