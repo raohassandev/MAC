@@ -1,5 +1,5 @@
-// // client/src/services/devices.ts
-// import API from './api';
+// client/src/services/devices.ts
+import api from '../api/client';
 
 // export interface Register {
 //   name: string;
@@ -177,14 +177,24 @@ export function convertToBaseDevice(serviceDevice: Device): BaseDevice {
 // Export functions that would typically be part of the service
 export async function getDevices(): Promise<Device[]> {
   try {
-    // In a real implementation, this would be an API call
-    // For now, we'll retrieve from localStorage
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
-        resolve(storedDevices);
-      }, 300); // Simulate network delay
-    });
+    // Try to use the API first
+    try {
+      const response = await api.get('/devices');
+      return response.data;
+    } catch (error: any) {
+      // If we get a 403 Forbidden error, it could be an auth issue
+      if (error.response && error.response.status === 403) {
+        console.warn('Authentication issue when getting devices: 403 Forbidden');
+        
+        // In a real app, we'd handle authentication here
+        // For now, fall back to localStorage
+      }
+      
+      // Fall back to localStorage if API fails
+      console.warn('Falling back to localStorage for devices');
+      const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+      return storedDevices;
+    }
   } catch (error) {
     console.error('Error fetching devices:', error);
     return [];
@@ -201,29 +211,46 @@ export async function addDevice(device: BaseDevice): Promise<Device> {
     // Ensure all required properties are present
     const preparedDevice = ensureDeviceProperties(device);
     
-    // In a real implementation, this would be an API call
-    // For now, we'll simulate a server response with a timeout
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Generate a random ID (in a real app, this would come from the backend)
-        const newDevice: Device = {
-          ...preparedDevice,
-          _id: `device_${Math.floor(Math.random() * 10000)}`,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+    try {
+      // Try to use the real API endpoint
+      const response = await api.post('/devices', preparedDevice);
+      return response.data;
+    } catch (error: any) {
+      // If we get a 403 Forbidden error, it's likely an authentication issue
+      if (error.response && error.response.status === 403) {
+        console.warn('Authentication issue: 403 Forbidden');
         
-        // Store in localStorage for persistence between page reloads
-        const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
-        storedDevices.push(newDevice);
-        localStorage.setItem('devices', JSON.stringify(storedDevices));
+        // Try to refresh the token or redirect to login if needed
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Authentication required. Please log in.');
+        }
         
-        resolve(newDevice);
-      }, 500); // Simulate network delay
-    });
+        // If we have a token but still get 403, it could be a permission issue
+        throw new Error('You do not have permission to add devices. Please contact your administrator.');
+      }
+      
+      // If API endpoint doesn't exist (404) or other issue, fall back to local storage
+      console.warn('Falling back to localStorage for device creation');
+      
+      // Generate a random ID (in a real app, this would come from the backend)
+      const newDevice: Device = {
+        ...preparedDevice,
+        _id: `device_${Math.floor(Math.random() * 10000)}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Store in localStorage for persistence between page reloads
+      const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+      storedDevices.push(newDevice);
+      localStorage.setItem('devices', JSON.stringify(storedDevices));
+      
+      return newDevice;
+    }
   } catch (error) {
     console.error('Error adding device:', error);
-    throw new Error('Failed to add device');
+    throw error;
   }
 }
 
