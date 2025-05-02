@@ -2,19 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { Device } from '../types/device.types';
 import {
   getDevices,
+  getDevice as getDeviceService,
   addDevice as addDeviceService,
   updateDevice as updateDeviceApi,
   deleteDevice as deleteDeviceApi,
   testConnection as testConnectionService,
 } from '../services/devices';
-// Fallbacks to the old API if needed
+// Import read registers function
 import {
-  getDeviceById,
   readDeviceRegisters,
 } from '../services/api';
-
-// Remove or comment out these imports if they exist
-// import { createDevice, testDevice } from '../services/api';
 
 interface UseDevicesReturn {
   devices: Device[];
@@ -86,17 +83,13 @@ export const useDevices = (): UseDevicesReturn => {
         return cachedDevice;
       }
 
-      // If not in state, fetch from API
-      const device = await getDeviceById(id);
+      // If not in state, use our development service
+      const device = await getDeviceService(id);
 
-      // Ensure required fields
-      const formattedDevice = {
-        ...device,
-        tags: device.tags || [],
-        registers: device.registers || [],
-      };
+      // Add the newly fetched device to our state
+      setDevices(prevDevices => [...prevDevices, device]);
 
-      return formattedDevice;
+      return device;
     } catch (err) {
       console.error('Error fetching device:', err);
       setDeviceError(

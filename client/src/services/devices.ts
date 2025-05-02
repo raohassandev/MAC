@@ -228,9 +228,50 @@ export async function getDevices(): Promise<Device[]> {
   }
 }
 
-export async function getDevice(_id: string): Promise<Device | null> {
-  // Implementation would go here
-  return null;
+export async function getDevice(id: string): Promise<Device> {
+  try {
+    // Always use localStorage in development mode
+    console.log('Using localStorage for getDevice (dev mode):', id);
+    const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+    
+    // Find the device by ID
+    const device = storedDevices.find((d: any) => d._id === id);
+    
+    if (device) {
+      return device;
+    }
+    
+    // If device not found, create a sample one with the given ID
+    console.warn(`Device with ID ${id} not found in localStorage, creating sample`);
+    const sampleDevice = {
+      _id: id,
+      name: `Device ${id.substring(0, 5)}`,
+      connectionType: 'tcp',
+      ip: '192.168.1.100',
+      port: 502,
+      slaveId: 1,
+      enabled: true,
+      make: 'Siemens',
+      model: 'S7-1200',
+      tags: ['sample'],
+      registers: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSeen: new Date()
+    };
+    
+    // Save to localStorage
+    storedDevices.push(sampleDevice);
+    localStorage.setItem('devices', JSON.stringify(storedDevices));
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return sampleDevice;
+  } catch (error) {
+    console.error('Error getting device:', error);
+    throw new Error('Failed to get device');
+  }
 }
 
 export async function addDevice(device: BaseDevice): Promise<Device> {
@@ -265,23 +306,66 @@ export async function addDevice(device: BaseDevice): Promise<Device> {
 }
 
 export async function updateDevice(device: Partial<Device> & { _id: string }): Promise<Device> {
-  // Implementation would go here
-  return {
-    _id: device._id,
-    name: device.name || '',
-    connectionType: device.connectionType || 'tcp',
-    slaveId: device.slaveId || 0,
-    enabled: device.enabled !== undefined ? device.enabled : true,
-    registers: [],
-    tags: [],
-    make: '',
-    model: '',
-  };
+  try {
+    console.log('Using localStorage for updateDevice (dev mode):', device._id);
+    
+    // Get existing devices
+    const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+    
+    // Find the device to update
+    const index = storedDevices.findIndex((d: any) => d._id === device._id);
+    
+    if (index === -1) {
+      throw new Error(`Device with ID ${device._id} not found`);
+    }
+    
+    // Update the device
+    const updatedDevice = {
+      ...storedDevices[index],
+      ...device,
+      updatedAt: new Date()
+    };
+    
+    // Save back to localStorage
+    storedDevices[index] = updatedDevice;
+    localStorage.setItem('devices', JSON.stringify(storedDevices));
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return updatedDevice;
+  } catch (error) {
+    console.error('Error updating device:', error);
+    throw new Error('Failed to update device');
+  }
 }
 
-export async function deleteDevice(_id: string): Promise<boolean> {
-  // Implementation would go here
-  return true;
+export async function deleteDevice(id: string): Promise<boolean> {
+  try {
+    console.log('Using localStorage for deleteDevice (dev mode):', id);
+    
+    // Get existing devices
+    const storedDevices = JSON.parse(localStorage.getItem('devices') || '[]');
+    
+    // Filter out the device to delete
+    const filteredDevices = storedDevices.filter((d: any) => d._id !== id);
+    
+    // Check if a device was actually removed
+    if (filteredDevices.length === storedDevices.length) {
+      console.warn(`Device with ID ${id} not found for deletion`);
+    }
+    
+    // Save back to localStorage
+    localStorage.setItem('devices', JSON.stringify(filteredDevices));
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting device:', error);
+    throw new Error('Failed to delete device');
+  }
 }
 
 export async function testConnection(_id: string): Promise<{ success: boolean; message: string }> {
