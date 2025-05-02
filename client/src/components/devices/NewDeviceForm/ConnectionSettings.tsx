@@ -58,12 +58,24 @@ const FieldError: React.FC<{ message?: string }> = ({ message }) => {
 
 const ConnectionSettings: React.FC = () => {
   const { state, actions } = useDeviceForm();
-  const { connectionSettings, validationState } = state;
+  const { deviceBasics, connectionSettings, validationState } = state;
   
-  // Helper to get error message for a specific field
+  // Helper to get connection error message for a specific field
   const getFieldError = (fieldName: string): string | undefined => {
     const error = validationState.connection.find(err => err.field === fieldName);
     return error?.message;
+  };
+  
+  // Helper to get device basic info error message
+  const getBasicFieldError = (fieldName: string): string | undefined => {
+    const error = validationState.basicInfo.find(err => err.field === fieldName);
+    return error?.message;
+  };
+  
+  // Handle device basics changes
+  const handleDeviceBasicsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    actions.setDeviceBasics({ [name]: value });
   };
 
   const handleConnectionTypeChange = (value: string) => {
@@ -81,7 +93,63 @@ const ConnectionSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium text-gray-900">Connection Settings</h3>
+      <h3 className="text-lg font-medium text-gray-900">Device Information</h3>
+      
+      <Form.Row>
+        <Form.Group>
+          <Form.Label htmlFor="name" required>Device Name</Form.Label>
+          <Input
+            id="name"
+            name="name"
+            value={deviceBasics.name}
+            onChange={handleDeviceBasicsChange}
+            placeholder="Production Line PLC"
+            className={getBasicFieldError('name') ? 'border-red-300' : ''}
+          />
+          <FieldError message={getBasicFieldError('name')} />
+        </Form.Group>
+        
+        <Form.Group>
+          <Form.Label htmlFor="make" required>Manufacturer/Make</Form.Label>
+          <Input
+            id="make"
+            name="make"
+            value={deviceBasics.make}
+            onChange={handleDeviceBasicsChange}
+            placeholder="Siemens, Allen-Bradley, etc."
+            className={getBasicFieldError('make') ? 'border-red-300' : ''}
+          />
+          <FieldError message={getBasicFieldError('make')} />
+        </Form.Group>
+      </Form.Row>
+      
+      <Form.Row>
+        <Form.Group>
+          <Form.Label htmlFor="model" required>Model</Form.Label>
+          <Input
+            id="model"
+            name="model"
+            value={deviceBasics.model}
+            onChange={handleDeviceBasicsChange}
+            placeholder="S7-1200, CompactLogix, etc."
+            className={getBasicFieldError('model') ? 'border-red-300' : ''}
+          />
+          <FieldError message={getBasicFieldError('model')} />
+        </Form.Group>
+        
+        <Form.Group>
+          <Form.Label htmlFor="description">Description</Form.Label>
+          <Input
+            id="description"
+            name="description"
+            value={deviceBasics.description}
+            onChange={handleDeviceBasicsChange}
+            placeholder="Optional device description"
+          />
+        </Form.Group>
+      </Form.Row>
+      
+      <h3 className="text-lg font-medium text-gray-900 mt-8">Connection Settings</h3>
 
       <Form.Group>
         <Form.Label htmlFor="connectionType">Connection Type</Form.Label>
